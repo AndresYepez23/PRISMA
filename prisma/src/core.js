@@ -1926,7 +1926,7 @@ async function requestPlan(userText){
    let response=null;
    try{
     status('Organizando la conversión local de escaneo a Excel…');
-    response=await requestQueenPlan({text:coreRequest,files:resolvedTask.files},{signal:controller.signal});
+    response=await requestQueenPlan({text:coreRequest,files:resolvedTask.files},{signal:controller.signal,bypassCircuit:true});
    }finally{queenPlanningController=null;}
    if(cancelRequested)return;
    if(response?.source==='queen-hybrid-local'&&response.plan?.intent==='execute'){
