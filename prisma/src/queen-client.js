@@ -16,8 +16,8 @@ export function queenCircuitState(now=Date.now()){
  return {available:now>=queenUnavailableUntil,retryAfterMs:Math.max(0,queenUnavailableUntil-now)};
 }
 export function resetQueenCircuitForTests(){queenUnavailableUntil=0;}
-export async function requestQueenPlan({text,files=[],context={},repair=false},{fetchImpl=fetch,signal,now=Date.now}={}){
- if(signal?.aborted||!queenCircuitState(now()).available)return null;
+export async function requestQueenPlan({text,files=[],context={},repair=false},{fetchImpl=fetch,signal,now=Date.now,bypassCircuit=false}={}){
+ if(signal?.aborted||(!bypassCircuit&&!queenCircuitState(now()).available))return null;
  const controller=new AbortController(),abort=()=>controller.abort();
  if(signal?.aborted)abort();else signal?.addEventListener('abort',abort,{once:true});
  const timer=setTimeout(abort,115000);
