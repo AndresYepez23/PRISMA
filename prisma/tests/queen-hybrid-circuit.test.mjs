@@ -42,3 +42,13 @@ test('fallback payload from an unavailable backend opens circuit without leaking
  const result=await requestQueenPlan(args,{now:()=>9000,fetchImpl:async()=>new Response(JSON.stringify({ok:false,fallback:true,code:'QUEEN_UNAVAILABLE'}),{status:200})});
  assert.equal(result,null);assert.equal(queenCircuitState(9001).retryAfterMs,29999);
 });
+
+test('verified local pipeline remains accessible while neural circuit is open',async()=>{
+ resetQueenCircuitForTests();
+ await requestQueenPlan(args,{now:()=>1000,fetchImpl:async()=>new Response('',{status:503})});
+ let calls=0;
+ const result=await requestQueenPlan(args,{now:()=>1001,bypassCircuit:true,fetchImpl:async()=>{
+  calls++;return new Response(JSON.stringify({ok:true,source:'queen-hybrid-local',plan:{intent:'execute',steps:[]}}),{status:200});
+ }});
+ assert.equal(calls,1);assert.equal(result.source,'queen-hybrid-local');
+});
