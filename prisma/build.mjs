@@ -1,4 +1,5 @@
 import { cp, copyFile, mkdir, rm, readFile, writeFile } from "node:fs/promises";
+import { assertProductionBuildBindings } from "./scripts/production-binding-guard.mjs";
 import { generateSeoPages } from "./seo/generate.mjs";
 import { generateInternationalPages } from "./seo/generate-international.mjs";
 // Abort publication if Core can no longer discover or safely chain its tools.
@@ -8,6 +9,7 @@ import "./tests/core-file-references.test.mjs";
 import "./tests/core-model-session.test.mjs";
 import "./tests/conversation-history.test.mjs";
 import "./tests/provider-orchestration.test.mjs";
+import "./tests/production-binding-guard.test.mjs";
 import "./tests/core-intelligence-benchmark.test.mjs";
 import "./tests/developer-api.test.mjs";
 import "./tests/queen.test.mjs";
@@ -17,6 +19,11 @@ import "./tests/settings-ui.test.mjs";
 import "./tests/core-mobile-prism-layout.test.mjs";
 import "./tests/i18n.test.mjs";
 
+// Fail closed on production before writing the deploy output. This prevents a new
+// production Pages deploy with redacted/empty secret bindings from superseding
+// the known-good deployment. Preview builds remain intentionally isolated.
+const credentialGate = assertProductionBuildBindings(process.env);
+if(credentialGate.active) console.log("Production credential presence gate: "+credentialGate.available+"/"+credentialGate.expected+"; no secret values logged.");
 const output = new URL("./dist/", import.meta.url);
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
