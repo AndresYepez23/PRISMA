@@ -9,6 +9,7 @@ import { compressVideoNative, preferNativeVideoCompression, localizedVideoError 
 import { selectImageCandidates, imageFailureDecision } from './image-routing.js';
 import { runAdvancedTextTool } from './advanced-text-tools.js';
 import { LOCAL_CREATOR_TOOL_IDS, runLocalCreatorTool } from './local-creator-tools.js';
+import {inspectArchiveFormat} from './file-inspection.js';
 const PDF_LIB='https://esm.sh/pdf-lib@1.17.1';
 const QR='https://esm.sh/qrcode@1.5.4';
 const MAMMOTH='https://esm.sh/mammoth@1.9.1';
@@ -357,7 +358,21 @@ async function inspectFile(file){
  else if(ascii.slice(0,3)==='ID3'||starts(0xff,0xfb))signature='MP3';
  else if(ascii.slice(0,4)==='OggS')signature='OGG';
  else if(ascii.slice(0,4)==='fLaC')signature='FLAC';
- return {text:['Nombre: '+file.name,'Tamaño: '+formatBytesEngine(file.size),'Tipo MIME declarado: '+(file.type||'No indicado'),'Última modificación: '+(file.lastModified?new Date(file.lastModified).toLocaleString('es-CO'):'No indicada'),'Extensión: '+(file.name.includes('.')?file.name.split('.').pop().toUpperCase():'Sin extensión'),'Firma detectada: '+signature,'Primeros bytes (hex): '+hex,'Vista ASCII: '+ascii].join('\n'),summary:'Inspección local. No se ha subido el archivo.'};
+ let kind=({PDF:'pdf',PNG:'image',JPEG:'image',GIF:'image',WebP:'image',MP3:'audio',OGG:'audio',FLAC:'audio','MP4 / ISO Base Media':'video'})[signature]||'';
+ let basis=kind?'binary-signature':'unrecognized';
+ if(starts(0x50,0x4b,0x03,0x04)){
+  const archive=await inspectArchiveFormat(file);kind=archive.kind;signature=archive.signature;basis='archive-directory';
+ }else if(!kind&&/\.(?:txt|md|markdown|html?|csv|json)$/i.test(file.name)){
+  const sample=new Uint8Array(await file.slice(0,4096).arrayBuffer());
+  try{
+   new TextDecoder('utf-8',{fatal:true}).decode(sample,{stream:file.size>sample.length});
+   if(sample.length&&!sample.some(b=>b===0||(b<32&&![9,10,13].includes(b)))){
+    kind=/\.csv$/i.test(file.name)?'csv':/\.json$/i.test(file.name)?'json':'text';
+    signature='Texto UTF-8 compatible (muestra); subtipo según extensión';basis='text-sample-and-extension';
+   }
+  }catch{/* Unknown binary or another encoding: do not claim a text conversion. */}
+ }
+ return {inspection:{kind,basis,signature},text:['Nombre: '+file.name,'Tamaño: '+formatBytesEngine(file.size),'Tipo MIME declarado: '+(file.type||'No indicado'),'Última modificación: '+(file.lastModified?new Date(file.lastModified).toLocaleString('es-CO'):'No indicada'),'Extensión: '+(file.name.includes('.')?file.name.split('.').pop().toUpperCase():'Sin extensión'),'Firma detectada: '+signature,'Primeros bytes (hex): '+hex,'Vista ASCII: '+ascii].join('\n'),summary:'Inspección local. No se ha subido el archivo.'};
 }
 async function jsonToExcel(p){
  const source=String(p.text||'').trim();if(!source)throw Error('Pega una lista JSON.');
@@ -855,7 +870,8 @@ async function generateText(p,cb){
   while(history.length&&history[0].role!=='user')history.shift();
   const conversationMessages=[{role:'system',content:system},...history,{role:'user',content:user}];
  const lengths={short:650,medium:1900,long:tier==='smart'?3400:2800};
- const standardTokens=task==='songwriting'?Math.max(lengths[p.length]||2400,3000):(lengths[p.length]||1200);
+ const standardTokens=task==='songwriting'?Math.max(lengths[p.length]||2400,3000):
+   task==='reasoning'&&p.length==='medium'?900:(lengths[p.length]||1200);
  // Only deliberate artifact creation may request an expanded bounded budget.
  const outputTokens=p.outputTokenBudget?Math.max(1000,Math.min(4400,Number(p.outputTokenBudget)||standardTokens)):standardTokens;
  const preferred=p.provider||'auto';
@@ -887,7 +903,9 @@ async function generateText(p,cb){
  });
  const startedAt=Date.now();
  const totalDeadline=task==='planner'?65000:task==='songwriting'?78000:65000;
- const individualDeadline=preferred==='sensenova'?48000:task==='planner'?11000:task==='songwriting'?22000:16000;
+ // Reasoning and comparisons can take longer than plain chat. The previous
+  // 16s deadline prematurely cancelled healthy models on these prompts.
+  const individualDeadline=preferred==='sensenova'?48000:task==='planner'?11000:task==='songwriting'?22000:task==='reasoning'?30000:16000;
  const modelFor=provider=>{
   let catalog=p.centralModelCatalog?.chat?.[provider]||[];
   if(provider==='kilo'&&preferred==='auto')catalog=catalog.filter(model=>
@@ -1536,7 +1554,7 @@ async function runSpecializedTextTool(id,p,cb){
  if(user.length<4)throw Error('Describe qué necesitas antes de ejecutar esta herramienta.');
  const result=await generateText({...p,prompt:spec.instruction+'\n\nPETICIÓN DEL USUARIO:\n'+user,
   task:spec.task,tone:spec.task==='reasoning'?'academic':'creative',
-  length:'long',reasoning:p.reasoning||'balanced'},cb);
+  length:id==='ai-compare-options'?(p.length||'medium'):'long',reasoning:p.reasoning||'balanced'},cb);
  return {...result,summary:spec.label+' · '+(result?.provider||'motor de IA')+'.'};
 }
 
