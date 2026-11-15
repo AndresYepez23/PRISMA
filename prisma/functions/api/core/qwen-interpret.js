@@ -2,7 +2,9 @@
 // Keep Cloudflare Access credentials and llama.cpp traffic server-side.
 import {inferQueen,withQueenLease,reserveQueenRequest,readBoundedJson,QueenError,queenConfig,recordQueenMetric} from '../../_lib/queen.js';
 import {searchCoreTools} from '../../../src/core-tool-intelligence.js';
-import {excludedCapabilityIds,isInformationalIntent} from '../../../src/core-capabilities.js';
+import {excludedCapabilityIds,isInformationalIntent,extractPayload} from '../../../src/core-capabilities.js';
+import {compatibleFileConversions,requestedConversionFormat} from '../../../src/file-conversions.js';
+import {tools} from '../../../src/registry.js';
 import {assessQwenCorePlanCoverage} from '../../../src/qwen-core-plan-coverage.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
@@ -21,7 +23,12 @@ export function validateQwenCoreInterpretation(value,allowed,excluded=[]){
 
 export function qwenCoreCandidates(text,files=[]){
  const excluded=new Set(excludedCapabilityIds(text,files));
- const options=searchCoreTools(text,files,12).filter(t=>['ready','beta'].includes(t.status)&&!excluded.has(t.id)&&
+ const target=requestedConversionFormat(extractPayload(text).instruction);
+ const outputIds=new Set(target?files.flatMap(file=>compatibleFileConversions(file).filter(route=>route.target===target).flatMap(route=>route.steps.map(step=>step.tool_id))):[]);
+ // Reserve compatible requested output tools before lexical ranking, which can
+ // otherwise fill the catalog with tools boosted by an attachment's filename.
+ const ranked=[...tools.filter(t=>outputIds.has(t.id)),...searchCoreTools(text,files,12)];
+ const options=[...new Map(ranked.map(t=>[t.id,t])).values()].filter(t=>['ready','beta'].includes(t.status)&&!excluded.has(t.id)&&
   !assessQwenCorePlanCoverage(text,[{tool_id:t.id}]).missing.includes('forbidden-compression'));
  return options.slice(0,QWEN_CORE_INTERPRET_LIMITS.candidates).map(t=>({id:t.id,name:t.name.slice(0,75),file:!!t.file,mode:t.mode}));
 }
