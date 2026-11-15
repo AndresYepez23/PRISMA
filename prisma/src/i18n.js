@@ -16,7 +16,7 @@ const browserLanguages = Array.isArray(navigator.languages) && navigator.languag
 const preferredBrowserLanguage = String(browserLanguages[0] || navigator.language || 'es');
 const browserSpanish = /^es(?:-|$)/i.test(preferredBrowserLanguage);
 const routeLanguage = /^\/en(?:\/|$)/i.test(location.pathname) ? 'en' :
-  /^\/(?:herramientas|categorias|soluciones|guias)(?:\/|$)|^\/(?:privacy|acerca)\.html$/i.test(location.pathname) ? 'es' : '';
+  /^\/(?:herramientas|categorias|soluciones|guias)(?:\/|$)|^\/(?:privacy|acerca)(?:\.html)?$/i.test(location.pathname) ? 'es' : '';
 const requestedLanguage = new URLSearchParams(location.search).get('lang');
 const explicitLanguage = ['es','en'].includes(requestedLanguage) ? requestedLanguage : '';
 const initialLanguage = routeLanguage || explicitLanguage || savedLanguage ||
@@ -157,10 +157,14 @@ const localizedPaths = new Map([
   ['/categorias/', '/en/categories/'],
   ['/soluciones/', '/en/solutions/'],
   ['/guias/', '/en/guides/'],
-  ['/privacy.html', '/en/privacy.html'],
-  ['/acerca.html', '/en/about.html']
+  ['/privacy', '/en/privacy'],
+  ['/acerca', '/en/about']
 ]);
 const spanishPaths = new Map([...localizedPaths].map(([es, en]) => [en, es]));
+const publicAliases = new Map([
+  ['/privacy.html','/privacy'], ['/en/privacy.html','/en/privacy'],
+  ['/acerca.html','/acerca'], ['/en/about.html','/en/about']
+]);
 
 function translateInternalLink(anchor) {
   const href = anchor?.getAttribute?.('href');
@@ -168,7 +172,9 @@ function translateInternalLink(anchor) {
   let url;
   try { url = new URL(href, document.baseURI); } catch { return; }
   if (url.origin !== location.origin) return;
-  const target = language === 'en' ? localizedPaths.get(url.pathname) : spanishPaths.get(url.pathname);
+  const pathname = publicAliases.get(url.pathname) || url.pathname;
+  const target = (language === 'en' ? localizedPaths.get(pathname) : spanishPaths.get(pathname)) ||
+    (pathname !== url.pathname ? pathname : '');
   if (!target) return;
   const next = target + url.search + url.hash;
   if (href !== next) anchor.setAttribute('href', next);

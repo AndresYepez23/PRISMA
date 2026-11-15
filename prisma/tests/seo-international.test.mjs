@@ -22,7 +22,7 @@ const alt=(html,language)=>html.includes('hreflang="'+language+'"');
 const attributes=tag=>Object.fromEntries([...tag.matchAll(/([\w:-]+)="([^"]*)"/g)].map(([,key,value])=>[key,decode(value)]));
 const documentPath=url=>{
  const path=new URL(url).pathname;
- return path.slice(1)+(path.endsWith('/')?'index.html':'');
+ return path.slice(1)+(path.endsWith('/')?'index.html':/\.[a-z]+$/i.test(path)?'':'.html');
 };
 const documents=new Map(await Promise.all(urls.map(async url=>[url,await readOutput(documentPath(url))])));
 const assetPaths=new Set((await readdir(dist,{recursive:true})).map(path=>'/'+path));
@@ -144,16 +144,16 @@ test('English app shell and legal page use English metadata and provide a Spanis
  const legal=await readOutput('en/privacy.html');
  assert.match(legal,/<html lang="en"/);
  assert.match(legal,/<title>Privacy and Terms \| Prisma Space<\/title>/);
- assert.ok(legal.includes('href="/privacy.html"'));
+ assert.ok(legal.includes('href="/privacy"'));
  assert.ok(urls.includes(SEO_BASE+'/en/'));
- assert.ok(urls.includes(SEO_BASE+'/en/privacy.html'));
+ assert.ok(urls.includes(SEO_BASE+'/en/privacy'));
  const about=await readOutput('en/about.html');
  const spanishAbout=await readOutput('acerca.html');
  assert.match(about,/<html lang="en"/);
  assert.ok(about.includes('About Prisma Space'));
  assert.ok(spanishAbout.includes('Acerca de Prisma Space'));
- assert.ok(urls.includes(SEO_BASE+'/acerca.html'));
- assert.ok(urls.includes(SEO_BASE+'/en/about.html'));
+ assert.ok(urls.includes(SEO_BASE+'/acerca'));
+ assert.ok(urls.includes(SEO_BASE+'/en/about'));
  assert.ok(legal.includes('Google AdSense'));
  assert.ok(legal.includes('Supabase Auth'));
  const spanishLegal=await readOutput('privacy.html');
@@ -216,6 +216,14 @@ test('every public page has reciprocal language URLs, coherent metadata and matc
  }
 });
 
+test('canonical and sitemap URLs match Cloudflare clean URLs while HTML files remain build artifacts',()=>{
+ for(const url of urls)assert.ok(!new URL(url).pathname.endsWith('.html'),'Cloudflare redirects this canonical URL: '+url);
+ for(const path of ['/privacy','/en/privacy','/acerca','/en/about']) {
+  assert.ok(documents.has(SEO_BASE+path));
+  assert.ok(assetPaths.has(path+'.html'),'Missing physical HTML for '+path);
+ }
+});
+
 test('all public navigation, assets and fragments exist and keep their locale except equivalent language links',()=>{
  const clean=html=>html.replace(/(<(script|style)\b[^>]*>)[\s\S]*?<\/\2>/gi,'$1</$2>');
  for(const [url,html] of documents) {
@@ -272,13 +280,13 @@ test('legal navigation uses complete localized labels and separates the language
  const english=await readOutput('en/privacy.html');
  assert.match(spanish,/<html lang="es"/);
  assert.match(spanish,/← Volver a Prisma Space<\/a>/);
- assert.match(spanish,/<div class="legal-language-options"><a href="\/en\/privacy\.html"[^>]*>Ver esta página en inglés<\/a><\/div>/);
+ assert.match(spanish,/<div class="legal-language-options"><a href="\/en\/privacy"[^>]*>Ver esta página en inglés<\/a><\/div>/);
  assert.doesNotMatch(spanish,/<a class="back"[^>]*>[^<]*<\/a>\s*<a[^>]*>English<\/a>/);
  assert.match(english,/← Return to Prisma Space<\/a>/);
- assert.match(english,/<div class="legal-language-options"><a href="\/privacy\.html"[^>]*>View this page in Spanish<\/a><\/div>/);
+ assert.match(english,/<div class="legal-language-options"><a href="\/privacy"[^>]*>View this page in Spanish<\/a><\/div>/);
  assert.match(english,/aria-label="Sections on this page"/);
  assert.doesNotMatch(english,/aria-label="Secciones de esta página"/);
- assert.match(spanish,/rel="canonical" href="https:\/\/prismaspace\.space\/privacy\.html"/);
+ assert.match(spanish,/rel="canonical" href="https:\/\/prismaspace\.space\/privacy"/);
 });
 
 test('SEO navigation labels are in the page language across both catalogues',async()=>{

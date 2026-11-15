@@ -31,7 +31,7 @@ const compactDescription = value => {
 };
 const localFile = (url,output) => {
   const pathname = new URL(url).pathname.replace(/^\/+/,'');
-  return new URL(pathname ? (pathname.endsWith('/') ? pathname+'index.html' : pathname) : 'index.html',output);
+  return new URL(pathname ? (pathname.endsWith('/') ? pathname+'index.html' : /\.[a-z]+$/i.test(pathname) ? pathname : pathname+'.html') : 'index.html',output);
 };
 function alternateTags(esUrl,enUrl) {
   return [
@@ -79,7 +79,7 @@ function header(esUrl) {
 }
 function footer() {
   return [
-    '<footer class="seo-footer"><div><a href="/en/">Prisma Space</a><span>Digital tools with purpose.</span></div><nav aria-label="Footer links"><a href="/en/tools/">Tools</a><a href="/en/categories/">Categories</a><a href="/en/solutions/">Solutions</a><a href="/en/guides/">Guides</a><a href="/en/about.html">About</a><a href="/en/privacy.html#privacidad">Privacy and terms</a></nav></footer>',
+    '<footer class="seo-footer"><div><a href="/en/">Prisma Space</a><span>Digital tools with purpose.</span></div><nav aria-label="Footer links"><a href="/en/tools/">Tools</a><a href="/en/categories/">Categories</a><a href="/en/solutions/">Solutions</a><a href="/en/guides/">Guides</a><a href="/en/about">About</a><a href="/en/privacy#privacidad">Privacy and terms</a></nav></footer>',
     '<script>(function(){ const button = document.getElementById("seo-theme"); if(!button) return; button.addEventListener("click", function(){ const next = document.documentElement.dataset.theme === "light" ? "dark" : "light"; document.documentElement.dataset.theme = next; try {localStorage.setItem("prisma-theme", next);}catch{} const meta=document.querySelector("meta[name=theme-color]");if(meta)meta.content=next==="light"?"#f3f7fc":"#0e121d"; }); })();</script>'
   ].join('\n');
 }
@@ -273,7 +273,7 @@ function appEnglishHtml(html) {
   // replacements over scripts, styles, code, URLs or user-provided content.
   const decode=value=>value.replace(/&(?:amp|quot|#39|lt|gt);/g, entity=>({'&amp;':'&','&quot;':'"','&#39;':"'",'&lt;':'<','&gt;':'>'})[entity]);
   const translate=value=>value.replace(/\S[\s\S]*\S|\S/, text=>esc(t(decode(text))));
-  const paths=new Map([['/','/en/'],['/herramientas/','/en/tools/'],['/categorias/','/en/categories/'],['/soluciones/','/en/solutions/'],['/guias/','/en/guides/'],['/privacy.html','/en/privacy.html'],['/acerca.html','/en/about.html']]);
+  const paths=new Map([['/','/en/'],['/herramientas/','/en/tools/'],['/categorias/','/en/categories/'],['/soluciones/','/en/solutions/'],['/guias/','/en/guides/'],['/privacy','/en/privacy'],['/acerca','/en/about']]);
   html=html.replace(/<!--[\s\S]*?-->|<(script|style|code|pre)\b[^>]*>[\s\S]*?<\/\1\s*>|<[^>]+>|[^<]+/gi,token=>{
     if (/^<!--|^<(?:script|style|code|pre)\b/i.test(token)) return token;
     if (!token.startsWith('<')) return translate(token);
@@ -379,8 +379,8 @@ export async function generateInternationalPages(output) {
     [BASE+'/categorias/',BASE+'/en/categories/'],
     [BASE+'/soluciones/',BASE+'/en/solutions/'],
     [BASE+'/guias/',BASE+'/en/guides/'],
-    [BASE+'/privacy.html',BASE+'/en/privacy.html'],
-    [BASE+'/acerca.html',BASE+'/en/about.html']
+    [BASE+'/privacy',BASE+'/en/privacy'],
+    [BASE+'/acerca',BASE+'/en/about']
   ]);
   for(const page of englishPages) englishUrlBySpanish.set(BASE+'/herramientas/'+page.sourceSlug+'/',BASE+'/en/tools/'+page.englishSlug+'/');
   for(const item of hubs.categories) englishUrlBySpanish.set(BASE+'/categorias/'+item.sourceSlug+'/',BASE+'/en/categories/'+item.englishSlug+'/');

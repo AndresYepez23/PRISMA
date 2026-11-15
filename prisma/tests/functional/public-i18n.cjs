@@ -5,7 +5,7 @@ const assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'../../dist');
 const server=http.createServer((req,res)=>{
  const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
- const file=path.resolve(root,'.'+pathname+(pathname.endsWith('/')?'index.html':''));
+ const file=path.resolve(root,'.'+pathname+(pathname.endsWith('/')?'index.html':/\.[a-z]+$/i.test(pathname)?'':'.html'));
  if(!file.startsWith(root+'/')||!fs.existsSync(file)){res.writeHead(404).end();return;}
  res.setHeader('Content-Type',({'js':'text/javascript','html':'text/html','css':'text/css','json':'application/json','svg':'image/svg+xml'})[file.split('.').pop()]||'application/octet-stream');
  fs.createReadStream(file).pipe(res);
@@ -15,6 +15,7 @@ const server=http.createServer((req,res)=>{
  const origin='http://127.0.0.1:'+server.address().port;
  const browser=await chromium.launch({executablePath:process.env.PRISMA_CHROMIUM||'/usr/bin/chromium',headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
  const cases=[];
+ const closeContext=async ctx=>{await ctx.unrouteAll({behavior:'wait'});await ctx.close();};
  const context=async options=>{
   const ctx=await browser.newContext(options);
   await ctx.route('**/*',async route=>{
@@ -44,7 +45,7 @@ const server=http.createServer((req,res)=>{
    const path=new URL(route,origin).pathname;
    assert.equal(new URL(page.url()).pathname,path,'Automatic language detection changed the URL');
    assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'),'https://prismaspace.space'+path);
-   cases.push('locale '+JSON.stringify({route,saved,locale,language}));await ctx.close();
+   cases.push('locale '+JSON.stringify({route,saved,locale,language}));await closeContext(ctx);
   }
   {
    const ctx=await context({locale:'en-US'}),page=await ctx.newPage();
@@ -59,19 +60,19 @@ const server=http.createServer((req,res)=>{
    assert.equal(new URL(page.url()).search,'?tool=pdf-to-word');
    assert.equal(new URL(page.url()).hash,'#workspace');
    assert.match(await page.locator('.main-footer').textContent(),/Acerca de Prisma/);
-   assert.equal(await page.locator('a[href="/acerca.html"]').count(),1);
+   assert.equal(await page.locator('a[href="/acerca"]').count(),1);
    assert.match(await page.locator('#profile-menu-privacy').textContent(),/Puedes explorar Prisma sin cuenta/);
    await page.evaluate(()=>window.prismaI18n.setLanguage('en'));
    assert.equal(new URL(page.url()).pathname,'/en/');
    assert.match(await page.locator('.main-footer').textContent(),/About Prisma/);
-   assert.equal(await page.locator('a[href="/en/about.html"]').count(),1);
+   assert.equal(await page.locator('a[href="/en/about"]').count(),1);
    assert.equal(await page.locator('#test-user-content').textContent(),'archivo — a user title');
-   cases.push('English → Spanish → English preserves page, query, fragment and user content');await ctx.close();
+   cases.push('English → Spanish → English preserves page, query, fragment and user content');await closeContext(ctx);
   }
   const esPdf='/herramientas/pdf-a-word/',enPdf='/en/tools/free-pdf-to-word-converter/';
   const routes=[
    esPdf,enPdf,'/categorias/','/en/categories/','/soluciones/','/en/solutions/',
-   '/guias/','/en/guides/','/acerca.html','/en/about.html','/privacy.html','/en/privacy.html'
+   '/guias/','/en/guides/','/acerca','/en/about','/privacy','/en/privacy'
   ];
   for(const route of routes){
    const language=route.startsWith('/en/')?'en':'es';
@@ -91,7 +92,7 @@ const server=http.createServer((req,res)=>{
     await page.locator('a.seo-language-switch').click();
     assert.equal(new URL(page.url()).pathname,language==='es'?enPdf:esPdf);
    }
-   cases.push('mobile public route '+route);await ctx.close();
+   cases.push('mobile public route '+route);await closeContext(ctx);
   }
   {
    const ctx=await context({javaScriptEnabled:false}),page=await ctx.newPage();
@@ -99,8 +100,8 @@ const server=http.createServer((req,res)=>{
    const body=await page.locator('body').textContent();
    assert.doesNotMatch(body,/\b(?:herramientas?|archivos?|privacidad|disponibles|contraseña)\b/i);
    assert.match(body,/About Prisma/);
-   assert.equal(await page.locator('.main-footer a[href="/en/privacy.html#privacidad"]').count(),1);
-   cases.push('English app HTML is translated without JavaScript');await ctx.close();
+   assert.equal(await page.locator('.main-footer a[href="/en/privacy#privacidad"]').count(),1);
+   cases.push('English app HTML is translated without JavaScript');await closeContext(ctx);
   }
   console.log(JSON.stringify({ok:true,realBrowser:true,externalRequests:false,cases:cases.length,results:cases},null,2));
  }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

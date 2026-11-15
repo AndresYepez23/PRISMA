@@ -51,7 +51,7 @@ function header() {
 }
 function footer() {
   return [
-    '<footer class="seo-footer"><div><a href="/?lang=es">Prisma Space</a><span>Herramientas con intención.</span></div><nav aria-label="Enlaces del pie de página"><a href="/herramientas/">Herramientas</a><a href="/categorias/">Categorías</a><a href="/soluciones/">Soluciones</a><a href="/guias/">Guías</a><a href="/acerca.html">Acerca de</a><a href="/privacy.html#privacidad">Privacidad y uso</a></nav></footer>',
+    '<footer class="seo-footer"><div><a href="/?lang=es">Prisma Space</a><span>Herramientas con intención.</span></div><nav aria-label="Enlaces del pie de página"><a href="/herramientas/">Herramientas</a><a href="/categorias/">Categorías</a><a href="/soluciones/">Soluciones</a><a href="/guias/">Guías</a><a href="/acerca">Acerca de</a><a href="/privacy#privacidad">Privacidad y uso</a></nav></footer>',
     '<script>(function(){ const button = document.getElementById("seo-theme"); if(!button) return; button.addEventListener("click", function(){ const next = document.documentElement.dataset.theme === "light" ? "dark" : "light"; document.documentElement.dataset.theme = next; try {localStorage.setItem("prisma-theme", next);}catch{} const meta=document.querySelector("meta[name=theme-color]");if(meta)meta.content=next==="light"?"#f3f7fc":"#0e121d"; }); })();</script>'
   ].join('\n');
 }
@@ -158,7 +158,7 @@ export async function generateSeoPages(output) {
   await mkdir(listing,{recursive:true});
   await writeFile(new URL('index.html',listing),directory(pages,toolMap),'utf8');
   const contentUrls=await generateContentHubs(output,{base:BASE,pages});
-  const urls=[BASE+'/', BASE+'/herramientas/', ...pages.map(page=>urlFor(page.slug)), BASE+'/privacy.html', BASE+'/acerca.html', ...contentUrls];
+  const urls=[BASE+'/', BASE+'/herramientas/', ...pages.map(page=>urlFor(page.slug)), BASE+'/privacy', BASE+'/acerca', ...contentUrls];
   const sitemap='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+urls.map(url=>'  <url><loc>'+esc(url)+'</loc></url>').join('\n')+'\n</urlset>\n';
   await writeFile(new URL('sitemap.xml',output),sitemap,'utf8');
   await writeFile(new URL('robots.txt',output),'User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /functions/\nSitemap: '+BASE+'/sitemap.xml\n','utf8');

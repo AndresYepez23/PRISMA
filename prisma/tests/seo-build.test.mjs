@@ -99,7 +99,7 @@ test('directory categories and sitemap expose exactly the current URLs',async()=
  assert.ok(robots.includes('Sitemap: '+SEO_BASE+'/sitemap.xml'));
  const about=await readFile(new URL('acerca.html',dist),'utf8');
  assert.ok(about.includes('Acerca de Prisma Space'));
- assert.ok(urls.includes(SEO_BASE+'/acerca.html'));
+ assert.ok(urls.includes(SEO_BASE+'/acerca'));
  assert.ok(!listing.includes('Herramientas online gratuitas'));
  for(const item of categories)assert.ok(urls.includes(SEO_BASE+'/categorias/'+item.slug+'/'));
  for(const item of solutions)assert.ok(urls.includes(SEO_BASE+'/soluciones/'+item.slug+'/'));

@@ -54,7 +54,7 @@ test('English language selection respects explicit routes, saved preferences and
  const selection=i18n.slice(i18n.indexOf('const STORAGE_KEY'),i18n.indexOf('const manualTranslations'));
  for(const [path,saved,browser,expected] of [
   ['/en/','es','es-CO','en'],['/en/','','es-ES','en'],
-  ['/herramientas/pdf-a-word/','en','en-US','es'],['/privacy.html','en','en-US','es'],
+  ['/herramientas/pdf-a-word/','en','en-US','es'],['/privacy','en','en-US','es'],['/privacy.html','en','en-US','es'],
   ['/','es','en-US','es'],['/','en','es-CO','en'],
   ['/','','es-CO','es'],['/','','en-US','en'],
   ['/?lang=es','en','en-US','es'],['/?lang=invalid','','en-US','en'],
@@ -104,8 +104,8 @@ test('app keeps legal/navigation links and PWA metadata in the selected language
   ['/categorias/','/en/categories/'],
   ['/soluciones/','/en/solutions/'],
   ['/guias/','/en/guides/'],
-  ['/privacy.html','/en/privacy.html'],
-   ['/acerca.html','/en/about.html']
+  ['/privacy','/en/privacy'],
+   ['/acerca','/en/about']
  ]) assert.ok(i18n.includes("['"+es+"', '"+en+"']"),'Missing locale link mapping '+es);
  assert.match(i18n,/translateInternalLinks\(root\)/);
  assert.match(i18n,/translateInternalLinks\(added\)/);
