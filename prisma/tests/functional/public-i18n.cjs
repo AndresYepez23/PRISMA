@@ -18,13 +18,19 @@ const server=http.createServer((req,res)=>{
  const closeContext=async ctx=>{await ctx.unrouteAll({behavior:'wait'});await ctx.close();};
  const context=async options=>{
   const ctx=await browser.newContext(options);
-  await ctx.route('**/*',async route=>{
+  await ctx.route('**/*',route=>{
    const url=new URL(route.request().url());
    if(![origin,'https://prismaspace.space'].includes(url.origin)||url.pathname.startsWith('/api/'))return route.abort();
    // Exercise the real i18n module without booting authentication or engines.
    if(url.pathname==='/src/main.js')return route.fulfill({contentType:'text/javascript',body:''});
    // Absolute canonical language links also resolve to the local build bytes.
-   if(url.origin!==origin)return route.fulfill({response:await route.fetch({url:origin+url.pathname+url.search})});
+   if(url.origin!==origin){
+    const pathname=decodeURIComponent(url.pathname);
+    const file=path.resolve(root,'.'+pathname+(pathname.endsWith('/')?'index.html':/\.[a-z]+$/i.test(pathname)?'':'.html'));
+    if(!file.startsWith(root+'/')||!fs.existsSync(file))return route.fulfill({status:404,body:''});
+    const contentType=({'html':'text/html','css':'text/css','js':'text/javascript','svg':'image/svg+xml'})[file.split('.').pop()]||'application/octet-stream';
+    return route.fulfill({contentType,body:fs.readFileSync(file)});
+   }
    return route.continue();
   });
   return ctx;
