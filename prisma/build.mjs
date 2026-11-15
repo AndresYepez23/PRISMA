@@ -53,9 +53,11 @@ const sw = await readFile(new URL("./sw.js", import.meta.url), "utf8");
 await writeFile(new URL("./dist/sw.js", import.meta.url), sw.replace("__BUILD_VERSION__", deploymentBuild));
 await generateSeoPages(output);
 await generateInternationalPages(output);
+await (await import('./seo/generate-expansion.mjs')).generateExpansionPages(output);
 // Validate the generated static HTML as part of the Cloudflare deployment gate.
 await import("./tests/seo-build.test.mjs");
 await import("./tests/seo-international.test.mjs");
 await import("./tests/seo-capabilities.test.mjs");
+await import("./tests/seo-expansion-engines.test.mjs");
 await import("./tests/performance-layout.test.mjs");
 console.log("PRISMA build complete: dist/ contains the public application, generated SEO landings and PWA shell.");

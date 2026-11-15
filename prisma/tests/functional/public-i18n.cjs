@@ -20,6 +20,7 @@ const server=http.createServer((req,res)=>{
   const ctx=await browser.newContext(options);
   await ctx.route('**/*',route=>{
    const url=new URL(route.request().url());
+   if(url.protocol==='blob:'||url.protocol==='data:')return route.continue();
    if(![origin,'https://prismaspace.space'].includes(url.origin)||url.pathname.startsWith('/api/'))return route.abort();
    // Exercise the real i18n module without booting authentication or engines.
    if(url.pathname==='/src/main.js')return route.fulfill({contentType:'text/javascript',body:''});
@@ -80,6 +81,8 @@ const server=http.createServer((req,res)=>{
    esPdf,enPdf,'/categorias/','/en/categories/','/soluciones/','/en/solutions/',
    '/guias/','/en/guides/','/acerca','/en/about','/privacy','/en/privacy'
   ];
+  const expansion=JSON.parse(fs.readFileSync(path.resolve(__dirname,'../../seo/expansion-pages.json'),'utf8'));
+  routes.push(...expansion.map(p=>p.path));
   for(const route of routes){
    const language=route.startsWith('/en/')?'en':'es';
    const ctx=await context({locale:language==='es'?'en-US':'es-CO',viewport:{width:390,height:844}});
@@ -99,6 +102,23 @@ const server=http.createServer((req,res)=>{
     assert.equal(new URL(page.url()).pathname,language==='es'?enPdf:esPdf);
    }
    cases.push('mobile public route '+route);await closeContext(ctx);
+  }
+  {
+   const ctx=await context({locale:'en-US'}),page=await ctx.newPage();
+   await page.goto(origin+'/en/');
+   const result=await page.evaluate(async()=>{
+    const {runTool}=await import('/src/engines.js');
+    const cards=await runTool('flashcards-export',[],{text:'Capital | Ottawa\nFormula :: H2O'});
+    const diff=await runTool('text-diff',[],{textA:'Unchanged\nOld',textB:'Unchanged\nNew'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(cards.blob);a.download=cards.filename;a.id='test-csv-download';a.textContent='Download CSV';document.body.append(a);
+    return {csv:await cards.blob.text(),diff:diff.text};
+   });
+   assert.equal(result.csv,'Capital,Ottawa\nFormula,H2O');
+   assert.match(result.diff,/\+ New/);assert.match(result.diff,/- Old/);
+   const downloadPromise=page.waitForEvent('download');await page.evaluate(()=>document.querySelector('#test-csv-download').click());
+   const download=await downloadPromise;assert.equal(download.suggestedFilename(),'prisma-tarjetas-anki.csv');
+   assert.equal(fs.readFileSync(await download.path(),'utf8'),result.csv);
+   cases.push('Real Anki CSV download and text difference engine');await closeContext(ctx);
   }
   {
    const ctx=await context({javaScriptEnabled:false}),page=await ctx.newPage();

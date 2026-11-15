@@ -1,0 +1,356 @@
+[
+  {
+    "language": "es",
+    "path": "/herramientas/crear-tarjetas-anki/",
+    "title": "Crear tarjetas para Anki desde texto y descargar CSV",
+    "description": "Convierte conceptos y respuestas en un CSV de dos columnas para Anki, sin tarjeta de encabezado. Revisa un ejemplo y los pasos de importación.",
+    "tool": "flashcards-export",
+    "intro": "Organiza tus apuntes como preguntas y respuestas antes de importarlos en Anki. Prisma prepara un CSV local de dos columnas; Anki gestiona los mazos y el repaso.",
+    "sections": [
+      [
+        "Preparar las tarjetas",
+        "Escribe una tarjeta por línea: Capital de Colombia | Bogotá. Usa |, una tabulación o :: para separar frente y reverso. Ejemplo de segunda tarjeta: 2 + 2 :: 4."
+      ],
+      [
+        "Importar en Anki",
+        "Descarga el CSV y abre la opción Importar de Anki. Comprueba que el separador sea coma, asigna la primera columna al frente y la segunda al reverso y elige el mazo. La vista previa debe mostrar dos tarjetas para el ejemplo, sin una tarjeta Front/Back."
+      ],
+      [
+        "Límites",
+        "El exportador omite líneas sin dos campos válidos. Si hay más separadores, une el resto de fragmentos con una raya. No genera archivos APKG, imágenes, audio ni tarjetas de huecos. Revisa las comas y comillas en la vista previa antes de importar."
+      ]
+    ],
+    "faqs": [
+      [
+        "¿Se añade una tarjeta de encabezado?",
+        "No. El CSV empieza por la primera tarjeta, sin fila Front,Back."
+      ],
+      [
+        "¿Prisma se conecta a mi cuenta Anki?",
+        "No. Descargas un archivo y decides dónde importarlo."
+      ]
+    ],
+    "related": [
+      [
+        "/guias/",
+        "Guías de herramientas"
+      ]
+    ],
+    "pair": "/en/tools/anki-csv-maker/",
+    "sources": []
+  },
+  {
+    "language": "en",
+    "path": "/en/tools/anki-csv-maker/",
+    "title": "Anki CSV Maker: Turn Study Notes into Flashcards",
+    "description": "Create a two-column CSV for Anki from questions and answers. Export without a header card and check field mapping before importing.",
+    "tool": "flashcards-export",
+    "intro": "Turn concise study notes into an importable Anki CSV. The export runs locally; scheduling and decks remain in Anki.",
+    "sections": [
+      [
+        "Write one card per line",
+        "Try Photosynthesis | Plants convert light into chemical energy, followed on a new line by Water formula :: H2O. Separate the two fields using a pipe, tab or double colon."
+      ],
+      [
+        "Import and preview",
+        "Download the CSV, choose Import in Anki and select comma as the separator. Map column one to Front and column two to Back. Select a note type and deck, then verify that the example produces two cards. There is no header row to skip."
+      ],
+      [
+        "What the file includes",
+        "Quotes and commas are escaped as CSV fields. Lines without a valid question and answer are skipped; additional separators join answer fragments with a dash. This does not export APKG decks, media or cloze notes."
+      ]
+    ],
+    "faqs": [
+      [
+        "Does the CSV contain a Front/Back card?",
+        "No. Its first row contains your first question and answer."
+      ],
+      [
+        "Can I import directly into an existing deck?",
+        "Choose the destination deck in Anki and review its import settings. Prisma does not connect to your Anki account."
+      ]
+    ],
+    "related": [
+      [
+        "/en/guides/",
+        "Tool guides"
+      ]
+    ],
+    "pair": "/herramientas/crear-tarjetas-anki/",
+    "sources": []
+  },
+  {
+    "language": "es",
+    "path": "/herramientas/comparar-textos/",
+    "title": "Comparar dos textos: ver líneas añadidas y eliminadas",
+    "description": "Compara dos versiones de texto en el navegador. Identifica líneas añadidas y eliminadas, con ejemplos y un límite de 450 líneas por entrada.",
+    "tool": "text-diff",
+    "intro": "Pega una versión original y otra modificada para revisar cambios línea por línea. La comparación es literal y se realiza en tu navegador.",
+    "sections": [
+      [
+        "Ejemplo",
+        "Original: Entrega el lunes. Modificado: Entrega el martes. La salida marca + Entrega el martes y - Entrega el lunes. Las líneas que coinciden aparecen con dos espacios delante."
+      ],
+      [
+        "Cómo comparar",
+        "Abre la herramienta, pega el original en la primera entrada y la revisión en la segunda. Ejecuta la comparación y lee los signos + y -; no dependen únicamente del color."
+      ],
+      [
+        "Límites",
+        "Cada entrada admite hasta 450 líneas. Mayúsculas y espacios pueden cambiar el resultado. Una línea movida puede aparecer como eliminación y adición. No es una comparación semántica, de plagio ni de archivos Word; copia primero el texto."
+      ]
+    ],
+    "faqs": [
+      [
+        "¿Detecta cambios de significado?",
+        "No, compara líneas exactas; no evalúa la intención ni la equivalencia de las frases."
+      ],
+      [
+        "¿Puedo comparar documentos extensos?",
+        "Divide el texto en secciones de hasta 450 líneas por entrada."
+      ]
+    ],
+    "related": [
+      [
+        "/herramientas/buscar-reemplazar-texto/",
+        "Buscar y reemplazar texto"
+      ]
+    ],
+    "pair": "/en/tools/text-difference-checker/",
+    "sources": []
+  },
+  {
+    "language": "en",
+    "path": "/en/tools/text-difference-checker/",
+    "title": "Text Difference Checker: Compare Two Text Versions",
+    "description": "Compare original and revised text by line. See additions and deletions locally, with clear examples and a 450-line limit for each input.",
+    "tool": "text-diff",
+    "intro": "Check edits between two versions without uploading document files. Paste plain text into the original and revised inputs.",
+    "sections": [
+      [
+        "Example",
+        "Original: Payment due Friday. Revised: Payment due Monday. The output marks + Payment due Monday and - Payment due Friday. Unchanged lines start with two spaces."
+      ],
+      [
+        "Read the result",
+        "Open the tool, paste both versions and run the comparison. A plus sign marks an added line; a minus sign marks a removed line. Review the actual wording instead of relying only on colours."
+      ],
+      [
+        "Limits",
+        "Each input accepts at most 450 lines. Case and whitespace matter. A moved line may appear as a deletion and an addition. This is not a plagiarism checker or a semantic comparison; it does not read Word files directly."
+      ]
+    ],
+    "faqs": [
+      [
+        "Does it compare individual words?",
+        "It reports line differences, so a one-word edit can replace an entire line in the output."
+      ],
+      [
+        "Are my texts uploaded?",
+        "This comparison runs locally in your browser."
+      ]
+    ],
+    "related": [
+      [
+        "/en/tools/",
+        "Explore text tools"
+      ]
+    ],
+    "pair": "/herramientas/comparar-textos/",
+    "sources": []
+  },
+  {
+    "language": "es",
+    "path": "/guias/csv-una-sola-columna-excel/",
+    "title": "CSV en una sola columna en Excel: cómo separar los datos",
+    "description": "Aprende a importar CSV en Excel eligiendo el delimitador y revisando columnas, codificación e identificadores antes de guardar.",
+    "tool": "table-file-convert",
+    "intro": "Si Excel muestra nombre;ciudad en una única celda, es posible que el delimitador del archivo no coincida con el que espera la apertura directa. Importa el archivo con vista previa antes de editar los datos.",
+    "sections": [
+      [
+        "Ejemplo y diagnóstico",
+        "Un archivo con nombre;ciudad y Ana;Bogotá usa punto y coma. Si Excel espera comas, puede mostrar cada fila en una sola columna. No reemplaces todos los signos a ciegas: un campo entre comillas puede contener el mismo separador."
+      ],
+      [
+        "Importar con control",
+        "En una versión de Excel que incluya Datos → Desde texto/CSV, selecciona el archivo, revisa la codificación y el delimitador y comprueba la vista previa. Los nombres de menús dependen de tu versión. Carga solo cuando nombre y ciudad estén separados."
+      ],
+      [
+        "Alternativa con Prisma",
+        "Abre el conversor CSV, Excel y JSON y elige XLSX como salida. El modo automático cuenta comas, punto y coma y tabulaciones en la primera fila; es una heurística, no una garantía. Comprueba las columnas resultantes y corrige el delimitador cuando sea necesario."
+      ],
+      [
+        "Evitar pérdidas",
+        "La primera fila se usa como encabezado. Evita nombres de columna duplicados y conserva una copia del CSV. Si hay códigos como 00123, importa la columna como texto en Excel; abrir directamente el CSV puede eliminar los ceros."
+      ]
+    ],
+    "faqs": [
+      [
+        "¿El problema siempre es el delimitador?",
+        "No. También puede haber comillas incorrectas, codificación incompatible o filas mal formadas. Revisa una muestra del archivo."
+      ],
+      [
+        "¿Cambiar la extensión a XLSX lo soluciona?",
+        "No. Debes importar o convertir los datos; renombrar el archivo no cambia su estructura."
+      ]
+    ],
+    "related": [
+      [
+        "/herramientas/convertir-archivos-csv-excel-json/",
+        "Convertir CSV, Excel y JSON"
+      ]
+    ],
+    "pair": null,
+    "sources": []
+  },
+  {
+    "language": "en",
+    "path": "/en/guides/keep-leading-zeros-csv-excel/",
+    "title": "Keep Leading Zeros When Importing CSV into Excel",
+    "description": "Preserve identifiers such as 00123 in Excel by importing CSV columns as text. Learn why formatting and quotation marks alone are not enough.",
+    "tool": "table-file-convert",
+    "intro": "Postal codes, product codes and account identifiers are labels, even when they contain digits. Excel may interpret them as numbers and remove leading zeros when a CSV is opened directly.",
+    "sections": [
+      [
+        "Example",
+        "A CSV containing code,name and 00123,Ana should retain 00123 as the identifier. If it becomes 123, save the original CSV before attempting any repair; the missing zeros cannot always be inferred."
+      ],
+      [
+        "Import as text",
+        "Use Data → From Text/CSV where available. In the import or transformation view, set the identifier column to Text before loading. Remove or adjust an automatic numeric type step if your Excel version adds one. Verify 00123 in the loaded cells."
+      ],
+      [
+        "CSV versus XLSX",
+        "CSV has no persistent column types. Quotation marks delimit fields but do not force Excel to keep them as text. Prisma reads CSV fields as strings when converting to XLSX; check the resulting workbook before sharing. Reopening a CSV directly can trigger type inference again."
+      ],
+      [
+        "Limits",
+        "A custom display format such as 00000 can show zeros without restoring the original identifier. Dates and long numbers can also be altered by type inference. Keep source data and check representative rows."
+      ]
+    ],
+    "faqs": [
+      [
+        "Can I recover zeros after saving as numbers?",
+        "Only if another source or a known fixed-length rule establishes the original values. Do not guess identifiers."
+      ],
+      [
+        "Does putting quotes around 00123 guarantee preservation?",
+        "No. Excel can still infer a numeric value when opening CSV. Import the column as text."
+      ]
+    ],
+    "related": [
+      [
+        "/en/tools/",
+        "Open the tool directory"
+      ]
+    ],
+    "pair": null,
+    "sources": []
+  },
+  {
+    "language": "es",
+    "path": "/guias/preparar-documentos-simo/",
+    "title": "Preparar documentos para SIMO: PDF legible y revisado",
+    "description": "Organiza documentos para SIMO con una lista de revisión, herramientas PDF y referencias oficiales. Comprueba requisitos de tu convocatoria.",
+    "tool": "pdf-merge",
+    "intro": "Para una inscripción en SIMO, consulta los documentos y condiciones de la convocatoria concreta antes de transformar archivos. Prisma ayuda a preparar PDF; no verifica requisitos de participación ni presenta la inscripción.",
+    "sections": [
+      [
+        "Verificar la convocatoria",
+        "Consulta SIMO y la Comisión Nacional del Servicio Civil. Identifica qué soporte corresponde a cada campo, el formato permitido y el límite de tamaño vigente. Fecha de revisión de esta guía: 15 de noviembre de 2026. No se establece aquí un límite universal."
+      ],
+      [
+        "Preparar un soporte",
+        "Ejemplo: un certificado de dos páginas y su reverso pertenecen al mismo soporte. Si el campo permite un único PDF, comprueba el orden y une únicamente esas páginas. No combines soportes distintos si deben cargarse por separado."
+      ],
+      [
+        "Revisar antes de cargar",
+        "Abre el PDF final, verifica nombres, fechas, firmas, sellos y legibilidad, y compara su peso con el límite del campo. Conserva los originales. La compresión estructural puede no reducir un escaneo; no sacrifiques texto legible para alcanzar un peso."
+      ],
+      [
+        "Cargar y confirmar",
+        "Realiza la carga en el portal oficial, revisa su vista previa y comprueba el estado registrado. Esta guía no garantiza aceptación ni sustituye las instrucciones oficiales."
+      ]
+    ],
+    "faqs": [
+      [
+        "¿Prisma carga mis documentos en SIMO?",
+        "No. Descargas el resultado y realizas la carga personalmente en el portal oficial."
+      ],
+      [
+        "¿Prisma garantiza cumplir el tamaño permitido?",
+        "No. El resultado depende del archivo y del límite del campo; verifica ambos antes de cargar."
+      ]
+    ],
+    "related": [
+      [
+        "/herramientas/unir-pdf/",
+        "Unir PDF"
+      ],
+      [
+        "/herramientas/comprimir-pdf/",
+        "Optimizar PDF"
+      ]
+    ],
+    "pair": null,
+    "sources": [
+      [
+        "https://simo.cnsc.gov.co/",
+        "SIMO — portal oficial"
+      ],
+      [
+        "https://www.cnsc.gov.co/",
+        "Comisión Nacional del Servicio Civil"
+      ]
+    ]
+  },
+  {
+    "language": "en",
+    "path": "/en/solutions/combine-documents-one-upload/",
+    "title": "Combine Documents for One Upload: Prepare a Reviewed PDF",
+    "description": "Prepare several PDF pages for one upload field. Check order, legibility, format and size against the specific portal requirements.",
+    "tool": "pdf-merge",
+    "intro": "Some application portals provide a single upload field for several supporting pages. For a Canadian application, first read the instructions for that exact field; accepted formats and size limits vary.",
+    "sections": [
+      [
+        "Start with the portal instructions",
+        "Check whether the field expects one combined file or separate supporting documents. For Canadian immigration applications, consult the official IRCC Help Centre and the instructions shown in your account. Do not assume every Canadian portal follows the same rules."
+      ],
+      [
+        "Combine a coherent set",
+        "Example: a three-page letter and a two-page attachment may belong in one supporting-document field. Prepare readable PDFs, arrange them in the required order and merge them. A Word file must first be converted and checked; the PDF merger does not merge arbitrary file formats."
+      ],
+      [
+        "Inspect the download",
+        "Open the combined PDF and verify all five pages, orientation, signatures and legibility. Compare its actual size with the field limit. Structural PDF optimization may save little on scans and cannot guarantee a particular upload size."
+      ],
+      [
+        "Submit in the original portal",
+        "Upload the reviewed file yourself, inspect any preview and confirm the portal reports a successful attachment. Prisma does not submit applications or guarantee acceptance."
+      ]
+    ],
+    "faqs": [
+      [
+        "Can I combine files for any Canadian portal?",
+        "Only when that portal permits a combined document. Follow the instructions for the specific service and upload field."
+      ],
+      [
+        "Will compression always meet the limit?",
+        "No. Scan-heavy PDFs may need a better source scan. Do not remove required pages or make evidence unreadable."
+      ]
+    ],
+    "related": [
+      [
+        "/en/tools/",
+        "Find PDF tools"
+      ]
+    ],
+    "pair": null,
+    "sources": [
+      [
+        "https://ircc.canada.ca/english/helpcentre/",
+        "IRCC Help Centre"
+      ]
+    ]
+  }
+]
