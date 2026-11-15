@@ -26,7 +26,7 @@ test('settings panel exposes real sections and help destinations', () => {
     assert.match(settings, new RegExp("case '" + section + "'"));
   }
   assert.match(html, /id="prisma-settings"/);
-  assert.match(html, /privacy\.html#condiciones/);
+  assert.match(html, /privacy#condiciones/);
   assert.match(html, /github\.com\/AndresYepez23\/PRISMA\/issues\/new/);
   assert.match(experience, /initPrismaSettings\(\)/);
 });

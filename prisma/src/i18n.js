@@ -15,14 +15,14 @@ const browserLanguages = Array.isArray(navigator.languages) && navigator.languag
 // must not override a visitor whose primary language is English.
 const preferredBrowserLanguage = String(browserLanguages[0] || navigator.language || 'es');
 const browserSpanish = /^es(?:-|$)/i.test(preferredBrowserLanguage);
-const routeLanguage = /^\/en(?:\/|$)/i.test(location.pathname) ? 'en' : '';
-const initialLanguage = routeLanguage || savedLanguage ||
+const routeLanguage = /^\/en(?:\/|$)/i.test(location.pathname) ? 'en' :
+  /^\/(?:herramientas|categorias|soluciones|guias)(?:\/|$)|^\/(?:privacy|acerca)(?:\.html)?$/i.test(location.pathname) ? 'es' : '';
+const requestedLanguage = new URLSearchParams(location.search).get('lang');
+const explicitLanguage = ['es','en'].includes(requestedLanguage) ? requestedLanguage : '';
+const initialLanguage = routeLanguage || explicitLanguage || savedLanguage ||
   (defaultMeta === 'en' ? 'en' : defaultMeta === 'es' ? 'es' : browserSpanish ? 'es' : 'en');
-// Put first-time English visitors on the real English URL, not a translated
-// Spanish canonical. Respect an explicit language preference already saved.
-if (location.pathname === '/' && initialLanguage === 'en') {
-  history.replaceState(history.state, '', '/en/' + location.search + location.hash);
-}
+// The neutral app may adapt its UI, but language detection must never redirect
+// visitors or crawlers. Only an explicit language switch changes the app URL.
 
 const manualTranslations = {
   'Prisma Space — Crea, convierte y experimenta': 'Prisma Space — Create, Convert, and Experiment',
@@ -157,9 +157,14 @@ const localizedPaths = new Map([
   ['/categorias/', '/en/categories/'],
   ['/soluciones/', '/en/solutions/'],
   ['/guias/', '/en/guides/'],
-  ['/privacy.html', '/en/privacy.html']
+  ['/privacy', '/en/privacy'],
+  ['/acerca', '/en/about']
 ]);
 const spanishPaths = new Map([...localizedPaths].map(([es, en]) => [en, es]));
+const publicAliases = new Map([
+  ['/privacy.html','/privacy'], ['/en/privacy.html','/en/privacy'],
+  ['/acerca.html','/acerca'], ['/en/about.html','/en/about']
+]);
 
 function translateInternalLink(anchor) {
   const href = anchor?.getAttribute?.('href');
@@ -167,7 +172,9 @@ function translateInternalLink(anchor) {
   let url;
   try { url = new URL(href, document.baseURI); } catch { return; }
   if (url.origin !== location.origin) return;
-  const target = language === 'en' ? localizedPaths.get(url.pathname) : spanishPaths.get(url.pathname);
+  const pathname = publicAliases.get(url.pathname) || url.pathname;
+  const target = (language === 'en' ? localizedPaths.get(pathname) : spanishPaths.get(pathname)) ||
+    (pathname !== url.pathname ? pathname : '');
   if (!target) return;
   const next = target + url.search + url.hash;
   if (href !== next) anchor.setAttribute('href', next);
@@ -250,7 +257,7 @@ function applyAll() {
   // The SPA switches / and /en/ without reloading. Keep its canonical and
   // Open Graph URL aligned with the selected language after every switch.
   if (location.pathname === '/' || /^\/en\/?$/i.test(location.pathname)) {
-    const appUrl = 'https://prismaspace.space' + (language === 'en' ? '/en/' : '/');
+    const appUrl = 'https://prismaspace.space' + (/^\/en\/?$/i.test(location.pathname) ? '/en/' : '/');
     const canonical = document.querySelector('link[rel="canonical"]');
     const ogUrl = document.querySelector('meta[property="og:url"]');
     if (canonical) canonical.href = appUrl;
@@ -272,12 +279,38 @@ function setLanguage(next, { persist = true } = {}) {
   }
   if (location.pathname === '/' || location.pathname === '/en/') {
     const target = next === 'en' ? '/en/' : '/';
-    if (location.pathname !== target) history.replaceState(history.state, '', target + location.search + location.hash);
+    const search = new URLSearchParams(location.search);
+    search.delete('lang');
+    const query = search.size ? '?' + search.toString() : '';
+    if (location.pathname !== target || query !== location.search) history.replaceState(history.state, '', target + query + location.hash);
   }
   applyAll();
   document.dispatchEvent(new CustomEvent('prisma:language-change', { detail: { language } }));
 }
 
+// /en/ is translated at build time too. Seed the original Spanish values once
+// so switching back still works without reloading or translating user content.
+if (root.lang === 'en') {
+  const originals = new Map(Object.entries(dictionary).map(([es, en]) => [en, es]));
+  const sourceValue = value => preserveWhitespace(value, originals.get(value.trim()) || value.trim());
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let node;
+  while ((node = walker.nextNode())) {
+    if (isSkippedText(node)) continue;
+    originalText.set(node, sourceValue(node.data));
+    lastText.set(node, node.data);
+  }
+  root.querySelectorAll('*').forEach(element => {
+    if (element.closest(SKIP_ATTRIBUTES)) return;
+    const values = new Map();
+    for (const attribute of ATTRIBUTES) {
+      if (attribute === 'content' || !element.hasAttribute(attribute)) continue;
+      values.set(attribute, sourceValue(element.getAttribute(attribute)));
+    }
+    originalAttributes.set(element, values);
+    lastAttributes.set(element, new Map([...values.keys()].map(attribute => [attribute, element.getAttribute(attribute)])));
+  });
+}
 applyAll();
 
 const observer = new MutationObserver(records => {

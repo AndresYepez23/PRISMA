@@ -39,11 +39,11 @@ function shell(title, description, url, schema, main) {
     '</head>',
     '<body class="seo-page">',
     '<header class="seo-header"><div class="seo-header-inner">',
-    '<a class="seo-brand" href="/" aria-label="Volver a Prisma Space"><img src="/assets/prisma-mark.svg" alt="" width="36" height="36"><span><strong>Prisma Space</strong><small>ECOSISTEMA DIGITAL</small></span></a>',
+    '<a class="seo-brand" href="/?lang=es" aria-label="Volver a Prisma Space"><img src="/assets/prisma-mark.svg" alt="" width="36" height="36"><span><strong>Prisma Space</strong><small>ECOSISTEMA DIGITAL</small></span></a>',
     '<nav class="seo-nav" aria-label="Navegación principal"><a href="/categorias/">Categorías</a><a href="/guias/">Guías</a><a href="/soluciones/">Soluciones</a><a href="/herramientas/">Herramientas</a><button id="seo-theme" type="button" aria-label="Cambiar tema">◐ <span>Tema</span></button></nav>',
     '</div></header>',
     main,
-    '<footer class="seo-footer"><div><a href="/">Prisma Space</a><span>Herramientas con intención.</span></div><nav aria-label="Enlaces del pie de página"><a href="/herramientas/">Herramientas</a><a href="/categorias/">Categorías</a><a href="/soluciones/">Soluciones</a><a href="/guias/">Guías</a><a href="/privacy.html#privacidad">Privacidad y uso</a></nav></footer>',
+    '<footer class="seo-footer"><div><a href="/?lang=es">Prisma Space</a><span>Herramientas con intención.</span></div><nav aria-label="Enlaces del pie de página"><a href="/herramientas/">Herramientas</a><a href="/categorias/">Categorías</a><a href="/soluciones/">Soluciones</a><a href="/guias/">Guías</a><a href="/acerca">Acerca de</a><a href="/privacy#privacidad">Privacidad y uso</a></nav></footer>',
     '<script>(function(){ const button = document.getElementById("seo-theme"); if(!button) return; button.addEventListener("click", function(){ const next = document.documentElement.dataset.theme === "light" ? "dark" : "light"; document.documentElement.dataset.theme = next; try {localStorage.setItem("prisma-theme", next);}catch{} const meta=document.querySelector("meta[name=theme-color]");if(meta)meta.content=next==="light"?"#f3f7fc":"#0e121d"; }); })();</script>',
     '</body>',
     '</html>',
@@ -79,7 +79,7 @@ function infoCards(items, className) {
 
 function toolHref(toolId, pageByTool) {
   const page = pageByTool.get(toolId);
-  return page ? '/herramientas/' + page.slug + '/' : '/?tool=' + encodeURIComponent(toolId);
+  return page ? '/herramientas/' + page.slug + '/' : '/?tool=' + encodeURIComponent(toolId) + '&lang=es';
 }
 
 function toolCards(ids, pageByTool, covered, limit) {
@@ -151,7 +151,7 @@ function categoryPage(category, seoPages, pageByTool, covered, categoryLookup, s
     mainEntity:{'@type':'ItemList',itemListElement:selectedPages.slice(0,60).map((page,index)=>({'@type':'ListItem',position:index+1,name:page.h1,url:base+'/herramientas/'+page.slug+'/'}))}
   };
   const main = '<main class="seo-main">' +
-    breadcrumb([{name:'Inicio',href:'/'},{name:'Categorías',href:'/categorias/'},{name:category.name}]) +
+    breadcrumb([{name:'Inicio',href:'/?lang=es'},{name:'Categorías',href:'/categorias/'},{name:category.name}]) +
     '<section class="seo-directory-hero"><div class="seo-eyebrow"><i></i>CATEGORÍA · PRISMA SPACE</div><h1>' + esc(category.h1) + '</h1><p>' + esc(category.intro) + '</p></section>' +
     cards +
     '<section class="seo-category seo-hub-section" id="herramientas"><div class="seo-section-label">CATÁLOGO DISPONIBLE</div><h2>Explora ' + selectedPages.length + ' herramientas y operaciones</h2><p class="seo-hub-copy">Cada ficha explica el resultado esperado, los pasos y las limitaciones de la operación. Las funciones beta se identifican antes de abrirlas.</p>' +
@@ -175,7 +175,7 @@ function solutionPage(solution, pageByTool, covered, categoryLookup, guideLookup
   }).join('\n') + '</ol>';
   const schema = {'@context':'https://schema.org','@type':'WebPage',name:solution.h1,description:solution.description,url,inLanguage:'es'};
   const main = '<main class="seo-main">' +
-    breadcrumb([{name:'Inicio',href:'/'},{name:'Soluciones',href:'/soluciones/'},{name:solution.h1}]) +
+    breadcrumb([{name:'Inicio',href:'/?lang=es'},{name:'Soluciones',href:'/soluciones/'},{name:solution.h1}]) +
     '<section class="seo-directory-hero"><div class="seo-eyebrow"><i></i>SOLUCIÓN · PRISMA SPACE</div><h1>' + esc(solution.h1) + '</h1><p>' + esc(solution.intro) + '</p></section>' +
     '<section class="seo-panel seo-workflow-panel"><div class="seo-section-label">RECORRIDO RECOMENDADO</div><h2>Resuelve la tarea paso a paso</h2>' + steps + '</section>' +
     '<section class="seo-related"><div class="seo-section-label">HERRAMIENTAS DEL RECORRIDO</div><h2>Abre la operación que necesitas</h2>' + toolCards(solution.toolIds,pageByTool,covered) + '</section>' +
@@ -206,7 +206,7 @@ function guidePage(guide, pageByTool, covered, solutionLookup, base) {
     step:guide.steps.map((step,index)=>({'@type':'HowToStep',position:index+1,name:step.title,text:step.body,url:base+toolHref(step.toolId,pageByTool)}))
   };
   const main = '<main class="seo-main">' +
-    breadcrumb([{name:'Inicio',href:'/'},{name:'Guías',href:'/guias/'},{name:guide.h1}]) +
+    breadcrumb([{name:'Inicio',href:'/?lang=es'},{name:'Guías',href:'/guias/'},{name:guide.h1}]) +
     '<section class="seo-directory-hero"><div class="seo-eyebrow"><i></i>GUÍA PRÁCTICA · PRISMA SPACE</div><h1>' + esc(guide.h1) + '</h1><p>' + esc(guide.intro) + '</p><div class="seo-actions"><a class="seo-cta" href="' + esc('/herramientas/'+guide.primaryPageSlug+'/') + '">Abrir herramienta relacionada <span aria-hidden="true">↗</span></a><a class="seo-subtle" href="#pasos">Ver pasos ↓</a></div></section>' +
     article +
     '<section class="seo-related" id="pasos"><div class="seo-section-label">PASO A PASO</div><h2>Cómo hacerlo en Prisma Space</h2>' + steps + '</section>' +
@@ -227,7 +227,7 @@ function hubIndex(kind, title, description, url, items, prefix, kicker) {
   }));
   const schema = {'@context':'https://schema.org','@type':'CollectionPage',name:title,description,url,inLanguage:'es',numberOfItems:items.length};
   const main = '<main class="seo-main">' +
-    breadcrumb([{name:'Inicio',href:'/'},{name:kind.charAt(0)+kind.slice(1).toLowerCase()}]) +
+    breadcrumb([{name:'Inicio',href:'/?lang=es'},{name:kind.charAt(0)+kind.slice(1).toLowerCase()}]) +
     '<section class="seo-directory-hero"><div class="seo-eyebrow"><i></i>' + esc(kind) + ' · PRISMA SPACE</div><h1>' + esc(title) + '</h1><p>' + esc(description) + '</p></section>' +
     infoCards(cards,'seo-hub-grid') +
     '<section class="seo-hub-crosslinks"><a href="/categorias/">Categorías</a><a href="/soluciones/">Soluciones</a><a href="/guias/">Guías paso a paso</a><a href="/herramientas/">Todas las herramientas</a></section>' +

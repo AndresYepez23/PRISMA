@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, stat, readdir } from 'node:fs/promises';
 import { SEO_BASE } from '../seo/config.mjs';
 
 const root=new URL('../',import.meta.url);
@@ -8,6 +8,8 @@ const dist=new URL('../dist/',import.meta.url);
 const readSource=path=>readFile(new URL(path,root),'utf8');
 const readOutput=path=>readFile(new URL(path,dist),'utf8');
 const sourcePages=JSON.parse(await readSource('seo/pages.json')).pages;
+const registrySource=await readSource('src/registry.js');
+const toolMode=new Map([...registrySource.matchAll(/\{\s*id:\s*'([^']+)'[^}]*mode:\s*'([^']+)'/g)].map(match=>[match[1],match[2]]));
 const pages=JSON.parse(await readSource('seo/pages.en.json')).pages;
 const sourceCategories=JSON.parse(await readSource('seo/content-categories.json')).categories;
 const sourceSolutions=JSON.parse(await readSource('seo/content-solutions.json')).solutions;
@@ -17,6 +19,13 @@ const sitemap=await readOutput('sitemap.xml');
 const urls=[...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map(match=>match[1]);
 const decode=value=>value.replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>');
 const alt=(html,language)=>html.includes('hreflang="'+language+'"');
+const attributes=tag=>Object.fromEntries([...tag.matchAll(/([\w:-]+)="([^"]*)"/g)].map(([,key,value])=>[key,decode(value)]));
+const documentPath=url=>{
+ const path=new URL(url).pathname;
+ return path.slice(1)+(path.endsWith('/')?'index.html':/\.[a-z]+$/i.test(path)?'':'.html');
+};
+const documents=new Map(await Promise.all(urls.map(async url=>[url,await readOutput(documentPath(url))])));
+const assetPaths=new Set((await readdir(dist,{recursive:true})).map(path=>'/'+path));
 
 test('English catalogue has a one-to-one mapping to every Spanish tool page',()=>{
  assert.equal(pages.length,sourcePages.length);
@@ -71,6 +80,9 @@ test('all English tool landings are crawlable, canonical, translated and connect
   assert.equal(schema[0].url,canonical);
   assert.ok(html.includes('href="/en/tools/"'));
   assert.ok(html.includes('class="seo-cta"'));
+  const mode=toolMode.get(page.tool);
+  assert.ok(mode,'missing mode for '+page.tool);
+  if(!['local','browser'].includes(mode)) { assert.ok(html.includes('CONNECTED SERVICE'),page.englishSlug); assert.ok(!html.includes('>FREE<'),page.englishSlug); }
   assert.ok(html.includes('class="seo-steps"'));
   assert.ok((html.match(/<details>/g)||[]).length>=2);
   assert.ok(urls.includes(canonical),'English tool page missing from sitemap');
@@ -125,20 +137,34 @@ test('English app shell and legal page use English metadata and provide a Spanis
  assert.equal(manifest.id,'/en/');
  assert.match(manifest.name,/Your AI workspace/);
  assert.match(app,/<meta name="prisma-default-language" content="en">/);
- assert.match(app,/<title>Prisma Space — Create, convert and explore<\/title>/);
+  assert.match(app,/<title>Prisma Space — Create, Convert, and Experiment<\/title>/);
  assert.match(app,/<link rel="canonical" href="https:\/\/prismaspace\.space\/en\/">/);
  assert.match(app,/<script type="module" src="\.\/src\/i18n\.js"><\/script>/);
  assert.match(app,/<base href="\/">/);
  const legal=await readOutput('en/privacy.html');
  assert.match(legal,/<html lang="en"/);
  assert.match(legal,/<title>Privacy and Terms \| Prisma Space<\/title>/);
- assert.ok(legal.includes('href="/privacy.html"'));
+ assert.ok(legal.includes('href="/privacy"'));
  assert.ok(urls.includes(SEO_BASE+'/en/'));
- assert.ok(urls.includes(SEO_BASE+'/en/privacy.html'));
+ assert.ok(urls.includes(SEO_BASE+'/en/privacy'));
+ const about=await readOutput('en/about.html');
+ const spanishAbout=await readOutput('acerca.html');
+ assert.match(about,/<html lang="en"/);
+ assert.ok(about.includes('About Prisma Space'));
+ assert.ok(spanishAbout.includes('Acerca de Prisma Space'));
+ assert.ok(urls.includes(SEO_BASE+'/acerca'));
+ assert.ok(urls.includes(SEO_BASE+'/en/about'));
+ assert.ok(legal.includes('Google AdSense'));
+ assert.ok(legal.includes('Supabase Auth'));
+ const spanishLegal=await readOutput('privacy.html');
+ assert.ok(spanishLegal.includes('Google AdSense'));
+ assert.ok(spanishLegal.includes('Supabase Auth'));
+ for (const page of [about,spanishAbout,legal,spanishLegal]) assert.ok(page.includes('proyectosmetas25@gmail.com'));
+ for (const page of [about,spanishAbout,legal,spanishLegal]) assert.ok(page.includes('mailto:proyectosmetas25@gmail.com'));
 });
 
 test('bilingual sitemap exposes paired alternates for every published page',async()=>{
- const spanishCount=sourcePages.length+3+sourceCategories.length+sourceSolutions.length+sourceGuides.length+3;
+ const spanishCount=sourcePages.length+4+sourceCategories.length+sourceSolutions.length+sourceGuides.length+3;
  assert.equal(urls.length,spanishCount*2);
  assert.equal(new Set(urls).size,urls.length);
  assert.match(sitemap,/xmlns:xhtml="http:\/\/www\.w3\.org\/1999\/xhtml"/);
@@ -155,18 +181,112 @@ test('bilingual sitemap exposes paired alternates for every published page',asyn
  assert.ok(robots.includes('Sitemap: '+SEO_BASE+'/sitemap.xml'));
 });
 
+test('every public page has reciprocal language URLs, coherent metadata and matching structured data',()=>{
+ const titles=new Set(),descriptions=new Set();
+ for(const entry of sitemap.matchAll(/<url>([\s\S]*?)<\/url>/g)) {
+  const url=decode(entry[1].match(/<loc>(.*?)<\/loc>/)[1]);
+  const html=documents.get(url),language=new URL(url).pathname.startsWith('/en/')?'en':'es';
+  const expected=Object.fromEntries([...entry[1].matchAll(/<xhtml:link[^>]+>/g)].map(([tag])=>{const a=attributes(tag);return [a.hreflang,a.href];}));
+  assert.match(html,new RegExp('<html lang="'+language+'"'),url);
+  const tags=[...html.matchAll(/<(?:link|meta)\b[^>]*>/g)].map(([tag])=>attributes(tag));
+  assert.equal(tags.find(a=>a.rel==='canonical')?.href,url,url);
+  const alternates=tags.filter(a=>a.rel==='alternate'&&a.hreflang);
+  assert.equal(alternates.length,3,url);
+  for(const locale of ['es','en','x-default']) {
+   assert.equal(alternates.find(a=>a.hreflang===locale)?.href,expected[locale],url+' '+locale);
+   assert.ok(documents.has(expected[locale]),'Missing alternate '+expected[locale]);
+   const reciprocal=[...documents.get(expected[locale]).matchAll(/<link\b[^>]*hreflang="[^"]+"[^>]*>/g)].map(([tag])=>attributes(tag));
+   assert.equal(reciprocal.find(a=>a.hreflang===language)?.href,url,url+' reciprocal '+locale);
+  }
+  assert.equal(expected['x-default'],expected.es,url);
+  const title=decode(html.match(/<title>(.*?)<\/title>/s)?.[1]||'');
+  const description=tags.find(a=>a.name==='description')?.content;
+  assert.ok(title&&description,url+' missing metadata');
+  assert.ok(!titles.has(title),'Duplicate title '+title);titles.add(title);
+  assert.ok(!descriptions.has(description),'Duplicate description '+description);descriptions.add(description);
+  assert.equal(tags.find(a=>a.property==='og:locale')?.content,language==='en'?'en_US':'es_ES',url);
+  assert.equal(tags.find(a=>a.property==='og:url')?.content,url,url);
+  assert.equal(tags.find(a=>a.property==='og:title')?.content,title,url);
+  const checkSchema=value=>{
+   if(!value||typeof value!=='object')return;
+   if(value.inLanguage)assert.equal(value.inLanguage,language,url);
+   Object.values(value).forEach(checkSchema);
+  };
+  for(const [,json] of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g))checkSchema(JSON.parse(json));
+ }
+});
+
+test('canonical and sitemap URLs match Cloudflare clean URLs while HTML files remain build artifacts',()=>{
+ for(const url of urls)assert.ok(!new URL(url).pathname.endsWith('.html'),'Cloudflare redirects this canonical URL: '+url);
+ for(const path of ['/privacy','/en/privacy','/acerca','/en/about']) {
+  assert.ok(documents.has(SEO_BASE+path));
+  assert.ok(assetPaths.has(path+'.html'),'Missing physical HTML for '+path);
+ }
+});
+
+test('all public navigation, assets and fragments exist and keep their locale except equivalent language links',()=>{
+ const clean=html=>html.replace(/(<(script|style)\b[^>]*>)[\s\S]*?<\/\2>/gi,'$1</$2>');
+ for(const [url,html] of documents) {
+  const language=new URL(url).pathname.startsWith('/en/')?'en':'es';
+  const base=new URL(html.match(/<base href="([^"]+)"/)?.[1]||url,url);
+  const equivalents=new Set([...html.matchAll(/<link[^>]*hreflang="(?:es|en|x-default)"[^>]*>/g)].map(([tag])=>attributes(tag).href));
+  for(const [tag] of clean(html).matchAll(/<(?:a|link|script|img)\b[^>]*>/g)) {
+   const a=attributes(tag),href=a.href||a.src;
+   if(!href)continue;
+   const target=new URL(href,base);
+   if(target.origin!==SEO_BASE)continue;
+   assert.ok(!/\/en\/en\//.test(target.pathname),href);
+   const destination=target.origin+target.pathname;
+   if(documents.has(destination)) {
+    if(/^<a\b/.test(tag)) {
+     const targetLanguage=target.pathname.startsWith('/en/')?'en':'es';
+     assert.ok(language===targetLanguage||equivalents.has(destination),url+' mixes language at '+href);
+     if(language==='es'&&new URL(url).pathname!=='/'&&target.pathname==='/')assert.equal(target.searchParams.get('lang'),'es',url+' loses Spanish at '+href);
+    }
+    if(target.hash)assert.ok(documents.get(destination).includes('id="'+decodeURIComponent(target.hash.slice(1))+'"'),url+' missing fragment '+href);
+   } else {
+    // Check actual files, including scripts and icons, below the build output.
+    assert.ok(!target.pathname.endsWith('/'),url+' missing route '+href);
+    assert.ok(assetPaths.has(target.pathname),url+' missing asset '+href);
+   }
+  }
+ }
+});
+
+test('rendered English content and labels contain no Spanish UI and Spanish pages keep Spanish instructions',()=>{
+ for(const [url,html] of documents) {
+  const visible=decode(html.replace(/<(script|style|code|pre)\b[^>]*>[\s\S]*?<\/\1>/gi,'').replace(/<[^>]*>/g,' '));
+  const labels=[...html.matchAll(/\b(?:placeholder|title|aria-label|alt)="([^"]*)"/g)].map(m=>decode(m[1])).join(' ');
+  if(new URL(url).pathname.startsWith('/en/')) {
+   assert.doesNotMatch(visible+' '+labels,/\b(?:herramientas?|archivos?|convierte|páginas|imágenes|privacidad|guías|categorías|procesamiento|contraseña|disponibles|soluciones)\b/i,url);
+  } else {
+   assert.doesNotMatch(visible,/\b(?:Open tool|How to use this tool|Before you start|Frequently asked questions|Connected service|Local processing)\b/i,url);
+  }
+ }
+});
+
+test('PDF to Word publishes the complete article, instructions and FAQ in both languages',()=>{
+ for(const [records,prefix,slugKey] of [[sourcePages,'/herramientas/','slug'],[pages,'/en/tools/','englishSlug']]) {
+  const page=records.find(p=>p.tool==='pdf-to-word');
+  const html=documents.get(SEO_BASE+prefix+page[slugKey]+'/');
+  for(const value of [page.h1,page.intro,page.details,page.tip,...page.steps,...page.faqs.flat()]) {
+   assert.ok(decode(html).includes(value),prefix+' missing translated content: '+value);
+  }
+ }
+});
+
 test('legal navigation uses complete localized labels and separates the language selector',async()=>{
  const spanish=await readOutput('privacy.html');
  const english=await readOutput('en/privacy.html');
  assert.match(spanish,/<html lang="es"/);
  assert.match(spanish,/← Volver a Prisma Space<\/a>/);
- assert.match(spanish,/<div class="legal-language-options"><a href="\/en\/privacy\.html"[^>]*>Ver esta página en inglés<\/a><\/div>/);
+ assert.match(spanish,/<div class="legal-language-options"><a href="\/en\/privacy"[^>]*>Ver esta página en inglés<\/a><\/div>/);
  assert.doesNotMatch(spanish,/<a class="back"[^>]*>[^<]*<\/a>\s*<a[^>]*>English<\/a>/);
  assert.match(english,/← Return to Prisma Space<\/a>/);
- assert.match(english,/<div class="legal-language-options"><a href="\/privacy\.html"[^>]*>View this page in Spanish<\/a><\/div>/);
+ assert.match(english,/<div class="legal-language-options"><a href="\/privacy"[^>]*>View this page in Spanish<\/a><\/div>/);
  assert.match(english,/aria-label="Sections on this page"/);
  assert.doesNotMatch(english,/aria-label="Secciones de esta página"/);
- assert.match(spanish,/rel="canonical" href="https:\/\/prismaspace\.space\/privacy\.html"/);
+ assert.match(spanish,/rel="canonical" href="https:\/\/prismaspace\.space\/privacy"/);
 });
 
 test('SEO navigation labels are in the page language across both catalogues',async()=>{
