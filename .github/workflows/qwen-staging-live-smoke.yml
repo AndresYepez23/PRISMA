@@ -1,0 +1,72 @@
+name: Qwen staging live interpreter smoke
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  qwen-live-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check isolated staging readiness without inference
+        env:
+          QWEN_STAGING_URL: https://0d467fde.prisma-queen-staging.pages.dev
+        run: |
+          set -euo pipefail
+          ready=false
+          for attempt in $(seq 1 18); do
+            if curl --silent --show-error --max-time 10 \
+              "$QWEN_STAGING_URL/api/core/qwen-interpret" \
+              --output "$RUNNER_TEMP/qwen-ready.json"; then
+              if node --input-type=module -e "import fs from 'node:fs';const r=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+'/qwen-ready.json','utf8'));if(r.ready!==true)process.exit(1);"; then
+                ready=true
+                break
+              fi
+            fi
+            sleep 5
+          done
+          test "$ready" = true
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const readiness=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/qwen-ready.json','utf8'));
+          console.log(JSON.stringify({ready:true,deploymentCommit:readiness.deploymentCommit||null}));
+          NODE
+      - name: Run exactly one real Qwen interpretation, with no retry
+        env:
+          QWEN_STAGING_URL: https://0d467fde.prisma-queen-staging.pages.dev
+        run: |
+          set -euo pipefail
+          status=$(curl --silent --show-error --max-time 45 \
+            --request POST \
+            --header "Origin: $QWEN_STAGING_URL" \
+            --header 'Content-Type: application/json' \
+            --data '{"text":"Extrae la segunda página del PDF y conviértela a Word","files":[{"name":"informe.pdf","type":"application/pdf","size":1250}]}' \
+            --output "$RUNNER_TEMP/qwen-result.json" \
+            --write-out '%{http_code}' \
+            "$QWEN_STAGING_URL/api/core/qwen-interpret")
+          QWEN_HTTP_STATUS="$status" node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const status=Number(process.env.QWEN_HTTP_STATUS);
+          let result={};try{result=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/qwen-result.json','utf8'));}catch{}
+          const ids=result.tool_ids||[];
+          const ok=status===200&&result.ok===true&&result.source==='qwen-core'&&result.intent==='tools'&&
+            ids.indexOf('pdf-extract')>=0&&ids.indexOf('pdf-to-word')>ids.indexOf('pdf-extract')&&
+            result.metrics?.inferences===1;
+          const evidence={httpStatus:status,ok:result.ok===true,source:result.source||null,intent:result.intent||null,
+            toolIds:ids,metrics:result.metrics||null,deploymentCommit:result.deploymentCommit||null};
+          console.log(JSON.stringify(evidence));
+          if(!ok)throw Error('REAL_QWEN_INTERPRETATION_ACCEPTANCE_FAILED');
+          NODE
+      - name: Preserve sanitized live evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen-staging-live-smoke
+          path: |
+            ${{ runner.temp }}/qwen-ready.json
+            ${{ runner.temp }}/qwen-result.json
+          if-no-files-found: ignore

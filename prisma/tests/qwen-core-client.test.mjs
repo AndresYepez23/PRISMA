@@ -21,17 +21,38 @@ test('the browser sends only file metadata, not document bytes or secrets',async
  assert.equal(JSON.stringify(body).includes('NEVER_SEND_THIS'),false);
  assert.deepEqual(r.tool_ids,['pdf-extract','pdf-to-word']);
 });
-test('a disabled Qwen interpreter is cached and does not block the ordinary fallback',async()=>{
- resetQwenCoreDisabledForTest();let called=0;
- const opts={fetchImpl:async()=>{called++;return new Response(JSON.stringify({ok:false,available:false,fallback:true}),{status:200});}};
+test('a disabled Qwen interpreter uses a bounded cooldown, then can recover without reloading',async()=>{
+ resetQwenCoreDisabledForTest();let called=0,clock=1000;
+ const opts={now:()=>clock,fetchImpl:async()=>{called++;return new Response(JSON.stringify({ok:false,available:false,fallback:true}),{status:200});}};
  assert.equal(await requestQwenCoreInterpretation({text:'Revisa este PDF'},opts),null);
  assert.equal(await requestQwenCoreInterpretation({text:'Otra petición'},opts),null);
- assert.equal(called,1);resetQwenCoreDisabledForTest();
+ assert.equal(called,1);
+ clock+=30001;
+ assert.equal(await requestQwenCoreInterpretation({text:'Revisa un nuevo PDF'},opts),null);
+ assert.equal(called,2);resetQwenCoreDisabledForTest();
 });
-test('invalid or unsuccessful remote hints never become executable plans',async()=>{
+test('transient interpreter failures back off without automatic retries',async()=>{
+ resetQwenCoreDisabledForTest();let called=0,clock=5000;
+ const opts={now:()=>clock,fetchImpl:async()=>{called++;return new Response('',{status:503});}};
+ assert.equal(await requestQwenCoreInterpretation({text:'Extrae páginas'},opts),null);
+ assert.equal(await requestQwenCoreInterpretation({text:'Otra extracción'},opts),null);
+ assert.equal(called,1);
+ clock+=30001;
+ assert.equal(await requestQwenCoreInterpretation({text:'Nueva tarea'},opts),null);
+ assert.equal(called,2);resetQwenCoreDisabledForTest();
+});
+test('Qwen may return up to eight grounded tool IDs but never more',async()=>{
  resetQwenCoreDisabledForTest();
- const result=await requestQwenCoreInterpretation({text:'Convertir PDF'},{fetchImpl:async()=>new Response(JSON.stringify({ok:true,source:'qwen-core',intent:'tools',tool_ids:['one','two','three','four']}))});
- assert.equal(result,null);
+ const ids=['pdf-extract','image-ocr','text-replace','csv-json','json-xlsx','file-verify','file-rename','zip-create'];
+ const accepted=await requestQwenCoreInterpretation({text:'Organiza esta cadena de herramientas'},{fetchImpl:async()=>new Response(JSON.stringify({ok:true,source:'qwen-core',intent:'tools',tool_ids:ids}))});
+ assert.deepEqual(accepted.tool_ids,ids);
+ const rejected=await requestQwenCoreInterpretation({text:'Una cadena demasiado larga'},{fetchImpl:async()=>new Response(JSON.stringify({ok:true,source:'qwen-core',intent:'tools',tool_ids:[...ids,'shell']}))});
+ assert.equal(rejected,null);
+});
+test('an uncertain network outcome is not automatically replayed',async()=>{
+ resetQwenCoreDisabledForTest();let called=0;
+ const result=await requestQwenCoreInterpretation({text:'Interpreta este archivo'},{fetchImpl:async()=>{called++;throw Error('connection reset');}});
+ assert.equal(result,null);assert.equal(called,1);
 });
 
 test('the scanned-CSV candidate is restricted to stated PDF/CSV/Excel semantics; it does not open general neural planning',()=>{
