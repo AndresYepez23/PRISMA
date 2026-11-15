@@ -42,6 +42,7 @@ import { describeCoreModel, isCoreChatModel, suggestedCoreModel, displayedConver
 const $ = (selector, root=document) => root.querySelector(selector);
 const STORAGE_KEY = 'prisma-core-workspace-v1';
 const CHATS_KEY = 'prisma-core-chats-v2';
+let websitePreviewSequence=0;
 let conversations = [];
 let activeConversationId = '';
 let conversationSearch = '';
@@ -2602,7 +2603,20 @@ function createExecutionResults(executed,partial){
         const previewButton=document.createElement('button');previewButton.type='button';
         previewButton.className='mini-button';previewButton.textContent='Vista previa de la web';
         previewButton.setAttribute('aria-expanded','false');
-        const panel=document.createElement('div');panel.className='core-website-preview hidden';
+        const panel=document.createElement('section');
+        panel.id='core-website-preview-'+(++websitePreviewSequence);
+        panel.className='core-website-preview hidden';
+        panel.setAttribute('role','dialog');
+        panel.setAttribute('aria-modal','true');
+        panel.setAttribute('aria-label','Vista previa de tu entrega');
+        previewButton.setAttribute('aria-controls',panel.id);
+        const toolbar=document.createElement('header');toolbar.className='core-website-preview-header';
+        const previewTitle=document.createElement('strong');previewTitle.textContent='Vista previa de tu entrega';
+        const closeButton=document.createElement('button');closeButton.type='button';
+        closeButton.className='core-website-preview-close';
+        closeButton.setAttribute('aria-label','Cerrar vista previa');
+        closeButton.textContent='× Cerrar';
+        toolbar.append(previewTitle,closeButton);
         const frame=document.createElement('iframe');frame.className='core-website-frame';
         frame.title='Vista previa aislada del prototipo web';frame.loading='lazy';
         frame.setAttribute('sandbox','allow-scripts');
@@ -2610,13 +2624,40 @@ function createExecutionResults(executed,partial){
         // download is the original self-contained HTML.
         const csp='<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; base-uri \'none\'; form-action \'none\'; script-src \'unsafe-inline\'; style-src \'unsafe-inline\'; img-src data: blob:; font-src data:; connect-src \'none\'">';
         frame.srcdoc=String(result.previewHtml).replace(/<head\b[^>]*>/i,head=>head+csp);
-        panel.append(frame);
+        panel.append(toolbar,frame);
+        const closePreview=()=>{
+          panel.classList.add('hidden');
+          panel.remove();
+          previewButton.setAttribute('aria-expanded','false');
+          previewButton.textContent='Vista previa de la web';
+          document.removeEventListener('keydown',handlePreviewKeydown,true);
+          if(!document.querySelector('.core-website-preview:not(.hidden)'))
+            document.body.classList.remove('core-website-preview-open');
+          if(previewButton.isConnected){
+            try{previewButton.focus({preventScroll:true});}catch{previewButton.focus();}
+          }
+        };
+        const handlePreviewKeydown=event=>{
+          if(event.key==='Escape'){event.preventDefault();closePreview();}
+        };
+        const openPreview=()=>{
+          document.querySelectorAll('.core-website-preview:not(.hidden) .core-website-preview-close')
+            .forEach(otherClose=>{if(otherClose!==closeButton)otherClose.click();});
+          document.body.append(panel);
+          panel.classList.remove('hidden');
+          document.body.classList.add('core-website-preview-open');
+          previewButton.setAttribute('aria-expanded','true');
+          previewButton.textContent='Cerrar vista previa';
+          document.addEventListener('keydown',handlePreviewKeydown,true);
+          closeButton.focus({preventScroll:true});
+        };
         previewButton.addEventListener('click',()=>{
-          const visible=panel.classList.toggle('hidden')===false;
-          previewButton.setAttribute('aria-expanded',String(visible));
-          previewButton.textContent=visible?'Cerrar vista previa':'Vista previa de la web';
+          if(panel.isConnected&&!panel.classList.contains('hidden'))closePreview();
+          else openPreview();
         });
-        card.append(previewButton,panel);
+        closeButton.addEventListener('click',closePreview);
+        panel.addEventListener('click',event=>{if(event.target===panel)closePreview();});
+        card.append(previewButton);
       }
       const row=document.createElement('div');row.className='core-result-download';
       const label=document.createElement('span');label.setAttribute('data-user-content','');label.textContent=result.filename||'Archivo generado';
