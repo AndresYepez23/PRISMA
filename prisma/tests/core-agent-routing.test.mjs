@@ -899,7 +899,9 @@ const connectionsSource=(readFileSync(new URL('../src/main.js',import.meta.url),
 assert.match(connectionsSource,/central\.imageUsage\?\.\[provider\]/);
 assert.match(connectionsSource,/cloudflare-image-usage/);
 assert.match(connectionsSource,/pollinations-image-usage/);
-assert.match(connectionsSource,/const count=Object\.values\(central\.providers\|\|\{\}\)\.filter\(Boolean\)\.length/);
+assert.match(connectionsSource,/const hiddenProviders=new Set\(\['requesty','huggingface'\]\)/);
+assert.match(connectionsSource,/Object\.entries\(central\.providers\|\|\{\}\)\.filter\(\(\[provider,enabled\]\)=>enabled&&!hiddenProviders\.has\(provider\)\)\.length/);
+assert.match(connectionsSource,/visibleCredentials=Object\.entries\(central\.credentialSlots\|\|\{\}\)/);
 
 
 // Core 4: bounded API budget, no hidden personal credits, and observable usage.

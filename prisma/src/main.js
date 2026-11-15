@@ -370,13 +370,6 @@ function pollinationsAuthFields(){
   return '<div class="provider-config" id="polli-config"><div class="provider-modal-status"><span id="polli-modal-status">Pollinations: no conectado</span><button type="button" class="mini-button" id="open-ai-settings">Configurar conexión</button></div><small>Conecta tu cuenta una sola vez desde el Laboratorio IA. La autorización y el presupuesto son personales.</small></div>';
 }
 
-function huggingFaceAuthFields(){
-  return '<div class="provider-config hidden" id="hf-config">'+
-    field('Token personal de Hugging Face','hfToken','password','','Necesita permiso Inference Providers. <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener">Crear token</a>. No se guarda en Prisma Space.','autocomplete="off" spellcheck="false"')+
-    '<div class="tool-hint">Importante: las cuentas Free no incluyen créditos mensuales de Inference Providers. Hugging Face PRO incluye USD 2 mensuales; el consumo adicional puede ser de pago.</div>'+
-  '</div>';
-}
-
 function setupApiExplorer(){
   const preset=$('#field-preset'),url=$('#field-url');
   const examples={
@@ -428,20 +421,17 @@ function renderProviderConnections(){
   const container=$('#provider-connect-grid');if(!container)return;
   const configs=[
     {id:'gemini',name:'Google Gemini',summary:'Razonamiento, chat y análisis de texto',detail:'Motor central de Prisma. Admite hasta seis claves protegidas, con rotación entre credenciales y cuotas compartidas por proyecto.',secretName:'GEMINI_API_KEYS_JSON',usageId:'gemini-image-usage',shared:true},
-    {id:'huggingface',name:'Hugging Face',summary:'Modelos abiertos y proveedores de inferencia',detail:'Motor compartido mediante Inference Providers. Admite hasta seis tokens. La cuenta gratuita de Hugging Face incluye crédito mensual limitado; Prisma conserva límites compartidos y no activa recargas automáticas.',secretName:'HF_API_KEYS_JSON',usageId:'huggingface-image-usage',shared:true},
     {id:'groq',name:'Groq',summary:'Inferencia rápida y modelos de lenguaje',detail:'Admite hasta seis claves Groq. Prisma distribuye solicitudes entre las claves sanas, pero mantiene los límites internos y la cuota del proyecto compartidos.',secretName:'GROQ_API_KEYS_JSON',shared:true},
-    {id:'openrouter',name:'OpenRouter',summary:'Respaldo automático de Prisma Core · OpenRouter Free Router',detail:'Último motor de respaldo de texto: solo se intenta después de que Gemini, Groq, Cloudflare, Pollinations y Hugging Face no puedan responder. Admite hasta seis claves y usa openrouter/free para seleccionar automáticamente un modelo gratuito disponible; no enruta a modelos de pago.',secretName:'OPENROUTER_API_KEYS_JSON',usageId:'openrouter-usage',shared:true},
+    {id:'openrouter',name:'OpenRouter',summary:'Respaldo automático de Prisma Core · OpenRouter Free Router',detail:'Último motor de respaldo de texto: se intenta cuando los motores principales no pueden responder. Admite hasta seis claves y usa openrouter/free para seleccionar automáticamente un modelo gratuito disponible; no enruta a modelos de pago.',secretName:'OPENROUTER_API_KEYS_JSON',usageId:'openrouter-usage',shared:true},
     {id:'cloudflare',name:'Cloudflare Workers AI',summary:'Gemma 4, Llama y FLUX.1 Schnell',detail:'Motor directo integrado en Cloudflare. Generación de texto e imágenes con asignación gratuita diaria y límites propios de Prisma.',bindingName:'AI',usageId:'cloudflare-image-usage',shared:true},
     {id:'pollinations',name:'Pollinations central',summary:'Generación multimodal con la cuenta de Prisma',detail:'Admite hasta seis claves centrales. La clave sk_ se guarda como secreto en Cloudflare y consume el saldo de Prisma. Si no hay clave central, los usuarios pueden usar Pollinations Connect con su propio saldo.',secretName:'POLLINATIONS_API_KEYS_JSON',usageId:'pollinations-image-usage',shared:true},
     {id:'pollinations-connect',name:'Pollinations Connect',shared:false},
      {id:'kilo',name:'Kilo AI Gateway',summary:'Catálogo dinámico de modelos gratuitos',detail:'No requiere clave. Prisma consulta el catálogo en vivo y solo permite modelos con precio cero. Límite público de 200 solicitudes/hora por IP; algunos endpoints NVIDIA son solo de prueba y pueden registrar prompts, por eso los endpoints NVIDIA son solo manuales. Los demás modelos de precio cero verificado sí pueden usarse como respaldo automático seguro. KILO_API_KEYS_JSON o hasta seis variables individuales son opcionales.',secretName:'KILO_API_KEYS_JSON (opcional)',shared:true},
-     {id:'requesty',name:'Requesty',summary:'13 modelos gratuitos · Nemotron, Gemma, Mistral y Ling',detail:'Plan gratuito oficial: 200 solicitudes/día y 20/minuto por organización, sin tarjeta. Prisma limita su uso compartido a 25 solicitudes/día y 10/minuto, y solo admite los 13 modelos publicados como gratuitos. Admite un máximo de tres claves mediante REQUESTY_API_KEYS_JSON o variables individuales. Secreto base: REQUESTY_API_KEY.',secretName:'REQUESTY_API_KEYS_JSON',shared:true},
      {id:'sensenova',name:'SenseNova / SenseTime',summary:'SenseNova 6.8 Flash Lite',detail:'Beta pública gratuita con hasta 1.500 llamadas por modelo cada cinco horas, según la oferta vigente. Prisma aplica un límite interno menor. Admite hasta seis claves mediante SENSENOVA_API_KEYS_JSON o variables individuales. Secreto base: SENSENOVA_API_KEY.',secretName:'SENSENOVA_API_KEYS_JSON',shared:true},
      {id:'zai',name:'Z.AI / Zhipu',summary:'GLM-4.7 Flash · GLM-4.5 Flash · GLM-4.6V Flash',detail:'Solo se permiten modelos Flash gratuitos. No se habilitan modelos GLM de pago. Admite hasta seis claves mediante ZAI_API_KEYS_JSON o variables individuales. Secreto base: ZAI_API_KEY.',secretName:'ZAI_API_KEYS_JSON',shared:true},
      {id:'aihubmix',name:'AIHubMix',summary:'Catálogo gratuito dinámico · disponibilidad consultada en vivo',detail:'10 llamadas de prueba totales sin tarjeta. Tras una recarga única de USD 1 se activa la cuota diaria oficial de 100 solicitudes, 10/minuto y 1 millón de tokens. Prisma conserva un límite más prudente de 15 solicitudes/día y 10/minuto, y solo habilita modelos de texto con peso de cuota 1. El respaldo automático de AIHubMix está desactivado hasta confirmar una recarga real de al menos USD 1; no definas AIHUBMIX_DAILY_QUOTA_ACTIVE=1 antes de hacerla. Admite hasta seis claves mediante AIHUBMIX_API_KEYS_JSON o variables individuales. Secreto base: AIHUBMIX_API_KEY.',secretName:'AIHUBMIX_API_KEYS_JSON',shared:true},
   ];
   container.innerHTML=configs.map(providerConnectionCard).join()+
-    '<article class="provider-connection-card provider-managed-card"><div class="provider-connection-top"><div><h4>Catálogo de Hugging Face</h4><p>6 modelos de chat + catálogo multimedia</p></div><span class="provider-connection-status">Cuotas limitadas</span></div><p class="provider-connection-detail">Hugging Face permite inferencia de chat con modelos seleccionables. FLUX/Stable Diffusion, Whisper y otros modelos multimedia pueden consumir rápidamente el crédito mensual; por eso su acceso central se habilita únicamente con un permiso explícito.</p><div id="hf-model-summary" class="provider-connection-detail">Consultando modelos...</div></article>'+
     '<article class="provider-connection-card provider-managed-card"><div class="provider-connection-top"><div><h4>OpenCode Zen</h4><p>GLM, Kimi, Nemotron y MiMo</p></div><span class="provider-connection-status">No integrado</span></div><p class="provider-connection-detail">Se conserva en el inventario, pero las condiciones actuales reservan el uso gratuito externo a OpenCode. Prisma no lo llamará desde su backend.</p></article>'+
      '<article class="provider-connection-card provider-managed-card"><div class="provider-connection-top"><div><h4>Motores open source locales</h4><p>Procesamiento en el dispositivo</p></div><span class="provider-connection-status connected">Disponibles</span></div><p class="provider-connection-detail">PDF-Lib, Tesseract.js, FFmpeg y otras bibliotecas ejecutan tareas directamente en el dispositivo cuando es posible.</p></article>';
   const input=$('#polli-app-key');if(input){input.value=localStorage.getItem('prisma-polli-client-id')||POLLINATIONS_APP_KEY;input.addEventListener('input',()=>localStorage.setItem('prisma-polli-client-id',input.value.trim()));}
@@ -512,7 +502,7 @@ async function refreshProviderConnectionStatuses(){
       target.innerHTML=daily+minute+pause+poolError+lines+poolHint+'<small>Las claves no multiplican la cuota del proyecto o cuenta. Prisma distribuye solicitudes entre credenciales sanas; ante un 402/429 pausa todo el proveedor y no rota para eludir límites.</small>';
     }
   });
-  const connected={pollinations:!!central.providers.pollinations,'pollinations-connect':!!getPollinationsToken(),huggingface:!!central.providers.huggingface,gemini:!!central.providers.gemini,groq:!!central.providers.groq,cloudflare:!!central.providers.cloudflare,openrouter:!!central.providers.openrouter,kilo:!!central.providers.kilo,requesty:!!central.providers.requesty,sensenova:!!central.providers.sensenova,zai:!!central.providers.zai,aihubmix:!!central.providers.aihubmix};
+  const connected={pollinations:!!central.providers.pollinations,'pollinations-connect':!!getPollinationsToken(),gemini:!!central.providers.gemini,groq:!!central.providers.groq,cloudflare:!!central.providers.cloudflare,openrouter:!!central.providers.openrouter,kilo:!!central.providers.kilo,sensenova:!!central.providers.sensenova,zai:!!central.providers.zai,aihubmix:!!central.providers.aihubmix};
   Object.entries(connected).forEach(([provider,isConnected])=>{
     const status=$('[data-connection-status="'+provider+'"]');
     if(status){
@@ -534,22 +524,14 @@ async function refreshProviderConnectionStatuses(){
       :!central.ok?'No se pudo verificar el estado en Cloudflare.'
       :warning||'Conexión central no disponible temporalmente. La cuenta personal sigue siendo opcional.');
   }
-  const hfSummary=$('#hf-model-summary');
-  if(hfSummary){
-    const catalog=central.modelCatalog||{};
-    const renderGroup=(name,items)=>'<strong>'+name+'</strong><div>'+items.map(item=>'<span class="model-catalog-entry" style="display:inline-block;margin:3px 6px 3px 0;padding:4px 9px;border:1px solid var(--border,#495063);border-radius:8px;font-size:12px">'+escapeHtml(item.name)+' · '+escapeHtml(item.specialty)+'</span>').join('')+'</div>';
-    hfSummary.innerHTML=renderGroup('Texto y razonamiento',catalog.chat?.huggingface||[])+
-      renderGroup('Imágenes · requiere activar consumo',catalog.image?.huggingface||[])+
-      renderGroup('Audio · requiere activar consumo',catalog.audio?.huggingface||[]);
-  }
   // Image quotas differ from chat quotas; publish only aggregate usage, not
   // credentials or user-generated content. Avoid retrying exhausted generators.
-  for(const provider of ['cloudflare','pollinations','huggingface','gemini']){
+  for(const provider of ['cloudflare','pollinations','gemini']){
     const target=$('#'+provider+'-image-usage');
     if(!target)continue;
     const quota=central.imageUsage?.[provider]?.daily;
     const enabled=Boolean(central.features?.[provider+'Images']);
-    const optIn=provider==='gemini'||provider==='huggingface';
+    const optIn=provider==='gemini';
     if(!central.ok||!quota){
       target.textContent='Cuota de imágenes no verificable. No se usarán motores externos sin autorización.';
     }else{
@@ -559,11 +541,15 @@ async function refreshProviderConnectionStatuses(){
     }
   }
   if($('#openrouter-usage'))void refreshOpenRouterUsage();
-  const count=Object.values(central.providers||{}).filter(Boolean).length;
+  const hiddenProviders=new Set(['requesty','huggingface']);
+  const count=Object.entries(central.providers||{}).filter(([provider,enabled])=>enabled&&!hiddenProviders.has(provider)).length;
+  const visibleCredentials=Object.entries(central.credentialSlots||{})
+    .filter(([provider])=>!hiddenProviders.has(provider))
+    .reduce((total,[,info])=>total+Number(info?.count||0),0);
   const summary=$('#connections-summary');
   if(summary){
     const capacity=central.capacity||{};
-    summary.textContent=count+' motores disponibles · '+Number(capacity.configuredCredentials||0)+' credenciales · pool '+Number(capacity.dailyBudget||0)+'/día · '+Number(capacity.visitorDailyLimit||0)+'/día por IP';
+    summary.textContent=count+' motores disponibles · '+visibleCredentials+' credenciales · pool '+Number(capacity.dailyBudget||0)+'/día · '+Number(capacity.visitorDailyLimit||0)+'/día por IP';
   }
   const usageNote=$('#inference-usage-summary');
   if(usageNote){
@@ -667,19 +653,16 @@ function providerNoticeText(provider,quality,task='image'){
  const features=centralConnectionState.features||{};
  let selected=provider||'auto';
  if(selected==='auto'){
-   const order=task==='image'?['cloudflare','pollinations','huggingface']:task==='audio'?['groq','cloudflare','pollinations','huggingface']:['groq','cloudflare','gemini','pollinations','huggingface'];
-   selected=order.find(item=>(item==='groq'&&task==='audio'?features.groqAudio:item==='cloudflare'&&task==='audio'?features.cloudflareAudio:connected[item])&&(task!=='image'||item!=='huggingface'||features.huggingfaceImages)&&(task!=='audio'||item!=='huggingface'||features.huggingfaceAudio))||'';
+   const order=task==='image'?['cloudflare','pollinations']:task==='audio'?['groq','cloudflare','pollinations']:['groq','cloudflare','gemini','pollinations'];
+   selected=order.find(item=>(item==='groq'&&task==='audio'?features.groqAudio:item==='cloudflare'&&task==='audio'?features.cloudflareAudio:connected[item]))||'';
  }
  if(!selected)return 'No hay un motor activo para esta tarea. Revisa las conexiones del Laboratorio IA.';
  const selectedAvailable=selected==='groq'&&task==='audio'?!!features.groqAudio:selected==='cloudflare'&&task==='audio'?!!features.cloudflareAudio:!!connected[selected];
  if(!selectedAvailable)return (selected==='groq'&&task==='audio'?centralConnectionState.warnings?.groqAudio:selected==='cloudflare'&&task==='audio'?centralConnectionState.warnings?.cloudflareAudio:centralConnectionState.warnings?.[selected])||'Este motor todavía no está habilitado en Prisma. La clave central se configura en Cloudflare.';
  if(selected==='pollinations'&&task==='image'&&!features.pollinationsImages&&!getPollinationsToken())return 'Pollinations necesita una clave central en Cloudflare o una cuenta personal conectada.';
- if(selected==='huggingface'&&task==='image'&&!features.huggingfaceImages)return 'Hugging Face permite generar imágenes, pero está desactivado para no agotar tus créditos gratuitos. Usa Cloudflare FLUX.';
- if(selected==='huggingface'&&task==='audio'&&!features.huggingfaceAudio)return 'El audio de Hugging Face está desactivado para proteger el crédito mensual.';
  if(selected==='groq'&&task==='audio'&&!features.groqAudio)return centralConnectionState.warnings?.groqAudio||'Groq Whisper está temporalmente en pausa. Prisma intentará otro motor de transcripción disponible.';
  if(selected==='cloudflare'&&task==='audio')return 'Cloudflare Whisper: respaldo de transcripción mediante Workers AI, máximo tres audios compartidos al día. No requiere clave adicional.';
  if(selected==='cloudflare')return 'Cloudflare Workers AI: motor compartido, limitado por las cuotas gratuitas diarias y el control de solicitudes de Prisma.';
- if(selected==='huggingface')return 'Hugging Face: seis modelos de texto habilitados. El nivel gratuito incluye solo US$0,10 de créditos mensuales; selecciona modelos con cuidado.';
  if(selected==='groq')return 'Groq: usa la clave central de Cloudflare. Las solicitudes están sujetas al plan gratuito y límites de Prisma.';
  if(selected==='pollinations')return centralConnectionState.providers.pollinations?'Pollinations central: servicio compartido con límites diarios; consume el saldo autorizado del propietario de Prisma.':'Pollinations Connect: cada visitante autoriza su cuenta y su presupuesto personal.';
  return 'Gemini: motor central de Prisma para chat y razonamiento. La generación de imágenes de Gemini todavía no está habilitada.';
@@ -775,7 +758,7 @@ function openTool(t){
   $('#modal-close').focus({preventScroll:true});
 }
 function textStudioModelSettings(){
- return selectField('Motor de texto','provider',[['auto','Automático · mejor disponible'],['groq','Groq'],['gemini','Google Gemini'],['cloudflare','Cloudflare Workers AI'],['sensenova','SenseNova'],['zai','Z.AI / GLM'],['requesty','Requesty'],['kilo','Kilo Gateway'],['aihubmix','AIHubMix · prueba limitada'],['pollinations','Pollinations'],['huggingface','Hugging Face (créditos limitados)']],'auto')+
+ return selectField('Motor de texto','provider',[['auto','Automático · mejor disponible'],['groq','Groq'],['gemini','Google Gemini'],['cloudflare','Cloudflare Workers AI'],['sensenova','SenseNova'],['zai','Z.AI / GLM'],['kilo','Kilo Gateway'],['aihubmix','AIHubMix · prueba limitada'],['pollinations','Pollinations']],'auto')+
   selectField('Modelo específico (opcional)','model',[['','Automático · según tarea']],'')+
   '<div class="tool-hint workflow-provider-notice" id="tool-provider-notice">Prisma elegirá el modelo más adecuado según la tarea.</div>';
 }
@@ -787,7 +770,7 @@ function buildWorkflowFields(workflow){
       field('Duración de recorte (segundos)','duration','number','10','','min=".1" step=".1"')+'</div>'+
       '<label class="workflow-check"><input type="checkbox" name="addWatermark"><span><strong>Marca de agua en la miniatura</strong><small>Solo se aplica a fotogramas.</small></span></label>'+
       field('Texto de marca (si se activa)','watermark','text','','')+
-      selectField('Motor de transcripción','provider',[['auto','Automático · Groq y respaldo Cloudflare'],['groq','Groq'],['cloudflare','Cloudflare Whisper · respaldo limitado'],['pollinations','Pollinations · cuenta autorizada'],['huggingface','Hugging Face · si está habilitado']],'auto')+
+      selectField('Motor de transcripción','provider',[['auto','Automático · Groq y respaldo Cloudflare'],['groq','Groq'],['cloudflare','Cloudflare Whisper · respaldo limitado'],['pollinations','Pollinations · cuenta autorizada']],'auto')+
       selectField('Idioma del audio','language',[['auto','Detectar'],['es','Español'],['en','Inglés']],'auto')+
       selectField('Motor para el resumen','textProvider',[['auto','Automático'],['groq','Groq'],['gemini','Gemini'],['cloudflare','Cloudflare'],['pollinations','Pollinations']],'auto')+
       '<div class="tool-hint">Las conversiones usan FFmpeg.wasm en el navegador. La transcripción y el resumen recurren a IA externa, sujeta a cuotas; solo se ejecutan si eliges ese modo.</div>';
@@ -855,10 +838,10 @@ function buildWorkflowFields(workflow){
       textStudioModelSettings()+'<div class="tool-hint">Prepara una guía, cuestionario y tarjetas. Verifica datos importantes con tus fuentes.</div><button type="button" class="mini-button" id="open-ai-settings">Gestionar conexiones</button>';
   }
   if(workflow.id==='ai-creation'){
-    return selectField('Motor para imágenes','provider',[['auto','Automático · recomendado'],['cloudflare','Cloudflare FLUX · central'],['pollinations','Pollinations · central o personal'],['huggingface','Hugging Face · créditos opcionales']],'auto','Se usan motores realmente habilitados en el backend.')+
+    return selectField('Motor para imágenes','provider',[['auto','Automático · recomendado'],['cloudflare','Cloudflare FLUX · central'],['pollinations','Pollinations · central o personal']],'auto','Se usan motores realmente habilitados en el backend.')+
       selectField('Modelo de imagen (opcional)','model',[['','Automático · mejor disponible']],'')+
       selectField('Calidad de generación','qualityProfile',[['fast','Más rápido'],['balanced','Equilibrado'],['high','Mayor detalle']],'balanced')+
-      selectField('Motor para el texto','textProvider',[['auto','Automático · recomendado'],['groq','Groq'],['gemini','Google Gemini'],['cloudflare','Cloudflare'],['pollinations','Pollinations'],['huggingface','Hugging Face']],'auto')+      '<div class="tool-hint workflow-provider-notice" id="workflow-provider-notice"></div><div class="tool-hint workflow-provider-notice" id="workflow-text-notice"></div>'+
+      selectField('Motor para el texto','textProvider',[['auto','Automático · recomendado'],['groq','Groq'],['gemini','Google Gemini'],['cloudflare','Cloudflare'],['pollinations','Pollinations']],'auto')+      '<div class="tool-hint workflow-provider-notice" id="workflow-provider-notice"></div><div class="tool-hint workflow-provider-notice" id="workflow-text-notice"></div>'+
       '<div class="prompt-examples"><span>Ideas para empezar</span><button type="button" class="mini-button prompt-example" data-prompt-example="Fotografía publicitaria premium de un perfume minimalista sobre una superficie de piedra, iluminación de estudio suave y fondo elegante.">Producto premium</button><button type="button" class="mini-button prompt-example" data-prompt-example="Una ciudad futurista bajo la lluvia al anochecer, luces cinematográficas, reflejos detallados y atmósfera épica.">Escena cinematográfica</button><button type="button" class="mini-button prompt-example" data-prompt-example="Ilustración editorial moderna sobre creatividad e inteligencia artificial, composición limpia y colores armónicos.">Ilustración editorial</button><button type="button" class="mini-button prompt-example" data-prompt-example="Miniatura de YouTube con alto contraste, sujeto principal expresivo, composición clara y espacio visual para un título corto.">Miniatura YouTube</button></div>'+
 
       textareaField('Cuéntanos qué quieres crear','prompt','','Describe el sujeto, el ambiente, el propósito y el estilo. Prisma se encarga de preparar el prompt visual.')+
