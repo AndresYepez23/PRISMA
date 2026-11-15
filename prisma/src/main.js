@@ -342,6 +342,21 @@ function setupMobileSearch(){
   input.addEventListener('blur',()=>{if(!input.value.trim())search.classList.remove('is-open');});
 }
 function toast(message,type='success'){const el=document.createElement('div');el.className='toast '+type;el.textContent=message;$('#toast-region').append(el);setTimeout(()=>el.remove(),3400);}
+function showRuntimeUpdateNotice(detail={}){
+ const region=$('#toast-region');
+ if(!region||region.querySelector('[data-prisma-runtime-update]'))return;
+ const notice=document.createElement('div');
+ notice.className='toast runtime-update-toast';
+ notice.dataset.prismaRuntimeUpdate='true';
+ const message=document.createElement('span');
+ message.textContent=detail.message||'Hay una nueva versión de Prisma Space. Recarga para aplicarla.';
+ const action=document.createElement('button');
+ action.type='button';action.className='mini-button';action.textContent='Recargar';
+ action.setAttribute('aria-label','Recargar Prisma Space para aplicar la actualización');
+ action.addEventListener('click',()=>window.location.reload(),{once:true});
+ notice.append(message,action);region.append(notice);
+}
+document.addEventListener('prisma:runtime-update-available',event=>showRuntimeUpdateNotice(event.detail||{}));
 function field(label,name,type='text',value='',hint='',extra=''){
   return '<div class="form-field"><label for="field-'+name+'">'+label+'</label><input class="form-control" id="field-'+name+'" name="'+name+'" type="'+type+'" value="'+escapeHtml(value)+'" '+extra+'>'+ (hint?'<small>'+hint+'</small>':'')+'</div>';
 }
