@@ -12,9 +12,9 @@ const ENGINE_GENERATION = "core-precision-v3";
 const SESSION_KEY = "prisma-developer-bridge-session-v3";
 const HEADERS = { "Content-Type": "application/json" };
 let nextVersionProbe = 0;
-let isReloadingForUpdate = false;
+let updatePending = false;
 async function checkForEngineUpdate() {
-  if (activeJob || document.hidden || isReloadingForUpdate || Date.now() < nextVersionProbe ||
+  if (activeJob || document.hidden || updatePending || Date.now() < nextVersionProbe ||
       RUNTIME_BUILD_ID.startsWith("__PRISMA_RUNTIME_")) return;
   nextVersionProbe = Date.now() + 90_000;
   try {
@@ -22,9 +22,16 @@ async function checkForEngineUpdate() {
     if (!response.ok) return;
     const remote = await response.json();
     if (typeof remote?.build === "string" && remote.build !== RUNTIME_BUILD_ID) {
-      isReloadingForUpdate = true;
-      dispatchStatus("updating", { message: "Prisma recibió una versión más reciente. Actualizando el motor para ejecutar las tareas de forma segura." });
-      window.location.reload();
+      // Never interrupt the just-opened app with a second automatic startup.
+      // Pause remote job polling until the user chooses to reload this version.
+      updatePending = true;
+      const detail = {
+        currentBuild: RUNTIME_BUILD_ID,
+        availableBuild: remote.build,
+        message: "Hay una versión nueva de Prisma Space. Recarga cuando quieras aplicarla; mientras tanto, Prisma Developer pausó la recepción de tareas para evitar ejecutarlas con un motor desactualizado."
+      };
+      dispatchStatus("update-available", detail);
+      document.dispatchEvent(new CustomEvent("prisma:runtime-update-available", { detail }));
     }
   } catch { /* temporary offline mode; never interrupt an ongoing job */ }
 }
@@ -372,7 +379,7 @@ async function executeJob(job) {
 async function pollOnce() {
   if (!running || !sessionToken || activeJob) return;
   await checkForEngineUpdate();
-  if (isReloadingForUpdate) return;
+  if (updatePending) return;
   const response = await bridgeRequest("/bridge/poll", {
     method: "POST",
     body: JSON.stringify({ attachments: metadata(getPrismaCoreAttachments()) })
