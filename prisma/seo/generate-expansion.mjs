@@ -41,6 +41,8 @@ export async function generateExpansionPages(output){
   const folder=new URL(p.path.slice(1),output);await mkdir(folder,{recursive:true});await writeFile(new URL('index.html',folder),html);
   const directory=p.path.slice(0,p.path.lastIndexOf('/',p.path.length-2)+1);
   const index=new URL(directory.slice(1)+'index.html',output);let listing=await readFile(index,'utf8');
+  listing=listing.replace(/(\d+)( fichas| practical tool pages)/g,(_,count,label)=>(Number(count)+1)+label);
+  listing=listing.replace(/"numberOfItems":(\d+)/g,(_,count)=>'"numberOfItems":'+(Number(count)+1));
   listing=listing.replace('</main>','<section class="seo-related"><h2><a href="'+p.path+'">'+esc(p.title)+'</a></h2><p>'+esc(p.description)+'</p></section></main>');await writeFile(index,listing);
   const links=alternates(p).replaceAll('<link ','<xhtml:link ').replaceAll('>','/>');
   sitemap=sitemap.replace('</urlset>','  <url><loc>'+url+'</loc>'+links+'</url>\n</urlset>');

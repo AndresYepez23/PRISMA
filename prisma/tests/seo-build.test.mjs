@@ -93,7 +93,7 @@ test('directory categories and sitemap expose exactly the current URLs',async()=
   const category=tools.find(t=>t.id===p.tool).category;
   assert.ok(listing.includes('id="'+category+'"'));assert.ok(listing.includes('href="#'+category+'"'));
  }
- assert.ok(listing.includes('Explora '+pages.length+' fichas'));
+ assert.ok(listing.includes('Explora '+(pages.length+2)+' fichas'));
  assert.ok(listing.includes('href="/categorias/"'));
  assert.ok(listing.includes('href="/soluciones/"'));
  assert.ok(listing.includes('href="/guias/"'));
