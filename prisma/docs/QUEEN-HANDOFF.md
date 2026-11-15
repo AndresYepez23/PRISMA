@@ -1,3 +1,18 @@
+# CURRENT CHECKPOINT — Qwen hybrid, 2026-11-15
+
+**This checkpoint supersedes all older pause/transfer instructions below.** The user explicitly resumed the work and asked to finish the hybrid system. Read [QWEN-HYBRID-STATUS-2026-11-15.md](QWEN-HYBRID-STATUS-2026-11-15.md) first.
+
+- PR #125 is merged; PR #147 is merged into `main`; PR #149 is merged only into the isolated staging branch; PR #148 remains the production activation PR.
+- Production `main` at checkpoint: `38af1adc2f2220c6ff3c24528804a60149e59a25`; deployed production Pages project `prismaspace` retains all 55 existing variables (48 secrets + 7 plain settings). No credentials were changed.
+- Stable backend bridge `17a6c338` remains in place for every API except the exact Qwen interpreter path in PR #148.
+- Isolated live staging deployment: `0d467fde`, source `cb51b6f23081e5f8835e883c09ffd701f8597db4`; one real Qwen interpreter call succeeded in 18.744 s and returned `pdf-extract → pdf-to-word`.
+- A separate full-plan probe timed out at the bounded 55-second limit. It was not retried; see the status report. Do not route ordinary requests through that full-plan endpoint.
+- Current work branch: `feature/qwen-hybrid-production-routing-20261114`; latest code/documentation commit at this checkpoint: `106a1ae5cd59ca8d318886c2279bb4b2291f2bf7`.
+
+Old checkpoint blocks below are historical evidence, not current instructions. Do not restart the project, rotate/recreate secrets, alter GenixNode, or overwrite the 55 production variables.
+
+---
+
 # Queen — transferencia maestra de PRISMA
 
 ## PAUSA SOLICITADA — estado final guardado, 14/11/2026 UTC
