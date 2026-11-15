@@ -380,10 +380,10 @@ function updateChatScreen(){const section=$('#core-section');section?.classList.
 const MODEL_PROVIDER_LABELS={
  groq:'Groq',zai:'Z.AI',gemini:'Google Gemini',openrouter:'OpenRouter',
  sensenova:'SenseNova',kilo:'Kilo Gateway',aihubmix:'AIHubMix',
- requesty:'Requesty',huggingface:'Hugging Face',cloudflare:'Cloudflare Workers AI',
- pollinations:'Pollinations'
+ cloudflare:'Cloudflare Workers AI',pollinations:'Pollinations'
 };
-const MODEL_PROVIDER_ORDER=['groq','zai','gemini','openrouter','sensenova','kilo','aihubmix','requesty','huggingface','cloudflare','pollinations'];
+const MODEL_PROVIDER_ORDER=['groq','zai','gemini','openrouter','sensenova','kilo','aihubmix','cloudflare','pollinations'];
+const HIDDEN_MANUAL_MODEL_PROVIDERS=new Set(['requesty','huggingface']);
 function activeChatRecord(){return conversations.find(chat=>chat.id===activeConversationId)||null;}
 function imageProviderReady(provider){
  const flag={cloudflare:'cloudflareImages',pollinations:'pollinationsImages',huggingface:'huggingfaceImages',gemini:'geminiImages'}[provider];
@@ -415,6 +415,7 @@ function modelLabel(provider,modelId){
  return models.find(item=>item.id===modelId)?.name||modelId||'Automático';
 }
 function chooseConversationModel(provider,modelId){
+ if(HIDDEN_MANUAL_MODEL_PROVIDERS.has(provider))return;
  const chat=activeChatRecord();if(!chat)return;
  const availability=providerAvailability(provider,'chat');
  if(!availability.available)return;
@@ -438,9 +439,10 @@ function renderChatModelOptions(){
  const selection=normalizeConversationModelSelection(activeChatRecord()?.modelSelection);
  const chosen=displayedConversationPreference(selection);
  const catalog=centralModelCatalog?.chat||{};
- const providers=[...MODEL_PROVIDER_ORDER,...Object.keys(catalog).filter(p=>!MODEL_PROVIDER_ORDER.includes(p)).sort()];
+ const providers=[...MODEL_PROVIDER_ORDER,...Object.keys(catalog).filter(p=>!MODEL_PROVIDER_ORDER.includes(p)&&!HIDDEN_MANUAL_MODEL_PROVIDERS.has(p)).sort()];
  list.replaceChildren();let visible=0;
  for(const provider of providers){
+  if(HIDDEN_MANUAL_MODEL_PROVIDERS.has(provider))continue;
   const availability=providerAvailability(provider,'chat');
   const models=(Array.isArray(catalog[provider])?catalog[provider]:[]).filter(isCoreChatModel);
   const picker=coreProviderPickerState({available:availability.available,configured:centralConfigured?.[provider],
@@ -595,7 +597,13 @@ function renderImageModelControls(){
 }
 function renderModelPicker(){
  const details=$('.core-model-settings'),summary=details?.querySelector('summary');if(!details||!summary)return;
- const selection=normalizeConversationModelSelection(activeChatRecord()?.modelSelection);
+ const chat=activeChatRecord();
+ const previous=normalizeConversationModelSelection(chat?.modelSelection);
+ if(chat&&previous.mode==='manual'&&HIDDEN_MANUAL_MODEL_PROVIDERS.has(previous.requestedProvider||previous.provider)){
+  chat.modelSelection=selectAutomaticConversationModel(previous,Date.now());
+  chat.updated=Date.now();persistChatHistory();
+ }
+ const selection=normalizeConversationModelSelection(chat?.modelSelection);
  const chosen=displayedConversationPreference(selection);
  const name=chosen.model?modelLabel(chosen.provider,chosen.model):'Automático';
  const actual=selection.model?modelLabel(selection.provider,selection.model):'';
@@ -631,7 +639,7 @@ function renderModelPicker(){
   panel.querySelectorAll('[data-model-pane]').forEach(p=>p.classList.toggle('active',p.dataset.modelPane===activeModelTab));
  }
  const imageButton=$('#core-image-activate');
- if(imageButton)imageButton.disabled=!['cloudflare','pollinations','huggingface','gemini'].some(imageProviderReady);
+ if(imageButton)imageButton.disabled=!['cloudflare','pollinations','gemini'].some(imageProviderReady);
 }
 function renderComposerMode(){
  // Keep the composer visually identical in both modes.
