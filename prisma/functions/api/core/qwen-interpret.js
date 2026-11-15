@@ -64,7 +64,7 @@ function qwenInterpreterEnvironment(env,request){
  let hostname='';try{hostname=new URL(request.url).hostname.toLowerCase();}catch{}
  const isolatedStaging=env.QUEEN_ENABLED==='1'&&env.QUEEN_STAGE==='staging'&&env.QWEN_CORE_STAGING_ENABLED==='1'&&
   /^(?:[a-f0-9]{8}\.)?prisma-queen-staging\.pages\.dev$/.test(hostname);
- const productionEnabled=env.QUEEN_ENABLED==='1'&&env.QUEEN_STAGE==='production'&&env.QWEN_CORE_INTERPRETER_ENABLED!=='0'&&
+ const productionEnabled=env.QUEEN_ENABLED==='1'&&env.QUEEN_STAGE==='production'&&env.QWEN_CORE_INTERPRETER_ENABLED==='1'&&
   ['prismaspace.space','prismaspace.pages.dev'].includes(hostname);
  return {enabled:isolatedStaging||productionEnabled,isolatedStaging,productionEnabled};
 }

@@ -118,7 +118,7 @@ test('Qwen Core does not spend an inference or suggest a tool for a clear inform
 test('production Qwen interpreter is enabled by existing production bindings without adding a credential',async()=>{
  let invoked=0;
  const host='https://prismaspace.space';
- const env={QUEEN_ENABLED:'1',QUEEN_STAGE:'production',
+ const env={QUEEN_ENABLED:'1',QUEEN_STAGE:'production',QWEN_CORE_INTERPRETER_ENABLED:'1',
   QUEEN_ACCESS_CLIENT_ID:'existing-client',QUEEN_ACCESS_CLIENT_SECRET:'existing-secret',
   QUEEN_API_KEY:'existing-key',QUEEN_BASE_URL:'https://queen.prismaspace.space/v1',CF_PAGES_COMMIT_SHA:'prod-test'};
  const request=new Request(host+'/api/core/qwen-interpret',{method:'POST',
@@ -130,6 +130,15 @@ test('production Qwen interpreter is enabled by existing production bindings wit
  assert.equal(result.source,'qwen-core');assert.equal(result.deploymentCommit,'prod-test');assert.equal(invoked,1);
  const disabled=await onRequestPost({request,env:{...env,QWEN_CORE_INTERPRETER_ENABLED:'0'}},{reserve:async()=>{invoked++;},interpret:async()=>{invoked++;}});
  assert.equal((await disabled.json()).available,false);assert.equal(invoked,1);
+});
+test('production Qwen interpreter stays disabled unless the explicit runtime flag is present',async()=>{
+ let invoked=0;
+ const host='https://prismaspace.space';
+ const request=new Request(host+'/api/core/qwen-interpret',{method:'POST',
+  headers:{Origin:host,'Content-Type':'application/json'},body:JSON.stringify({text:'¿Qué formatos puede convertir Prisma?',files:[]})});
+ const response=await onRequestPost({request,env:{QUEEN_ENABLED:'1',QUEEN_STAGE:'production'}},
+  {reserve:async()=>{invoked++;},interpret:async()=>{invoked++;}});
+ assert.equal((await response.json()).available,false);assert.equal(invoked,0);
 });
 test('production interpreter cannot be enabled on unrelated or preview hosts',async()=>{
  let invoked=0;
@@ -148,6 +157,6 @@ test('staging readiness probe exposes only its own deployment commit without inf
  assert.deepEqual(await good.json(),{ready:true,deploymentCommit:'test-commit'});
  const bad=await onRequestGet({request:new Request('https://prismaspace.pages.dev/api/core/qwen-interpret'),env});
  assert.deepEqual(await bad.json(),{ready:false,deploymentCommit:null});
- const prod=await onRequestGet({request:new Request('https://prismaspace.space/api/core/qwen-interpret'),env:{QUEEN_ENABLED:'1',QUEEN_STAGE:'production',CF_PAGES_COMMIT_SHA:'prod'}});
+ const prod=await onRequestGet({request:new Request('https://prismaspace.space/api/core/qwen-interpret'),env:{QUEEN_ENABLED:'1',QUEEN_STAGE:'production',QWEN_CORE_INTERPRETER_ENABLED:'1',CF_PAGES_COMMIT_SHA:'prod'}});
  assert.deepEqual(await prod.json(),{ready:true,deploymentCommit:'prod'});
 });
