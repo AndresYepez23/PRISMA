@@ -2,16 +2,17 @@
 
 **This checkpoint supersedes all older pause/transfer instructions below.** The user explicitly resumed the work and asked to finish the hybrid system. Read [QWEN-HYBRID-STATUS-2026-11-15.md](QWEN-HYBRID-STATUS-2026-11-15.md) first.
 
-- PR #125 is merged; PR #147 is merged into `main`; PR #149 is merged only into the isolated staging branch; PR #148 remains the production activation PR.
-- Production `main` at checkpoint: `38af1adc2f2220c6ff3c24528804a60149e59a25`; deployed production Pages project `prismaspace` retains all 55 existing variables (48 secrets + 7 plain settings). No credentials were changed.
-- Stable backend bridge `17a6c338` remains in place for every API except the exact Qwen interpreter path in PR #148.
-- Isolated live staging deployment: `0d467fde`, source `cb51b6f23081e5f8835e883c09ffd701f8597db4`; one real Qwen interpreter call succeeded in 18.744 s and returned `pdf-extract → pdf-to-word`.
-- A separate full-plan probe timed out at the bounded 55-second limit. It was not retried; see the status report. Do not route ordinary requests through that full-plan endpoint.
-- Current work branch: `feature/qwen-hybrid-production-routing-20261114`; latest code/documentation commit at this checkpoint: `106a1ae5cd59ca8d318886c2279bb4b2291f2bf7`.
+- PR #125, #147 and #148 are merged into `main`; PR #149 is merged only into the isolated staging branch; PR #150 restores the stable API bridge and is pending validation.
+- Main/production source at this checkpoint: `a522320f067d9bb67450deb6b6b8a01f0553ccbe`; Pages deployment `57b15b65` completed.
+- Production project still lists the 55 original variables (48 secret bindings + 7 plain settings). The new Pages runtime returned `QUEEN_AUTH_NOT_CONFIGURED` when the Qwen route was sent directly to it. Do not infer secret validity from variable names; do not copy, rotate or recreate any secret.
+- Keep all production API traffic on immutable known-good backend `17a6c338` until the Qwen interpreter can be enabled there safely. Its existing Qwen route is gated by `QWEN_CORE_INTERPRETER_ENABLED=1`; that plain-text flag is currently absent.
+- Isolated staging deployment `0d467fde` returned a real Qwen interpreter result in 18.744 seconds with one inference: `pdf-extract → pdf-to-word`. A separate full-plan probe timed out at 55 seconds and was not retried.
+- Current recovery branch: `fix/qwen-stable-interpreter-bridge-20261115`; latest checkpoint commit: `bf885e1776e7fd2ec098187b55339649bbdd8d72`.
 
-Old checkpoint blocks below are historical evidence, not current instructions. Do not restart the project, rotate/recreate secrets, alter GenixNode, or overwrite the 55 production variables.
+Old checkpoint blocks below are historical evidence, not current instructions. Do not restart GenixNode, alter provider pools, change D1 schemas, or overwrite the 55 existing variables.
 
 ---
+
 
 # Queen — transferencia maestra de PRISMA
 
