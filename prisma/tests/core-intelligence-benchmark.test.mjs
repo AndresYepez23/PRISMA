@@ -140,7 +140,7 @@ test('real local engines return correct transformed data with zero provider requ
    ['dedupe-lines',{text:'A\nA\nB'},'A\nB'],
    ['text-sort',{text:'B\nA'},'A\nB'],
    ['text-diff',{textA:'uno\r\ndos',textB:'uno\ntres'},'  uno\n+ tres\n- dos'],
-   ['flashcards-export',{text:'A | Uno\r\nB | Dos'},'Front,Back\nA,Uno\nB,Dos']
+   ['flashcards-export',{text:'A | Uno\r\nB | Dos'},'A,Uno\nB,Dos']
   ];
   for(const [id,p,expected] of cases){assert.equal((await runToolBatch(tool(id),[],p,localRun)).text,expected,id);counters.executions++;}
   assert.match((await runTool('word-count',[],{text:'hola mundo'})).text,/Lectura estimada: 1 s/);counters.executions++;

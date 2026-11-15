@@ -514,7 +514,7 @@ async function runText(id,p){
   const lines=text.split(/\r\n|\r|\n/).map(x=>x.trim()).filter(Boolean),cards=[];
   for(const line of lines){const parts=line.split(/\s*(?:\||\t|::)\s*/);if(parts.length<2)continue;const front=parts.shift().trim(),back=parts.join(' — ').trim();if(front&&back)cards.push([front,back]);}
   if(!cards.length)throw Error('Escribe una tarjeta por línea y separa concepto y definición con |, tabulación o ::.');
-  const csv=['Front,Back',...cards.map(row=>row.map(csvCell).join(','))].join('\n');
+  const csv=cards.map(row=>row.map(csvCell).join(',')).join('\n');
   return {...download(new Blob([csv],{type:'text/csv;charset=utf-8'}),'prisma-tarjetas-anki.csv'),text:csv,summary:cards.length+' tarjetas listas para importar en Anki.'};
  }
 

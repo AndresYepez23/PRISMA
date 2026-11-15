@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, stat, readdir } from 'node:fs/promises';
+import { expansionPages, validateExpansion } from '../seo/generate-expansion.mjs';
 import { SEO_BASE } from '../seo/config.mjs';
 
 const root=new URL('../',import.meta.url);
@@ -165,7 +166,7 @@ test('English app shell and legal page use English metadata and provide a Spanis
 
 test('bilingual sitemap exposes paired alternates for every published page',async()=>{
  const spanishCount=sourcePages.length+4+sourceCategories.length+sourceSolutions.length+sourceGuides.length+3;
- assert.equal(urls.length,spanishCount*2);
+ assert.equal(urls.length,spanishCount*2+expansionPages.length);
  assert.equal(new Set(urls).size,urls.length);
  assert.match(sitemap,/xmlns:xhtml="http:\/\/www\.w3\.org\/1999\/xhtml"/);
  assert.match(sitemap,/hreflang="x-default"/);
@@ -191,8 +192,10 @@ test('every public page has reciprocal language URLs, coherent metadata and matc
   const tags=[...html.matchAll(/<(?:link|meta)\b[^>]*>/g)].map(([tag])=>attributes(tag));
   assert.equal(tags.find(a=>a.rel==='canonical')?.href,url,url);
   const alternates=tags.filter(a=>a.rel==='alternate'&&a.hreflang);
-  assert.equal(alternates.length,3,url);
-  for(const locale of ['es','en','x-default']) {
+  const exclusive=expansionPages.some(p=>SEO_BASE+p.path===url&&!p.pair);
+  assert.equal(alternates.length,exclusive?0:3,url);
+  if(exclusive) assert.deepEqual(expected,{});
+  for(const locale of exclusive?[]:['es','en','x-default']) {
    assert.equal(alternates.find(a=>a.hreflang===locale)?.href,expected[locale],url+' '+locale);
    assert.ok(documents.has(expected[locale]),'Missing alternate '+expected[locale]);
    const reciprocal=[...documents.get(expected[locale]).matchAll(/<link\b[^>]*hreflang="[^"]+"[^>]*>/g)].map(([tag])=>attributes(tag));
@@ -240,7 +243,7 @@ test('all public navigation, assets and fragments exist and keep their locale ex
    if(documents.has(destination)) {
     if(/^<a\b/.test(tag)) {
      const targetLanguage=target.pathname.startsWith('/en/')?'en':'es';
-     assert.ok(language===targetLanguage||equivalents.has(destination),url+' mixes language at '+href);
+     assert.ok(language===targetLanguage||equivalents.has(destination)||((expansionPages.some(p=>SEO_BASE+p.path===url&&!p.pair))&&['/guias/','/en/guides/'].includes(target.pathname)),url+' mixes language at '+href);
      if(language==='es'&&new URL(url).pathname!=='/'&&target.pathname==='/')assert.equal(target.searchParams.get('lang'),'es',url+' loses Spanish at '+href);
     }
     if(target.hash)assert.ok(documents.get(destination).includes('id="'+decodeURIComponent(target.hash.slice(1))+'"'),url+' missing fragment '+href);
@@ -255,7 +258,7 @@ test('all public navigation, assets and fragments exist and keep their locale ex
 
 test('rendered English content and labels contain no Spanish UI and Spanish pages keep Spanish instructions',()=>{
  for(const [url,html] of documents) {
-  const visible=decode(html.replace(/<(script|style|code|pre)\b[^>]*>[\s\S]*?<\/\1>/gi,'').replace(/<[^>]*>/g,' '));
+  const visible=decode(html.replace(/<a class="seo-language-switch"[^>]*>[\s\S]*?<\/a>/g,'').replace(/<(script|style|code|pre)\b[^>]*>[\s\S]*?<\/\1>/gi,'').replace(/<[^>]*>/g,' '));
   const labels=[...html.matchAll(/\b(?:placeholder|title|aria-label|alt)="([^"]*)"/g)].map(m=>decode(m[1])).join(' ');
   if(new URL(url).pathname.startsWith('/en/')) {
    assert.doesNotMatch(visible+' '+labels,/\b(?:herramientas?|archivos?|convierte|páginas|imágenes|privacidad|guías|categorías|procesamiento|contraseña|disponibles|soluciones)\b/i,url);
@@ -319,4 +322,13 @@ test('SEO navigation labels are in the page language across both catalogues',asy
    await check(enDirectory+'/'+english.englishSlug+'/index.html','en','Switch to Spanish','Cambiar a inglés');
   }
  }
+});
+
+ test('regional catalogue keeps exactly eight approved pages and rejects false equivalents',()=>{
+ assert.equal(expansionPages.length,8);
+ assert.equal(expansionPages.filter(p=>p.language==='es').length,4);
+ assert.doesNotThrow(()=>validateExpansion(expansionPages));
+ assert.throws(()=>validateExpansion([...expansionPages,expansionPages[0]]));
+ assert.throws(()=>validateExpansion(expansionPages.map((p,i)=>i===0?{...p,pair:'/missing/'}:p)));
+ for(const p of expansionPages)assert.ok(documents.has(SEO_BASE+p.path));
 });

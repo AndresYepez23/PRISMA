@@ -14,7 +14,7 @@
         "Ejecuta la conversión para extraer el texto de sus páginas.",
         "Descarga el DOCX y revisa el formato antes de utilizarlo."
       ],
-      "tip": "Los PDF escaneados o hechos de fotografías necesitan reconocimiento OCR antes de esta conversión.",
+      "tip": "Un PDF digital contiene texto seleccionable. Un escaneo puede contener solo imágenes y requiere OCR previo; esta conversión no garantiza recuperar texto, tablas ni diseño de un escaneo. Revisa siempre el DOCX.",
       "faqs": [
         [
           "¿Puedo convertir un PDF escaneado?",
@@ -79,25 +79,29 @@
     {
       "slug": "dividir-pdf",
       "tool": "pdf-split",
-      "title": "Dividir PDF gratis por páginas y descargar ZIP",
-      "h1": "Dividir PDF en archivos separados",
-      "description": "Separa un PDF en un documento por página y descarga todos los archivos en un ZIP. Gratis, sin cuenta y con procesamiento local.",
-      "intro": "Si tienes un PDF de muchas páginas y necesitas compartir cada hoja por separado, dividirlo manualmente puede llevar tiempo. Esta herramienta genera archivos PDF individuales y los empaqueta juntos para facilitar la descarga.",
-      "details": "El resultado es un archivo ZIP con un PDF por cada página del original. Si solo necesitas conservar algunas páginas concretas, la herramienta Extraer páginas PDF será más adecuada.",
+      "title": "Dividir PDF: páginas, rangos, partes y bloques",
+      "h1": "Dividir PDF por páginas, rangos o bloques",
+      "description": "Divide PDF por páginas, selección, rangos, partes o bloques. Descarga un PDF para un grupo o un ZIP con varios documentos.",
+      "intro": "Selecciona páginas con 2, 4-6; usa rangos como 1-3;4-6 para obtener dos documentos. También puedes separar todas las páginas, excluir una selección, distribuir el PDF en 2 a 20 partes o crear bloques de 1 a 200 páginas.",
+      "details": "En un PDF de 8 páginas, los rangos 1-3;4-8 producen dos PDF dentro de un ZIP. Un único rango 2-4 produce un PDF descargable. La selección 2,4-6 genera un PDF por cada página seleccionada, no un documento combinado.",
       "steps": [
-        "Selecciona el PDF que deseas dividir.",
-        "Ejecuta la separación automática por página.",
-        "Descarga el ZIP y extrae los PDF individuales."
+        "Abre la herramienta y selecciona un PDF.",
+        "Elige el modo y configura páginas, rangos, cantidad de partes o tamaño del bloque.",
+        "Revisa la selección y descarga el PDF o ZIP; abre los documentos resultantes."
       ],
-      "tip": "Para obtener un único PDF con determinadas páginas, usa la herramienta de extracción en lugar de dividir todo.",
+      "tip": "No se permiten rangos solapados. Las partes se distribuyen por cantidad de páginas, no por peso. El último bloque puede ser más corto.",
       "faqs": [
         [
-          "¿Obtendré un ZIP o varios archivos sueltos?",
-          "Se entrega un archivo ZIP que contiene los PDF individuales."
+          "¿Cuándo recibo PDF y cuándo ZIP?",
+          "Un único grupo se descarga como PDF; varios grupos se entregan juntos en un ZIP."
         ],
         [
-          "¿Puedo dividir un PDF de varias páginas?",
-          "Sí, siempre que el navegador disponga de recursos para procesar el tamaño del documento."
+          "¿Puedo seleccionar la última página?",
+          "Sí: last selecciona la última y last:2 las dos últimas. También puedes usar números y rangos."
+        ],
+        [
+          "¿Se divide por megabytes?",
+          "No. Los modos trabajan con páginas; no garantizan un peso máximo por archivo."
         ]
       ]
     },
@@ -108,7 +112,7 @@
       "h1": "Optimizar el tamaño de un PDF",
       "description": "Reduce el peso estructural de algunos documentos PDF sin convertir sus páginas en imágenes. El ahorro depende del archivo.",
       "intro": "Los PDF pueden contener estructuras duplicadas u objetos internos que admiten reorganización. Prisma Space intenta optimizar esa estructura manteniendo el contenido seleccionable del documento.",
-      "details": "Esta opción no recomprime fotografías ni promete una reducción grande en todos los casos. Un PDF compuesto principalmente por imágenes puede quedar prácticamente igual de pesado.",
+      "details": "El motor reescribe la estructura del PDF usando flujos de objetos. No vuelve a comprimir las fotografías ni reduce su resolución. Por eso un PDF ya optimizado o dominado por imágenes puede conservar prácticamente el mismo peso, e incluso crecer.",
       "steps": [
         "Selecciona el documento PDF que quieres optimizar.",
         "Ejecuta la optimización de su estructura interna.",
@@ -123,6 +127,10 @@
         [
           "¿Se baja la resolución de las imágenes?",
           "Esta versión no aplica compresión avanzada a las fotografías del documento."
+        ],
+        [
+          "¿Por qué no se reduce mi PDF escaneado?",
+          "Si casi todo el peso corresponde a imágenes, optimizar la estructura aporta poco. Comprueba el tamaño descargado; no se garantiza un límite en MB."
         ]
       ]
     },
@@ -333,14 +341,14 @@
       "title": "Comprimir imágenes gratis: reducir peso JPG, PNG y WebP",
       "h1": "Comprimir una imagen sin instalar programas",
       "description": "Ajusta la calidad de una imagen y exporta una versión más ligera en JPG o WebP desde el navegador.",
-      "intro": "Las fotografías de alta resolución pueden pesar demasiado para enviarlas por correo o subirlas a un formulario. Reducir su calidad de exportación puede ahorrar espacio manteniendo una apariencia adecuada para pantalla.",
-      "details": "Esta herramienta trabaja sobre una imagen y permite elegir un nivel de calidad. El tamaño final depende de la fotografía de origen, sus dimensiones y el formato elegido.",
+      "intro": "Abre una imagen que tu navegador pueda decodificar, como JPG, PNG o WebP. El compresor permite elegir WebP o JPG como salida y ajustar calidad; el formato de entrada no determina el de descarga.",
+      "details": "Por ejemplo, una fotografía PNG puede exportarse como WebP con calidad 78. Se mantienen las dimensiones originales: reducir píxeles requiere la herramienta Redimensionar imagen. WebP puede conservar transparencia; JPG no admite canal alfa.",
       "steps": [
         "Selecciona la imagen que quieres optimizar.",
         "Ajusta la calidad y elige JPG o WebP como formato de salida.",
         "Descarga el archivo y compara peso y nitidez con el original."
       ],
-      "tip": "Si necesitas conservar transparencias, revisa el formato de salida antes de comprimir.",
+      "tip": "La calidad es una preferencia del codificador, no un porcentaje de reducción. El archivo puede crecer. Revisa el resultado, especialmente fondos transparentes; si el navegador sustituye el formato, se informa el tipo real.",
       "faqs": [
         [
           "¿Comprimir una imagen siempre reduce su tamaño?",
@@ -560,13 +568,13 @@
       "h1": "Generar referencias bibliográficas en APA 7, Vancouver y MLA",
       "description": "Da formato a referencias con autor, año, título, revista o editorial y DOI. Elige APA 7, Vancouver o MLA 9 y revisa los datos de la fuente.",
       "intro": "Preparar la bibliografía de un trabajo académico exige mantener un formato coherente. Este generador organiza los datos que introduces y crea versiones de la referencia en tres estilos habituales: APA 7, Vancouver y MLA 9.",
-      "details": "Añade autor, año y título, e incorpora la revista, editorial, DOI o URL cuando corresponda. Prisma Space no busca automáticamente los metadatos de una publicación ni verifica que sean correctos: el resultado depende de la información que escribas.",
+      "details": "Ejemplo con datos sintéticos: autor García, A.; año 2024; título Manual de estudio; fuente Editorial Ejemplo. APA genera García, A. (2024). Manual de estudio. Editorial Ejemplo. Puedes seleccionar también Vancouver o MLA 9. El motor organiza los campos suministrados; no busca publicaciones por DOI.",
       "steps": [
         "Introduce los autores, el año y el título de la publicación.",
         "Añade la revista, editorial, DOI o URL si tienes esos datos.",
         "Selecciona APA 7, Vancouver o MLA 9 y comprueba la referencia generada."
       ],
-      "tip": "Consulta siempre la guía oficial del estilo exigido por tu universidad. Revisa el orden de autores, mayúsculas, volumen, número, páginas y DOI.",
+      "tip": "Verifica puntuación, autores y datos contra la publicación original. Las salidas son plantillas básicas y no garantizan conformidad completa con cada norma.",
       "faqs": [
         [
           "¿El generador busca un artículo usando su DOI?",
@@ -987,7 +995,7 @@
       "h1": "Crear un archivo de subtítulos SRT desde texto",
       "description": "Convierte un guion en un archivo .srt con tiempos aproximados y duración configurable para editarlo en CapCut u otros programas.",
       "intro": "Si ya tienes el guion de un vídeo, puedes transformarlo en un archivo de subtítulos que luego se importa en un editor. Prisma Space separa el texto en fragmentos y crea una estructura SRT descargable.",
-      "details": "Puedes introducir una frase por línea o pegar un texto completo, definir los segundos aproximados por subtítulo y ajustar el máximo de caracteres. Los tiempos se calculan de forma estimada: la herramienta no escucha el audio ni sincroniza automáticamente las frases con la voz.",
+      "details": "Por ejemplo, escribe dos frases en líneas separadas para crear dos segmentos de subtítulos. La herramienta genera tiempos aproximados desde texto; no escucha audio ni transcribe un vídeo. Abre el SRT en tu editor y sincroniza cada segmento.",
       "steps": [
         "Pega el guion o escribe una frase por línea.",
         "Ajusta la duración aproximada y los caracteres máximos de cada subtítulo.",
@@ -1450,7 +1458,7 @@
     {
       "slug": "buscar-reemplazar-texto",
       "tool": "text-replace",
-      "title": "Buscar y reemplazar texto online online",
+      "title": "Buscar y reemplazar texto online",
       "h1": "Buscar y reemplazar texto online",
       "description": "Corrige un término repetido o sustituye una etiqueta en un bloque de texto con control de coincidencias.",
       "intro": "Corrige un término repetido o sustituye una etiqueta en un bloque de texto con control de coincidencias.",
@@ -1819,13 +1827,13 @@
       "h1": "Convertir archivos CSV, Excel y JSON",
       "description": "Cambia el formato de datos tabulares para importar información en una hoja de cálculo o una aplicación.",
       "intro": "Cambia el formato de datos tabulares para importar información en una hoja de cálculo o una aplicación.",
-      "details": "Carga CSV, JSON, XLS o XLSX, selecciona manualmente el destino y descarga el archivo. La primera fila de CSV se usa como encabezado. Para Excel se conserva la primera hoja, salvo la opción de todas las hojas destinada a JSON; no conserva estilos ni fórmulas como un libro original.",
+      "details": "Matriz de conversión: CSV → JSON o XLSX; JSON → CSV o XLSX; XLS/XLSX → CSV o JSON. No convierte al mismo formato. Ejemplo CSV: codigo,nombre seguido de 00123,Ana. La primera fila define los nombres de columna. El delimitador automático cuenta comas, punto y coma o tabulaciones en esa fila; confirma la separación en el resultado.",
       "steps": [
         "Abre convertir archivos csv, excel y json en Prisma Space.",
         "Carga CSV, JSON, XLS o XLSX, selecciona manualmente el destino y descarga el archivo.",
         "Revisa el resultado antes de copiarlo, descargarlo o utilizarlo."
       ],
-      "tip": "La primera fila de CSV se usa como encabezado. Para Excel se conserva la primera hoja, salvo la opción de todas las hojas destinada a JSON; no conserva estilos ni fórmulas como un libro original.",
+      "tip": "CSV: menos de 10 MB de texto y hasta 50.000 registros. JSON debe ser una lista de objetos, o un objeto con una única lista. Columnas con nombres repetidos pueden perder datos; Excel usa la primera hoja salvo que selecciones todas para JSON. No conserva diseños ni fórmulas como un libro original.",
       "faqs": [
         [
           "¿Convierte un archivo XLS a XLSX?",

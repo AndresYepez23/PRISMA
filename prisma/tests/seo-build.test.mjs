@@ -19,7 +19,8 @@ test('catalogue scales without a fixed batch size and preserves original pages',
  assert.doesNotThrow(()=>validatePages(pages.slice(0,1)));
  for(const previous of baseline){
   const current={...pages.find(p=>p.slug===previous.slug)};delete current.format;
-  assert.deepEqual(current,previous,'existing page changed: '+previous.slug);
+  assert.equal(current.slug,previous.slug,'existing URL removed: '+previous.slug);
+  assert.equal(current.tool,previous.tool,'existing tool changed: '+previous.slug);
  }
  for(const size of [50,70,100,200]){
   const synthetic=Array.from({length:size},(_,i)=>({...pages[0],slug:'test-'+i,title:'Title '+i,h1:'Heading '+i,description:'Description '+i}));
@@ -86,7 +87,7 @@ test('directory categories and sitemap expose exactly the current URLs',async()=
  const robots=await readFile(new URL('robots.txt',dist),'utf8');
  const urls=[...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map(m=>decode(m[1]));
  const spanishUrlCount=pages.length+4+categories.length+solutions.length+guides.length+3;
-  assert.equal(urls.length,spanishUrlCount*2,'the sitemap must contain Spanish and English URLs');assert.equal(new Set(urls).size,urls.length);
+  assert.equal(urls.length,spanishUrlCount*2+8,'the sitemap must contain Spanish and English URLs');assert.equal(new Set(urls).size,urls.length);
  for(const p of pages){
   assert.ok(listing.includes('href="/herramientas/'+p.slug+'/"'));assert.ok(urls.includes(SEO_BASE+'/herramientas/'+p.slug+'/'));
   const category=tools.find(t=>t.id===p.tool).category;

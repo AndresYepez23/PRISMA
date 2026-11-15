@@ -50,7 +50,7 @@ function head(title,description,url,schema,esUrl) {
     '<meta name="application-name" content="Prisma Space">',
     '<title>' + esc(compactTitle(title)) + '</title>',
     '<link rel="canonical" href="' + esc(url) + '">',
-    alternateTags(esUrl,url),
+    esUrl ? alternateTags(esUrl,url) : '',
     '<meta property="og:type" content="website">',
     '<meta property="og:site_name" content="Prisma Space">',
     '<meta property="og:locale" content="en_US">',
@@ -83,7 +83,7 @@ function footer() {
     '<script>(function(){ const button = document.getElementById("seo-theme"); if(!button) return; button.addEventListener("click", function(){ const next = document.documentElement.dataset.theme === "light" ? "dark" : "light"; document.documentElement.dataset.theme = next; try {localStorage.setItem("prisma-theme", next);}catch{} const meta=document.querySelector("meta[name=theme-color]");if(meta)meta.content=next==="light"?"#f3f7fc":"#0e121d"; }); })();</script>'
   ].join('\n');
 }
-function markup(title,description,url,schema,main,esUrl) {
+export function markup(title,description,url,schema,main,esUrl) {
   return ['<!doctype html>','<html lang="en" data-theme="dark">','<head>',head(title,description,url,schema,esUrl),'</head>','<body class="seo-page">',header(esUrl),main,footer(),'</body>','</html>',''].join('\n');
 }
 function breadcrumb(items) {
