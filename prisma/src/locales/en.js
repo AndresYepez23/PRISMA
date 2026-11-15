@@ -251,6 +251,7 @@ const translations = {
   "Crea degradados lineales o radiales y copia el código CSS.": "Create linear or radial gradients and copy the CSS code.",
   "Crea identificadores únicos UUID v4 en tu dispositivo.": "Generate unique identifiers UUID v4 on your device.",
   "Crea imágenes desde una descripción con modelos de Hugging Face.": "Create images from a description with Hugging Face models.",
+  "Crea imágenes desde una descripción con los motores de IA disponibles.": "Create images from a description with the available AI engines.",
   "Crea letras originales completas, estructura musical y un prompt de producción para un futuro generador de audio. No renderiza audio musical.": "Create original letters, musical structure, and a production prompt for a future audio generator. No audio rendering is performed.",
   "Crea un efecto pixelado ajustable para avatares, fondos y mosaicos.": "Create an adjustable pixelated effect for avatars, backgrounds, and mosaics.",
   "Crea una canción original": "Create an original song",
@@ -1890,6 +1891,7 @@ const translations = {
   "Diseño": "Design",
   "Desarrollo": "Development",
   "Reconocimiento visual mediante el modelo ViT ONNX en tu navegador. El modelo se descarga la primera vez; etiquetas en inglés.": "Visual recognition using the ViT ONNX model in your browser. The model is downloaded on first use; labels are in English.",
+  "Reconocimiento visual mediante un modelo ViT ONNX de código abierto en tu navegador. El modelo se descarga la primera vez; etiquetas en inglés.": "Visual recognition using an open-source ViT ONNX model in your browser. The model is downloaded on first use; labels are in English.",
   "Crea un prototipo de página web responsive en un único archivo HTML con CSS y JavaScript integrados; permite descargar y previsualizar. No publica en Internet ni activa pagos, cuentas o backend.": "Create a responsive website prototype in a single HTML file with integrated CSS and JavaScript; it can be downloaded and previewed. It does not publish to the Internet or enable payments, accounts, or a backend.",
   "Reduce resolución y tasa de bits de un vídeo MP4/MOV/WebM; conserva audio y entrega un archivo descargable solo si realmente ocupa menos. En Safari iPhone utiliza codificación local nativa cuando está disponible.": "Reduce the resolution and bitrate of an MP4/MOV/WebM video; preserves audio and provides a downloadable file only if the result is actually smaller. On iPhone Safari, it uses native local encoding when available."
 };
