@@ -28,7 +28,7 @@ test('Lab IA workflow and tool selectors no longer offer the removed providers',
   );
   const workflowFields = main.slice(
     main.indexOf('function buildWorkflowFields'),
-    main.indexOf('function buildToolModal')
+    main.indexOf('function setupWorkflowAI')
   );
   assert.doesNotMatch(textStudio, /Requesty|Hugging Face|requesty|huggingface/i);
   assert.doesNotMatch(workflowFields, /Requesty|Hugging Face|requesty|huggingface/i);
@@ -39,7 +39,7 @@ test('Lab IA workflow and tool selectors no longer offer the removed providers',
 test('Prisma Core manual model picker excludes hidden providers, including dynamic catalog entries', () => {
   const labels = core.slice(
     core.indexOf('const MODEL_PROVIDER_LABELS'),
-    core.indexOf('function activeChatRecord')
+    core.indexOf('const HIDDEN_MANUAL_MODEL_PROVIDERS')
   );
   const picker = core.slice(
     core.indexOf('function renderChatModelOptions'),
