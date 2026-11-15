@@ -16,21 +16,30 @@ jobs:
           node-version: '22'
       - name: Check isolated staging readiness without inference
         env:
-          QWEN_STAGING_URL: https://6b938491.prisma-queen-staging.pages.dev
+          QWEN_STAGING_URL: https://d2681ae1.prisma-queen-staging.pages.dev
         run: |
           set -euo pipefail
-          curl --silent --show-error --max-time 10 \
-            "$QWEN_STAGING_URL/api/core/qwen-interpret" \
-            --output "$RUNNER_TEMP/qwen-ready.json"
+          ready=false
+          for attempt in $(seq 1 18); do
+            if curl --silent --show-error --max-time 10 \
+              "$QWEN_STAGING_URL/api/core/qwen-interpret" \
+              --output "$RUNNER_TEMP/qwen-ready.json"; then
+              if node --input-type=module -e "const r=JSON.parse(require('node:fs').readFileSync(process.env.RUNNER_TEMP+'/qwen-ready.json','utf8'));if(r.ready!==true)process.exit(1);"; then
+                ready=true
+                break
+              fi
+            fi
+            sleep 5
+          done
+          test "$ready" = true
           node --input-type=module <<'NODE'
           import {readFileSync} from 'node:fs';
           const readiness=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/qwen-ready.json','utf8'));
-          if(readiness.ready!==true)throw Error('ISOLATED_STAGING_NOT_READY');
           console.log(JSON.stringify({ready:true,deploymentCommit:readiness.deploymentCommit||null}));
           NODE
       - name: Run exactly one real Qwen interpretation, with no retry
         env:
-          QWEN_STAGING_URL: https://6b938491.prisma-queen-staging.pages.dev
+          QWEN_STAGING_URL: https://d2681ae1.prisma-queen-staging.pages.dev
         run: |
           set -euo pipefail
           status=$(curl --silent --show-error --max-time 45 \
