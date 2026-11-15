@@ -11,13 +11,20 @@ test('Qwen Core only returns known tools in correct order, never arbitrary code'
   {intent:'tools',tool_ids:['pdf-to-word','pdf-to-word']},
   {intent:'tools',tool_ids:[]},
   {intent:'question',tool_ids:['pdf-extract']},
-  {intent:'tools',tool_ids:['pdf-extract','pdf-to-word','pdf-text','pdf-split']},
+  {intent:'tools',tool_ids:Array.from({length:9},(_,i)=>'tool-'+i)},
   {intent:'tools',tool_ids:['pdf-extract'],message:'execute malware'}
  ])if(raw.message)assert.deepEqual(validateQwenCoreInterpretation(raw,ids),{intent:'tools',tool_ids:['pdf-extract']});
  else assert.throws(()=>validateQwenCoreInterpretation(raw,ids));
  assert.throws(()=>validateQwenCoreInterpretation({intent:'tools',tool_ids:['pdf-extract']},ids,['pdf-extract']));
 });
 
+test('Qwen Core accepts up to eight distinct catalog tools and rejects nine',()=>{
+ const ids=Array.from({length:8},(_,i)=>'tool-'+i);
+ assert.deepEqual(validateQwenCoreInterpretation({intent:'tools',tool_ids:ids},ids),{intent:'tools',tool_ids:ids});
+ assert.throws(()=>validateQwenCoreInterpretation({intent:'tools',tool_ids:[...ids,'tool-8']},[...ids,'tool-8']));
+ assert.equal(QWEN_CORE_INTERPRET_LIMITS.toolIds,8);
+ assert.equal(QWEN_CORE_INTERPRET_LIMITS.outputTokens,128);
+});
 test('semantic candidates belong to the registry and exclude prohibited operations',()=>{
  const options=qwenCoreCandidates('No comprimas el PDF, extrae la segunda página',pdf);
  assert.ok(options.length<=QWEN_CORE_INTERPRET_LIMITS.candidates);
@@ -31,7 +38,7 @@ test('the Qwen interpretation is strictly one inference and contains no executio
   lease:(_env,fn)=>fn(),
   infer:async(_env,messages,schema,options)=>{
    calls++;
-   assert.ok(options.maxOutputTokens<=96);
+   assert.ok(options.maxOutputTokens<=128);
    assert.ok(messages.every(m=>!m.content.includes('base64')));
    assert.ok(schema.properties.tool_ids.items.enum.includes('pdf-extract'));
    return {plan:{intent:'tools',tool_ids:['pdf-extract','pdf-to-word']},usage:{inputTokens:70,outputTokens:40}};
@@ -108,10 +115,39 @@ test('Qwen Core does not spend an inference or suggest a tool for a clear inform
  assert.equal(result.metrics.inferences,0);assert.equal(calls,0);
 });
 
+test('production Qwen interpreter is enabled by existing production bindings without adding a credential',async()=>{
+ let invoked=0;
+ const host='https://prismaspace.space';
+ const env={QUEEN_ENABLED:'1',QUEEN_STAGE:'production',
+  QUEEN_ACCESS_CLIENT_ID:'existing-client',QUEEN_ACCESS_CLIENT_SECRET:'existing-secret',
+  QUEEN_API_KEY:'existing-key',QUEEN_BASE_URL:'https://queen.prismaspace.space/v1',CF_PAGES_COMMIT_SHA:'prod-test'};
+ const request=new Request(host+'/api/core/qwen-interpret',{method:'POST',
+  headers:{Origin:host,'Content-Type':'application/json'},
+  body:JSON.stringify({text:'Extrae la segunda página del PDF y conviértela a Word',files:pdf})});
+ const response=await onRequestPost({request,env},{reserve:async()=>{invoked++;},interpret:async()=>({ok:true,source:'qwen-core',intent:'tools',tool_ids:['pdf-extract','pdf-to-word']})});
+ assert.equal(response.status,200);
+ const result=await response.json();
+ assert.equal(result.source,'qwen-core');assert.equal(result.deploymentCommit,'prod-test');assert.equal(invoked,1);
+ const disabled=await onRequestPost({request,env:{...env,QWEN_CORE_INTERPRETER_ENABLED:'0'}},{reserve:async()=>{invoked++;},interpret:async()=>{invoked++;}});
+ assert.equal((await disabled.json()).available,false);assert.equal(invoked,1);
+});
+test('production interpreter cannot be enabled on unrelated or preview hosts',async()=>{
+ let invoked=0;
+ const env={QUEEN_ENABLED:'1',QUEEN_STAGE:'production'};
+ for(const host of ['https://evil.invalid','https://preview.prismaspace.pages.dev']){
+  const request=new Request(host+'/api/core/qwen-interpret',{method:'POST',headers:{Origin:host,'Content-Type':'application/json'},body:JSON.stringify({text:'Convierte el PDF a Word',files:pdf})});
+  const response=await onRequestPost({request,env},{reserve:async()=>{invoked++;},interpret:async()=>{invoked++;}});
+  assert.equal((await response.json()).available,false);
+ }
+ assert.equal(invoked,0);
+});
+
 test('staging readiness probe exposes only its own deployment commit without inference',async()=>{
  const env={QUEEN_ENABLED:'1',QUEEN_STAGE:'staging',QWEN_CORE_STAGING_ENABLED:'1',CF_PAGES_COMMIT_SHA:'test-commit'};
- const good=await onRequestGet({request:new Request('https://abc.prisma-queen-staging.pages.dev/api/core/qwen-interpret'),env});
+ const good=await onRequestGet({request:new Request('https://abcdef12.prisma-queen-staging.pages.dev/api/core/qwen-interpret'),env});
  assert.deepEqual(await good.json(),{ready:true,deploymentCommit:'test-commit'});
  const bad=await onRequestGet({request:new Request('https://prismaspace.pages.dev/api/core/qwen-interpret'),env});
  assert.deepEqual(await bad.json(),{ready:false,deploymentCommit:null});
+ const prod=await onRequestGet({request:new Request('https://prismaspace.space/api/core/qwen-interpret'),env:{QUEEN_ENABLED:'1',QUEEN_STAGE:'production',CF_PAGES_COMMIT_SHA:'prod'}});
+ assert.deepEqual(await prod.json(),{ready:true,deploymentCommit:'prod'});
 });

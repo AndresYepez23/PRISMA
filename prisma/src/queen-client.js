@@ -7,7 +7,17 @@ export function queenTaskContext(resolvedTask,selection){
  return {previousGoal:'',procedure,previousTools:task?.steps?.map(s=>s.tool_id).slice(-8)||[],
   preferences:{mode:selection?.mode==='manual'?'manual':'auto',provider:selection?.provider||'',model:selection?.model||''}};
 }
-export async function requestQueenPlan({text,files=[],context={},repair=false},{fetchImpl=fetch,signal}={}){
+// Browser-only circuit breaker. It protects the local fallback from repeated
+// long waits when the neural service is rate-limited or temporarily unavailable.
+// Never replay a request after an uncertain upstream outcome.
+const QUEEN_BACKOFF_MS=30000;
+let queenUnavailableUntil=0;
+export function queenCircuitState(now=Date.now()){
+ return {available:now>=queenUnavailableUntil,retryAfterMs:Math.max(0,queenUnavailableUntil-now)};
+}
+export function resetQueenCircuitForTests(){queenUnavailableUntil=0;}
+export async function requestQueenPlan({text,files=[],context={},repair=false},{fetchImpl=fetch,signal,now=Date.now,bypassCircuit=false}={}){
+ if(signal?.aborted||(!bypassCircuit&&!queenCircuitState(now()).available))return null;
  const controller=new AbortController(),abort=()=>controller.abort();
  if(signal?.aborted)abort();else signal?.addEventListener('abort',abort,{once:true});
  const timer=setTimeout(abort,115000);
@@ -15,14 +25,22 @@ export async function requestQueenPlan({text,files=[],context={},repair=false},{
   const response=await fetchImpl('/api/core/plan',{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,
    body:JSON.stringify({text,files:files.map(f=>({name:f.name,type:f.type,size:f.size})),context,repair})});
   if(!response.ok){
-   // Fetch resolves when headers arrive. Abort now to cancel the unread error body
-   // and release the response stream while preserving the existing local fallback.
+   // Back off only for transient server and quota errors; 4xx validation errors
+   // should not disable Queen for unrelated subsequent user requests.
+   if([429,502,503,504].includes(response.status))queenUnavailableUntil=Math.max(queenUnavailableUntil,now()+QUEEN_BACKOFF_MS);
    controller.abort();
    return null;
   }
-  const payload=await response.json();return payload?.ok?payload:null;
- }catch{return null;}
- finally{clearTimeout(timer);signal?.removeEventListener('abort',abort);}
+  const payload=await response.json();
+  if(payload?.ok){queenUnavailableUntil=0;return payload;}
+  if(payload?.fallback&&['QUEEN_UNAVAILABLE','QUEEN_BUSY','QUEEN_RATE_LIMITED','CORE_BACKEND_UNREACHABLE'].includes(payload.code))
+   queenUnavailableUntil=Math.max(queenUnavailableUntil,now()+QUEEN_BACKOFF_MS);
+  return null;
+ }catch{
+  // An aborted/unknown network outcome is not proof of model failure. Never
+  // retry automatically or suppress a later explicit user request.
+  return null;
+ }finally{clearTimeout(timer);signal?.removeEventListener('abort',abort);}
 }
 
 export function queenFailureDescription(error){

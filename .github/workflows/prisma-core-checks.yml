@@ -28,11 +28,33 @@ jobs:
         with:
           node-version: "22"
       - name: Run Prisma Core provider and workflow regressions
-        run: node --test prisma/tests/qwen-core-plan-coverage.test.mjs prisma/tests/qwen-core-client.test.mjs prisma/tests/qwen-core-interpreter.test.mjs prisma/tests/qwen-core-hybrid-benchmark.test.mjs prisma/tests/queen-integration.test.mjs prisma/tests/queen-staging.test.mjs prisma/tests/queen.test.mjs prisma/tests/core-agent-routing.test.mjs prisma/tests/core-model-session.test.mjs prisma/tests/conversation-history.test.mjs prisma/tests/provider-orchestration.test.mjs prisma/tests/research-providers.test.mjs prisma/tests/core-create-model-groups.test.mjs prisma/tests/core-composer-single-row.test.mjs prisma/tests/core-creative-catalog.test.mjs prisma/tests/core-create-transcription.test.mjs prisma/tests/core-create-tts.test.mjs prisma/tests/core-create-picker-open.test.mjs prisma/tests/pollinations-audio-multikey.test.mjs
+        run: node --test prisma/tests/qwen-core-plan-coverage.test.mjs prisma/tests/qwen-core-client.test.mjs prisma/tests/qwen-core-interpreter.test.mjs prisma/tests/qwen-core-production-routing.test.mjs prisma/tests/qwen-core-hybrid-benchmark.test.mjs prisma/tests/queen-integration.test.mjs prisma/tests/queen-staging.test.mjs prisma/tests/queen.test.mjs prisma/tests/core-agent-routing.test.mjs prisma/tests/core-model-session.test.mjs prisma/tests/conversation-history.test.mjs prisma/tests/provider-orchestration.test.mjs prisma/tests/research-providers.test.mjs prisma/tests/core-create-model-groups.test.mjs prisma/tests/core-composer-single-row.test.mjs prisma/tests/core-creative-catalog.test.mjs prisma/tests/core-create-transcription.test.mjs prisma/tests/core-create-tts.test.mjs prisma/tests/core-create-picker-open.test.mjs prisma/tests/pollinations-audio-multikey.test.mjs
       - name: Build Prisma and test SEO output
         run: |
           node prisma/build.mjs
           node --test prisma/tests/seo-build.test.mjs
+      - name: Real local DOCX, PDF and TXT assessment and conversion in Chromium
+        timeout-minutes: 4
+        run: |
+          tooling="$RUNNER_TEMP/prisma-browser"
+          npm install --prefix "$tooling" --no-audit --no-fund --silent playwright@1.62.1
+          node "$tooling/node_modules/playwright/cli.js" install --with-deps chromium
+          export NODE_PATH="$tooling/node_modules"
+          export PRISMA_CHROMIUM
+          PRISMA_CHROMIUM="$(node -e "console.log(require('playwright').chromium.executablePath())")"
+          export PRISMA_FUNCTIONAL_OUTPUT="$RUNNER_TEMP/prisma-document-conversion"
+          node prisma/tests/functional/document-conversion.cjs
+      - name: Preserve real document conversion evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: document-conversion-evidence
+          path: |
+            ${{ runner.temp }}/prisma-document-conversion/results.json
+            ${{ runner.temp }}/prisma-document-conversion/*.docx
+            ${{ runner.temp }}/prisma-document-conversion/*.html
+            ${{ runner.temp }}/prisma-document-conversion/*.pdf
+            ${{ runner.temp }}/prisma-document-conversion/*.txt
       - name: Real Qwen Core inference quality sample on isolated staging
         if: github.event_name == 'pull_request' && github.head_ref == 'feature/qwen-core-hybrid'
         timeout-minutes: 6

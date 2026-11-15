@@ -1,0 +1,19 @@
+name: Queen hybrid circuit regression
+on:
+  push:
+    branches:
+      - feature/queen-hybrid-resilience-20261114
+      - main
+permissions:
+  contents: read
+jobs:
+  hybrid:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test prisma/tests/queen-hybrid-circuit.test.mjs prisma/tests/queen-integration.test.mjs prisma/tests/qwen-core-client.test.mjs
+      - run: node prisma/build.mjs

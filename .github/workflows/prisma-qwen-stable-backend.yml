@@ -1,0 +1,129 @@
+name: Prisma Qwen stable-backend bridge verification
+on:
+  push:
+    branches:
+      - fix/qwen-from-working-production-20261114
+      - main
+permissions:
+  contents: read
+jobs:
+  isolated-bridge:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test proxy security, request forwarding and staging isolation
+        run: node --test prisma/tests/stable-api-bridge.test.mjs
+      - name: Test existing Qwen orchestration
+        run: node --test prisma/tests/qwen-core-plan-coverage.test.mjs prisma/tests/qwen-core-client.test.mjs prisma/tests/qwen-core-interpreter.test.mjs prisma/tests/queen-integration.test.mjs
+      - name: Build static Pages app without privileged secrets
+        run: node prisma/build.mjs
+      - name: Verify preview has updated frontend and preserved production API
+        env:
+          EXPECT_SHA: ${{ github.sha }}
+        run: |
+          node --input-type=module <<'NODE'
+          const preview = 'https://fix-qwen-from-working-produc.prismaspace.pages.dev';
+          const old = 'https://17a6c338.prismaspace.pages.dev';
+          const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+          let ready=false;
+          for(let attempt=0;attempt<30;attempt++){
+            try{
+              const response=await fetch(preview+'/prisma-build.json',{signal:AbortSignal.timeout(10000),cache:'no-store'});
+              if(response.ok&&((await response.json()).build===process.env.EXPECT_SHA)){ready=true;break;}
+            }catch{}
+            await sleep(10000);
+          }
+          if(!ready)throw Error('NEW_PREVIEW_NOT_READY; no API/Queen live inference attempted');
+          async function inventory(origin){
+            const response=await fetch(origin+'/api/providers/status',{signal:AbortSignal.timeout(20000),cache:'no-store'});
+            if(!response.ok)throw Error(origin+': HTTP '+response.status);
+            const status=await response.json();
+            if(!status.ok||!status.credentialSlots)throw Error('Invalid status payload');
+            return {header:response.headers.get('X-Prisma-Core-Backend'),
+              external:Object.values(status.credentialSlots).reduce((x,v)=>x+(Number(v.count)||0),0),
+              tavily:Number(status.research?.tavily?.configuredKeys)||0,
+              jina:!!status.research?.jina?.configured,
+              ai:!!status.configured?.cloudflare,d1:!!status.protection?.d1RateLimiting};
+          }
+          const known=await inventory(old),candidate=await inventory(preview);
+          console.log('KNOWN_GOOD',JSON.stringify(known));
+          console.log('BRIDGED_PREVIEW',JSON.stringify(candidate));
+          if(known.external<40||known.tavily<1||!known.jina||!known.ai||!known.d1)throw Error('BASELINE_BROKEN');
+          if(candidate.header!=='stable-17a6c338'||candidate.external!==known.external||
+            candidate.tavily!==known.tavily||candidate.jina!==known.jina||
+            candidate.ai!==known.ai||candidate.d1!==known.d1)
+            throw Error('API_BRIDGE_NOT_PROVEN; preserve production');
+          const resp=await fetch(preview+'/api/core/plan',{
+            method:'POST',
+            headers:{Origin:preview,'Content-Type':'application/json'},
+            body:JSON.stringify({text:'¿Qué puede hacer Prisma Core con un archivo PDF? Responde como pregunta, sin ejecutar herramientas.',files:[]}),
+            signal:AbortSignal.timeout(100000)
+          });
+          const result=await resp.json().catch(()=>({}));
+          const evidence={httpStatus:resp.status,proxy:resp.headers.get('X-Prisma-Core-Backend'),
+            ok:result.ok===true,source:result.source,code:result.code||null,
+            inferences:Number(result.metrics?.inferences)||0};
+          console.log('QWEN_PREVIEW_ONE_SHOT',JSON.stringify(evidence));
+          if(!resp.ok||!evidence.ok||evidence.source!=='queen'||evidence.inferences<1||
+            evidence.proxy!=='stable-17a6c338')
+            throw Error('LIVE_QWEN_VIA_PREVIEW_NOT_VERIFIED; preserve production');
+          NODE
+
+  production-release:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[core-bridge-release]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify production build, credential inventory and one real Qwen inference
+        env:
+          EXPECT_SHA: ${{ github.sha }}
+        run: |
+          node --input-type=module <<'NODE'
+          const canonical='https://prismaspace.pages.dev';
+          const stable='https://17a6c338.prismaspace.pages.dev';
+          const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+          let published=false;
+          for(let i=0;i<36;i++){
+            try{
+              const r=await fetch(canonical+'/prisma-build.json',{signal:AbortSignal.timeout(10000),cache:'no-store'});
+              if(r.ok&&(await r.json()).build===process.env.EXPECT_SHA){published=true;break;}
+            }catch{}
+            await sleep(10000);
+          }
+          if(!published)throw Error('NEW_PRODUCTION_BUILD_NOT_PUBLISHED; keep stable rollback available');
+          async function inventory(origin){
+            const r=await fetch(origin+'/api/providers/status',{signal:AbortSignal.timeout(25000),cache:'no-store'});
+            if(!r.ok)throw Error(origin+': HTTP '+r.status);
+            const v=await r.json();
+            if(!v.ok||!v.credentialSlots)throw Error('Missing provider status');
+            return {proxy:r.headers.get('X-Prisma-Core-Backend'),
+              count:Object.values(v.credentialSlots).reduce((sum,x)=>sum+(Number(x.count)||0),0),
+              tavily:Number(v.research?.tavily?.configuredKeys)||0,
+              jina:!!v.research?.jina?.configured,ai:!!v.configured?.cloudflare,d1:!!v.protection?.d1RateLimiting};
+          }
+          const previous=await inventory(stable),current=await inventory(canonical);
+          console.log('PRODUCTION_PROVIDER_INVENTORY',JSON.stringify({previous,current}));
+          if(previous.count<40||previous.tavily===0||!previous.jina||!previous.d1||!previous.ai||
+             JSON.stringify({...current,proxy:null})!==JSON.stringify({...previous,proxy:null})||
+             current.proxy!=='stable-17a6c338')throw Error('PRODUCTION_PROVIDER_REGRESSION');
+          const r=await fetch(canonical+'/api/core/plan',{method:'POST',
+            headers:{Origin:canonical,'Content-Type':'application/json'},
+            body:JSON.stringify({text:'¿Qué puede hacer Prisma Core con un archivo PDF? Responde como pregunta, sin ejecutar herramientas.',files:[]}),
+            signal:AbortSignal.timeout(100000)});
+          const v=await r.json().catch(()=>({}));
+          const outcome={status:r.status,source:v.source||null,ok:v.ok===true,
+            inferences:Number(v.metrics?.inferences)||0,bridge:r.headers.get('X-Prisma-Core-Backend')};
+          console.log('PRODUCTION_QWEN_ONE_SHOT',JSON.stringify(outcome));
+          if(!r.ok||!outcome.ok||outcome.source!=='queen'||outcome.inferences<1||
+             outcome.bridge!=='stable-17a6c338')throw Error('PRODUCTION_QWEN_NOT_VERIFIED');
+          console.log('RELEASE_GATE_PASS: current UI and working credential-bearing Core are connected');
+          NODE
