@@ -17,6 +17,11 @@ export async function onRequest({ request, next }, { fetcher = fetch } = {}) {
     return next();
   }
 
+  // Qwen's bounded interpreter is intentionally served by the current Pages
+  // deployment, whose production bindings are verified independently. Keep
+  // every other API on the immutable credential-preserving backend bridge.
+  if (incoming.pathname === '/api/core/qwen-interpret') return next();
+
   // Never turn an off-site browser request into a trusted same-origin POST.
   const origin = request.headers.get('Origin');
   if (origin && origin !== incoming.origin) {
