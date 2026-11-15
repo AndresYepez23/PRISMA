@@ -3965,3 +3965,6 @@ body.is-core-view .core-compose-surface{
   min-width:0!important;
   max-width:none!important;
 }
+
+/* A runtime update is opt-in: never cover the app or force a second startup. */
+.runtime-update-toast{display:flex;align-items:center;gap:12px;max-width:min(440px,calc(100vw - 24px))}.runtime-update-toast span{flex:1;min-width:0;line-height:1.5}.runtime-update-toast .mini-button{flex:0 0 auto;white-space:nowrap}

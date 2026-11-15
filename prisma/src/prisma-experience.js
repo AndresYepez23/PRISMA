@@ -34,21 +34,8 @@ export async function askInstall(){
 }
 function initPwa(){
  if('serviceWorker' in navigator){
-  // A PWA can keep an old JavaScript module graph after a new worker activates.
-  // Reload only when this page already had a controller; first installation stays put.
-  const hadController=!!navigator.serviceWorker.controller;
-  if(hadController){
-   let refreshing=false;
-   navigator.serviceWorker.addEventListener('controllerchange',()=>{
-    if(refreshing)return;
-    refreshing=true;
-    const splash=$('#app-startup'),label=$('#app-startup-status');
-    if(label)label.textContent='Actualizando Prisma Space…';
-    splash?.classList.remove('hidden');
-    document.body.classList.add('app-booting');
-    location.reload();
-   },{once:true});
-  }
+  // New workers wait until existing clients close. Updating the shell must never
+  // reload an active page or show the startup screen for a second time.
   window.addEventListener('load',()=>{
    navigator.serviceWorker.register('/sw.js',{updateViaCache:'none'})
     .then(registration=>registration.update().catch(error=>console.warn('No se pudo comprobar la actualización de Prisma:',error?.message||error)))
