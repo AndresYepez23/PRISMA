@@ -2,6 +2,7 @@
 const {chromium}=require('playwright');
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const assert=require('node:assert/strict');
+const {verifyToolControls}=require('./seo-tool-controls.cjs');
 const root=path.resolve(__dirname,'../../dist');
 const server=http.createServer((req,res)=>{
  const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
@@ -119,6 +120,12 @@ const server=http.createServer((req,res)=>{
    const download=await downloadPromise;assert.equal(download.suggestedFilename(),'prisma-tarjetas-anki.csv');
    assert.equal(fs.readFileSync(await download.path(),'utf8'),result.csv);
    cases.push('Real Anki CSV download and text difference engine');await closeContext(ctx);
+  }
+  {
+   const ctx=await context({locale:'en-US'}),page=await ctx.newPage();
+   await page.goto(origin+'/en/');await page.waitForFunction(()=>Boolean(window.prismaI18n));
+   await verifyToolControls(page);
+   cases.push('Bilingual reading, JSON, HTML and bidirectional CSV/TSV form controls with real local results');await closeContext(ctx);
   }
   {
    const ctx=await context({javaScriptEnabled:false}),page=await ctx.newPage();

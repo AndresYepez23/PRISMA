@@ -4,6 +4,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { validatePages, toolUrl } from '../seo/generate.mjs';
 import { SEO_BASE, FORMAT_PRESETS } from '../seo/config.mjs';
 import { tools } from '../src/registry.js';
+import { expansionPages } from '../seo/generate-expansion.mjs';
 const root=new URL('../',import.meta.url),dist=new URL('../dist/',import.meta.url);
 const read=p=>readFile(new URL(p,root),'utf8');
 const {pages}=JSON.parse(await read('seo/pages.json'));
@@ -87,13 +88,13 @@ test('directory categories and sitemap expose exactly the current URLs',async()=
  const robots=await readFile(new URL('robots.txt',dist),'utf8');
  const urls=[...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map(m=>decode(m[1]));
  const spanishUrlCount=pages.length+4+categories.length+solutions.length+guides.length+3;
-  assert.equal(urls.length,spanishUrlCount*2+8,'the sitemap must contain Spanish and English URLs');assert.equal(new Set(urls).size,urls.length);
+  assert.equal(urls.length,spanishUrlCount*2+expansionPages.length,'the sitemap must contain Spanish and English URLs');assert.equal(new Set(urls).size,urls.length);
  for(const p of pages){
   assert.ok(listing.includes('href="/herramientas/'+p.slug+'/"'));assert.ok(urls.includes(SEO_BASE+'/herramientas/'+p.slug+'/'));
   const category=tools.find(t=>t.id===p.tool).category;
   assert.ok(listing.includes('id="'+category+'"'));assert.ok(listing.includes('href="#'+category+'"'));
  }
- assert.ok(listing.includes('Explora '+(pages.length+2)+' fichas'));
+ assert.ok(listing.includes('Explora '+(pages.length+expansionPages.filter(p=>p.path.startsWith('/herramientas/')).length)+' fichas'));
  assert.ok(listing.includes('href="/categorias/"'));
  assert.ok(listing.includes('href="/soluciones/"'));
  assert.ok(listing.includes('href="/guias/"'));

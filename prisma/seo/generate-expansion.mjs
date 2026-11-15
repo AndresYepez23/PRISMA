@@ -8,7 +8,7 @@ export const expansionPages=JSON.parse(await readFile(new URL('./expansion-pages
 export function validateExpansion(pages,existing=new Set()){
  const paths=new Map();
  for(const p of pages){
-  if(!['es','en'].includes(p.language)||!/^\/(?:herramientas|guias|en\/(?:tools|guides|solutions))\/[a-z0-9-]+\/$/.test(p.path))throw Error('Invalid regional page route');
+  if(!['es','en'].includes(p.language)||!/^\/(?:herramientas|guias|soluciones|en\/(?:tools|guides|solutions))\/[a-z0-9-]+\/$/.test(p.path))throw Error('Invalid regional page route');
   if(p.path.startsWith('/en/')!==(p.language==='en')||paths.has(p.path)||existing.has(BASE+p.path))throw Error('Duplicate or conflicting page '+p.path);
   if(!tools.some(t=>t.id===p.tool&&t.status!=='soon'))throw Error('Unavailable tool '+p.tool);
   if(!p.title||!p.description||!p.intro||p.sections.length<3||p.faqs.length<2)throw Error('Incomplete page '+p.path);
