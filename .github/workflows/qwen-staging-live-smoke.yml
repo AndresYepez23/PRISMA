@@ -2,7 +2,7 @@ name: Qwen staging live interpreter smoke
 on:
   push:
     branches:
-      - feature/qwen-hybrid-production-routing-20261114
+      - qwen-staging-live-smoke-manual
 permissions:
   contents: read
 jobs:
