@@ -359,11 +359,11 @@ function openConversation(id){
  userPinnedToBottom=true;renderMessages({forceBottom:true});renderConversationList();closeConversationDrawer();
  updateChatScreen();status('Conversación cargada.','success');
 }
-function startNewConversation(){
+function startNewConversation({focus=true}={}){
  if(busy||executionActive)return;
  speechSynthesisStop();
  const active=conversations.find(chat=>chat.id===activeConversationId);
- if(active&&!active.messages.length){closeConversationDrawer();$('#core-input')?.focus();return;}
+ if(active&&!active.messages.length){closeConversationDrawer();if(focus)$('#core-input')?.focus();return;}
  // Keep exactly one unsent draft in memory, without adding it to the history.
  const record=newChatRecord();conversations=conversations.filter(hasConversationMessages);
  conversations.unshift(record);activeConversationId=record.id;activeModelTab='chat';
@@ -372,8 +372,9 @@ function startNewConversation(){
  // Creating a blank draft must not trigger storage writes or cloud sync.
  renderMessages({forceBottom:true});renderConversationList();closeConversationDrawer();updateChatScreen();
  status('Nueva conversación. El historial anterior sigue disponible.','success');
- $('#core-input')?.focus();
+ if(focus)$('#core-input')?.focus();
 }
+export function startNewPrismaConversation(){startNewConversation({focus:false});}
 function updateChatScreen(){const section=$('#core-section');section?.classList.toggle('has-conversation',messages.length>0);const title=$('#core-conversation-name');if(title)title.textContent=conversations.find(c=>c.id===activeConversationId)?.title||'Nueva conversación';renderModelPicker();renderComposerMode();}
 
 const MODEL_PROVIDER_LABELS={
@@ -2905,12 +2906,22 @@ export function initPrismaCore(){
     }else{
       // A notification without payload may refresh local history, but must not
       // switch away from the conversation the user already has open.
+      const activeDraft=conversations.find(chat=>chat.id===previousActiveId&&!hasConversationMessages(chat));
       loadChatHistory();
-      const active=conversations.find(chat=>chat.id===previousActiveId);
-      if(active){
+      if(activeDraft){
+        // The blank draft is intentionally absent from persisted history.
+        // Reattach it after the refresh instead of silently reopening an old chat.
+        conversations=retainActiveConversationDraft([activeDraft,...conversations],conversations,previousActiveId);
         activeConversationId=previousActiveId;
-        messages=active.messages.slice();
-      }else activeConversationChanged=true;
+        messages=[];
+        activeConversationChanged=true;
+      }else{
+        const active=conversations.find(chat=>chat.id===previousActiveId);
+        if(active){
+          activeConversationId=previousActiveId;
+          messages=active.messages.slice();
+        }else activeConversationChanged=true;
+      }
     }
     if(busy||executionActive)return;
     renderConversationList();

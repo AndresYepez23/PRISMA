@@ -15,6 +15,7 @@ assert.equal(hasConversationMessages(valid),true,'A chat with a user message bel
 assert.equal(hasConversationMessages(legacy),true,'Legacy conversations with messages remain valid');
 
 const core=readFileSync(new URL('../src/core.js',import.meta.url),'utf8');
+const main=readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
 const account=readFileSync(new URL('../src/prisma-account.js',import.meta.url),'utf8');
 const aurora=readFileSync(new URL('../aurora-system.css',import.meta.url),'utf8');
 
@@ -107,4 +108,26 @@ assert.match(core,/taskMemory\.wait\(activeConversationId,plan\.userRequest/,'A 
 const sendSource=core.slice(core.indexOf('async function sendMessage(){'),core.indexOf('function renameActiveChat(){'));
 assert.doesNotMatch(sendSource,/finally\{[\s\S]*attachments=\[\];renderAttachments\(\)/,
  'Submitting a file must not clear it unconditionally when an operation fails');
+
+const viewStart=main.indexOf('function showView(view){');
+const viewEnd=main.indexOf('function setupHeroInteraction(){',viewStart);
+const viewSource=main.slice(viewStart,viewEnd);
+assert.match(viewSource,/const enteringCore=view==='core'&&activeView!=='core'/,
+  'Opening Core from another workspace must be recognized as a fresh entry');
+assert.match(viewSource,/if\(enteringCore\)startNewPrismaConversation\(\)/,
+  'Opening Core from the tools workspace must start a new conversation');
+assert.match(core,/export function startNewPrismaConversation\(\)\{startNewConversation\(\{focus:false\}\);\}/,
+  'Navigation must create a draft without automatically opening the mobile keyboard');
+const newChatStart=core.indexOf('function startNewConversation({focus=true}={}){');
+const newChatEnd=core.indexOf('function updateChatScreen(){',newChatStart);
+assert.match(core.slice(newChatStart,newChatEnd),/if\(active&&!active\.messages\.length\)/,
+  'Re-entering Core must reuse an already-empty draft rather than create duplicate drafts');
+const remoteStart=core.indexOf("document.addEventListener('prisma:remote-chats-ready'");
+const remoteEnd=core.indexOf("document.addEventListener('prisma:clear-local-history'",remoteStart);
+const remoteSource=core.slice(remoteStart,remoteEnd);
+assert.match(remoteSource,/const activeDraft=conversations\.find\(chat=>chat\.id===previousActiveId&&!hasConversationMessages\(chat\)\)/,
+  'History refresh must identify the unsaved active draft');
+assert.match(remoteSource,/retainActiveConversationDraft\(\[activeDraft,\.\.\.conversations\],conversations,previousActiveId\)/,
+  'A payload-free history refresh must not replace the active new chat with an old conversation');
+
 console.log('Prisma Core PDF retry and history synchronization regressions passed.');
