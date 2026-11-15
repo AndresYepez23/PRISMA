@@ -9,7 +9,7 @@ const safeJson = object => JSON.stringify(object).replace(/</g, '\\u003c').repla
 const urlFor = slug => BASE + '/herramientas/' + encodeURIComponent(slug) + '/';
 const categoryFor = tool => GROUPS[tool.category] || { name: 'Herramientas', order: 5 };
 export function toolUrl(page) {
-  const search = new URLSearchParams({ tool: page.tool });
+  const search = new URLSearchParams({ tool: page.tool, lang: 'es' });
   if (page.format) search.set('format', page.format);
   return '/?' + search.toString();
 }
@@ -44,14 +44,14 @@ function head(title, description, url, schema) {
 function header() {
   return [
     '<header class="seo-header"><div class="seo-header-inner">',
-    '<a class="seo-brand" href="/" aria-label="Volver a Prisma Space"><img src="/assets/prisma-mark.svg" alt="" width="36" height="36"><span><strong>Prisma Space</strong><small>ECOSISTEMA DIGITAL</small></span></a>',
-    '<nav class="seo-nav" aria-label="Navegación principal"><a href="/categorias/">Categorías</a><a href="/guias/">Guías</a><a href="/soluciones/">Soluciones</a><a href="/herramientas/">Herramientas</a><a href="/">Prisma Core</a><button id="seo-theme" type="button" aria-label="Cambiar tema">◐ <span>Tema</span></button></nav>',
+    '<a class="seo-brand" href="/?lang=es" aria-label="Volver a Prisma Space"><img src="/assets/prisma-mark.svg" alt="" width="36" height="36"><span><strong>Prisma Space</strong><small>ECOSISTEMA DIGITAL</small></span></a>',
+    '<nav class="seo-nav" aria-label="Navegación principal"><a href="/categorias/">Categorías</a><a href="/guias/">Guías</a><a href="/soluciones/">Soluciones</a><a href="/herramientas/">Herramientas</a><a href="/?lang=es">Prisma Core</a><button id="seo-theme" type="button" aria-label="Cambiar tema">◐ <span>Tema</span></button></nav>',
     '</div></header>'
   ].join('\n');
 }
 function footer() {
   return [
-    '<footer class="seo-footer"><div><a href="/">Prisma Space</a><span>Herramientas con intención.</span></div><nav aria-label="Enlaces del pie de página"><a href="/herramientas/">Herramientas</a><a href="/categorias/">Categorías</a><a href="/soluciones/">Soluciones</a><a href="/guias/">Guías</a><a href="/acerca.html">Acerca de</a><a href="/privacy.html#privacidad">Privacidad y uso</a></nav></footer>',
+    '<footer class="seo-footer"><div><a href="/?lang=es">Prisma Space</a><span>Herramientas con intención.</span></div><nav aria-label="Enlaces del pie de página"><a href="/herramientas/">Herramientas</a><a href="/categorias/">Categorías</a><a href="/soluciones/">Soluciones</a><a href="/guias/">Guías</a><a href="/acerca.html">Acerca de</a><a href="/privacy.html#privacidad">Privacidad y uso</a></nav></footer>',
     '<script>(function(){ const button = document.getElementById("seo-theme"); if(!button) return; button.addEventListener("click", function(){ const next = document.documentElement.dataset.theme === "light" ? "dark" : "light"; document.documentElement.dataset.theme = next; try {localStorage.setItem("prisma-theme", next);}catch{} const meta=document.querySelector("meta[name=theme-color]");if(meta)meta.content=next==="light"?"#f3f7fc":"#0e121d"; }); })();</script>'
   ].join('\n');
 }
@@ -82,7 +82,7 @@ function landing(page, pages, toolMap) {
   const faqs = page.faqs.map(pair => '<details><summary>' + esc(pair[0]) + '</summary><p>' + esc(pair[1]) + '</p></details>').join('\n');
   const body = [
     '<main class="seo-main">',
-    '<nav class="seo-breadcrumb" aria-label="Ruta de navegación"><a href="/">Inicio</a><span>/</span><a href="/herramientas/">Herramientas</a><span>/</span><a href="/herramientas/#' + esc(tool.category) + '">' + esc(categoryFor(tool).name) + '</a><span>/</span><span aria-current="page">' + esc(page.h1) + '</span></nav>',
+    '<nav class="seo-breadcrumb" aria-label="Ruta de navegación"><a href="/?lang=es">Inicio</a><span>/</span><a href="/herramientas/">Herramientas</a><span>/</span><a href="/herramientas/#' + esc(tool.category) + '">' + esc(categoryFor(tool).name) + '</a><span>/</span><span aria-current="page">' + esc(page.h1) + '</span></nav>',
     '<section class="seo-hero"><div class="seo-hero-copy">',
     '<div class="seo-eyebrow"><i></i>' + esc(categoryFor(tool).name) + ' · ' + (['local','browser'].includes(tool.mode)?'Procesamiento local':'Servicio conectado') + ' · ' + (beta ? 'Beta' : 'Disponible') + '</div>',
     '<h1>' + esc(page.h1) + '</h1>',
@@ -114,7 +114,7 @@ function directory(pages,toolMap) {
     return '<section class="seo-category" id="'+esc(c)+'"><div class="seo-section-label">EXPLORA POR CATEGORÍA</div><h2>'+esc(categoryFor({category:c}).name)+'</h2><div class="seo-directory-grid">'+links+'</div></section>';
   }).join('\n');
   const body=[
-    '<main class="seo-main"><nav class="seo-breadcrumb" aria-label="Ruta de navegación"><a href="/">Inicio</a><span>/</span><span aria-current="page">Directorio de herramientas</span></nav>',
+    '<main class="seo-main"><nav class="seo-breadcrumb" aria-label="Ruta de navegación"><a href="/?lang=es">Inicio</a><span>/</span><span aria-current="page">Directorio de herramientas</span></nav>',
     '<section class="seo-directory-hero"><div class="seo-eyebrow"><i></i>DIRECTORIO · PRISMA SPACE</div><h1>Herramientas online para resolver tareas digitales</h1>',
     '<p>Convierte documentos, edita imágenes, procesa vídeo y audio, crea contenido y resuelve tareas de estudio desde Prisma Space. Explora '+pages.length+' fichas prácticas que explican operaciones concretas y abre la herramienta correspondiente en un clic.</p><div class="seo-tags">'+tags+'</div></section>',
     sections,

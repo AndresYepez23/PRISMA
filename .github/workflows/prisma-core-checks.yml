@@ -46,6 +46,7 @@ jobs:
           PRISMA_CHROMIUM="$(node -e "console.log(require('playwright').chromium.executablePath())")"
           export PRISMA_FUNCTIONAL_OUTPUT="$RUNNER_TEMP/prisma-document-conversion"
           node prisma/tests/functional/document-conversion.cjs
+          node prisma/tests/functional/public-i18n.cjs
       - name: Preserve real document conversion evidence
         if: always()
         uses: actions/upload-artifact@v4

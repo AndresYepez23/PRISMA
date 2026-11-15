@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { runInNewContext } from 'node:vm';
 import { readFile } from 'node:fs/promises';
 import translations from '../src/locales/en.js';
 import { tools, categories } from '../src/registry.js';
@@ -50,11 +51,24 @@ test('English requests are normalized without losing negative instructions or co
 
 test('English language selection respects explicit routes, saved preferences and regional Spanish browsers',async()=>{
  const i18n=await read('src/i18n.js');
- assert.ok(i18n.includes('preferredBrowserLanguage = String(browserLanguages[0]'));
- assert.ok(i18n.includes('const routeLanguage = /^\\/en'));
- assert.ok(i18n.includes('const initialLanguage = routeLanguage || savedLanguage ||'));
- assert.ok(i18n.includes("browserSpanish ? 'es' : 'en'"));
- assert.ok(i18n.includes("location.pathname === '/' && initialLanguage === 'en'"));
+ const selection=i18n.slice(i18n.indexOf('const STORAGE_KEY'),i18n.indexOf('const manualTranslations'));
+ for(const [path,saved,browser,expected] of [
+  ['/en/','es','es-CO','en'],['/en/','','es-ES','en'],
+  ['/herramientas/pdf-a-word/','en','en-US','es'],['/privacy.html','en','en-US','es'],
+  ['/','es','en-US','es'],['/','en','es-CO','en'],
+  ['/','','es-CO','es'],['/','','en-US','en'],
+  ['/?lang=es','en','en-US','es'],['/?lang=invalid','','en-US','en'],
+  ['/en/?lang=es','es','es-CO','en']
+ ]) {
+  const url=new URL(path,'https://prismaspace.space');
+  const result=runInNewContext(selection+';initialLanguage',{
+   document:{documentElement:{},querySelector:()=>({content:'auto'})},
+   location:{pathname:url.pathname,search:url.search},localStorage:{getItem:()=>saved},URLSearchParams,
+   navigator:{languages:[browser,'es'],language:browser},
+   history:{replaceState:()=>assert.fail('Language detection must not redirect')}
+  });
+  assert.equal(result,expected,JSON.stringify({path,saved,browser}));
+ }
  assert.ok(i18n.includes("const target = next === 'en' ? '/en/' : '/'"));
 });
 

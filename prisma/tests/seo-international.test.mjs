@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, stat, readdir } from 'node:fs/promises';
 import { SEO_BASE } from '../seo/config.mjs';
 
 const root=new URL('../',import.meta.url);
@@ -19,6 +19,13 @@ const sitemap=await readOutput('sitemap.xml');
 const urls=[...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map(match=>match[1]);
 const decode=value=>value.replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>');
 const alt=(html,language)=>html.includes('hreflang="'+language+'"');
+const attributes=tag=>Object.fromEntries([...tag.matchAll(/([\w:-]+)="([^"]*)"/g)].map(([,key,value])=>[key,decode(value)]));
+const documentPath=url=>{
+ const path=new URL(url).pathname;
+ return path.slice(1)+(path.endsWith('/')?'index.html':'');
+};
+const documents=new Map(await Promise.all(urls.map(async url=>[url,await readOutput(documentPath(url))])));
+const assetPaths=new Set((await readdir(dist,{recursive:true})).map(path=>'/'+path));
 
 test('English catalogue has a one-to-one mapping to every Spanish tool page',()=>{
  assert.equal(pages.length,sourcePages.length);
@@ -130,7 +137,7 @@ test('English app shell and legal page use English metadata and provide a Spanis
  assert.equal(manifest.id,'/en/');
  assert.match(manifest.name,/Your AI workspace/);
  assert.match(app,/<meta name="prisma-default-language" content="en">/);
- assert.match(app,/<title>Prisma Space — Create, convert and explore<\/title>/);
+  assert.match(app,/<title>Prisma Space — Create, Convert, and Experiment<\/title>/);
  assert.match(app,/<link rel="canonical" href="https:\/\/prismaspace\.space\/en\/">/);
  assert.match(app,/<script type="module" src="\.\/src\/i18n\.js"><\/script>/);
  assert.match(app,/<base href="\/">/);
@@ -172,6 +179,92 @@ test('bilingual sitemap exposes paired alternates for every published page',asyn
  }
  const robots=await readOutput('robots.txt');
  assert.ok(robots.includes('Sitemap: '+SEO_BASE+'/sitemap.xml'));
+});
+
+test('every public page has reciprocal language URLs, coherent metadata and matching structured data',()=>{
+ const titles=new Set(),descriptions=new Set();
+ for(const entry of sitemap.matchAll(/<url>([\s\S]*?)<\/url>/g)) {
+  const url=decode(entry[1].match(/<loc>(.*?)<\/loc>/)[1]);
+  const html=documents.get(url),language=new URL(url).pathname.startsWith('/en/')?'en':'es';
+  const expected=Object.fromEntries([...entry[1].matchAll(/<xhtml:link[^>]+>/g)].map(([tag])=>{const a=attributes(tag);return [a.hreflang,a.href];}));
+  assert.match(html,new RegExp('<html lang="'+language+'"'),url);
+  const tags=[...html.matchAll(/<(?:link|meta)\b[^>]*>/g)].map(([tag])=>attributes(tag));
+  assert.equal(tags.find(a=>a.rel==='canonical')?.href,url,url);
+  const alternates=tags.filter(a=>a.rel==='alternate'&&a.hreflang);
+  assert.equal(alternates.length,3,url);
+  for(const locale of ['es','en','x-default']) {
+   assert.equal(alternates.find(a=>a.hreflang===locale)?.href,expected[locale],url+' '+locale);
+   assert.ok(documents.has(expected[locale]),'Missing alternate '+expected[locale]);
+   const reciprocal=[...documents.get(expected[locale]).matchAll(/<link\b[^>]*hreflang="[^"]+"[^>]*>/g)].map(([tag])=>attributes(tag));
+   assert.equal(reciprocal.find(a=>a.hreflang===language)?.href,url,url+' reciprocal '+locale);
+  }
+  assert.equal(expected['x-default'],expected.es,url);
+  const title=decode(html.match(/<title>(.*?)<\/title>/s)?.[1]||'');
+  const description=tags.find(a=>a.name==='description')?.content;
+  assert.ok(title&&description,url+' missing metadata');
+  assert.ok(!titles.has(title),'Duplicate title '+title);titles.add(title);
+  assert.ok(!descriptions.has(description),'Duplicate description '+description);descriptions.add(description);
+  assert.equal(tags.find(a=>a.property==='og:locale')?.content,language==='en'?'en_US':'es_ES',url);
+  assert.equal(tags.find(a=>a.property==='og:url')?.content,url,url);
+  assert.equal(tags.find(a=>a.property==='og:title')?.content,title,url);
+  const checkSchema=value=>{
+   if(!value||typeof value!=='object')return;
+   if(value.inLanguage)assert.equal(value.inLanguage,language,url);
+   Object.values(value).forEach(checkSchema);
+  };
+  for(const [,json] of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g))checkSchema(JSON.parse(json));
+ }
+});
+
+test('all public navigation, assets and fragments exist and keep their locale except equivalent language links',()=>{
+ const clean=html=>html.replace(/(<(script|style)\b[^>]*>)[\s\S]*?<\/\2>/gi,'$1</$2>');
+ for(const [url,html] of documents) {
+  const language=new URL(url).pathname.startsWith('/en/')?'en':'es';
+  const base=new URL(html.match(/<base href="([^"]+)"/)?.[1]||url,url);
+  const equivalents=new Set([...html.matchAll(/<link[^>]*hreflang="(?:es|en|x-default)"[^>]*>/g)].map(([tag])=>attributes(tag).href));
+  for(const [tag] of clean(html).matchAll(/<(?:a|link|script|img)\b[^>]*>/g)) {
+   const a=attributes(tag),href=a.href||a.src;
+   if(!href)continue;
+   const target=new URL(href,base);
+   if(target.origin!==SEO_BASE)continue;
+   assert.ok(!/\/en\/en\//.test(target.pathname),href);
+   const destination=target.origin+target.pathname;
+   if(documents.has(destination)) {
+    if(/^<a\b/.test(tag)) {
+     const targetLanguage=target.pathname.startsWith('/en/')?'en':'es';
+     assert.ok(language===targetLanguage||equivalents.has(destination),url+' mixes language at '+href);
+     if(language==='es'&&new URL(url).pathname!=='/'&&target.pathname==='/')assert.equal(target.searchParams.get('lang'),'es',url+' loses Spanish at '+href);
+    }
+    if(target.hash)assert.ok(documents.get(destination).includes('id="'+decodeURIComponent(target.hash.slice(1))+'"'),url+' missing fragment '+href);
+   } else {
+    // Check actual files, including scripts and icons, below the build output.
+    assert.ok(!target.pathname.endsWith('/'),url+' missing route '+href);
+    assert.ok(assetPaths.has(target.pathname),url+' missing asset '+href);
+   }
+  }
+ }
+});
+
+test('rendered English content and labels contain no Spanish UI and Spanish pages keep Spanish instructions',()=>{
+ for(const [url,html] of documents) {
+  const visible=decode(html.replace(/<(script|style|code|pre)\b[^>]*>[\s\S]*?<\/\1>/gi,'').replace(/<[^>]*>/g,' '));
+  const labels=[...html.matchAll(/\b(?:placeholder|title|aria-label|alt)="([^"]*)"/g)].map(m=>decode(m[1])).join(' ');
+  if(new URL(url).pathname.startsWith('/en/')) {
+   assert.doesNotMatch(visible+' '+labels,/\b(?:herramientas?|archivos?|convierte|páginas|imágenes|privacidad|guías|categorías|procesamiento|contraseña|disponibles|soluciones)\b/i,url);
+  } else {
+   assert.doesNotMatch(visible,/\b(?:Open tool|How to use this tool|Before you start|Frequently asked questions|Connected service|Local processing)\b/i,url);
+  }
+ }
+});
+
+test('PDF to Word publishes the complete article, instructions and FAQ in both languages',()=>{
+ for(const [records,prefix,slugKey] of [[sourcePages,'/herramientas/','slug'],[pages,'/en/tools/','englishSlug']]) {
+  const page=records.find(p=>p.tool==='pdf-to-word');
+  const html=documents.get(SEO_BASE+prefix+page[slugKey]+'/');
+  for(const value of [page.h1,page.intro,page.details,page.tip,...page.steps,...page.faqs.flat()]) {
+   assert.ok(decode(html).includes(value),prefix+' missing translated content: '+value);
+  }
+ }
 });
 
 test('legal navigation uses complete localized labels and separates the language selector',async()=>{

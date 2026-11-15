@@ -36,7 +36,8 @@ test('every preset matches the app allowlist and only supported URL fields are e
  for(const p of pages){
   const url=new URL(toolUrl(p),SEO_BASE);
   assert.equal(url.searchParams.get('tool'),p.tool);
-  assert.deepEqual([...url.searchParams.keys()],p.format?['tool','format']:['tool']);
+  assert.deepEqual([...url.searchParams.keys()],p.format?['tool','lang','format']:['tool','lang']);
+  assert.equal(url.searchParams.get('lang'),'es');
   if(p.format)assert.ok(actual[p.tool]?.includes(p.format));
  }
  assert.match(main,/openTool\(target\)/);

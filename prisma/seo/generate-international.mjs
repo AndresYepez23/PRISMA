@@ -247,7 +247,9 @@ function hubIndex(kind,title,description,url,items,prefix,esUrl) {
   return markup(title,description,url,schema,body,esUrl);
 }
 function injectAlternates(html,esUrl,enUrl) {
-  if (!html.includes('hreflang="en"')) html=html.replace('</head>',alternateTags(esUrl,enUrl)+'\n</head>');
+  // A visible language-selector anchor does not declare head-level alternates.
+  html=html.replace(/<link\b[^>]*rel="alternate"[^>]*hreflang="(?:es|en|x-default)"[^>]*>\s*/g,'');
+  html=html.replace('</head>',alternateTags(esUrl,enUrl)+'\n</head>');
   if (html.includes('class="seo-nav"') && !html.includes('seo-language-switch')) {
     html=html.replace(/(<nav class="seo-nav"[^>]*>)([\s\S]*?)(<\/nav>)/, '$1$2<a class="seo-language-switch" href="'+enUrl+'" lang="en">Cambiar a inglés</a>$3');
   }
@@ -258,8 +260,8 @@ function appEnglishHtml(html) {
     .replace('href="./manifest.webmanifest"','href="./manifest.en.webmanifest"')
     .replace('content="auto"','content="en"')
     .replace('content="es_ES"','content="en_US"')
-    .replace('<title>Prisma Space — Crea, convierte y experimenta</title>','<title>Prisma Space — Create, convert and explore</title>')
-    .replace('content="Prisma Space — Crea, convierte y experimenta"','content="Prisma Space — Create, convert and explore"')
+    .replace('<title>Prisma Space — Crea, convierte y experimenta</title>','<title>Prisma Space — Create, Convert, and Experiment</title>')
+    .replace('content="Prisma Space — Crea, convierte y experimenta"','content="Prisma Space — Create, Convert, and Experiment"')
     .replace('content="Prisma Space reúne herramientas digitales, procesamiento local e inteligencia artificial para crear, convertir, optimizar y experimentar en un solo lugar."','content="Prisma Space brings together digital tools, local processing, and artificial intelligence to create, convert, optimize, and explore in one place."')
     .replace('content="Crea, convierte, optimiza y experimenta con IA en un solo lugar."','content="Create, convert, optimize, and explore with AI in one place."')
     .replace(/<link rel="canonical" href="[^"]*">/,'<link rel="canonical" href="'+BASE+'/en/">')
@@ -267,6 +269,23 @@ function appEnglishHtml(html) {
   if (!html.includes('name="prisma-default-language"')) html=html.replace('<head>','<head><meta name="prisma-default-language" content="en">');
   const tags=alternateTags(BASE+'/',BASE+'/en/');
   if (!html.includes('hreflang="en"')) html=html.replace('</head>',tags+'\n</head>');
+  // Emit translated HTML for crawlers and before JavaScript loads. Never run
+  // replacements over scripts, styles, code, URLs or user-provided content.
+  const decode=value=>value.replace(/&(?:amp|quot|#39|lt|gt);/g, entity=>({'&amp;':'&','&quot;':'"','&#39;':"'",'&lt;':'<','&gt;':'>'})[entity]);
+  const translate=value=>value.replace(/\S[\s\S]*\S|\S/, text=>esc(t(decode(text))));
+  const paths=new Map([['/','/en/'],['/herramientas/','/en/tools/'],['/categorias/','/en/categories/'],['/soluciones/','/en/solutions/'],['/guias/','/en/guides/'],['/privacy.html','/en/privacy.html'],['/acerca.html','/en/about.html']]);
+  html=html.replace(/<!--[\s\S]*?-->|<(script|style|code|pre)\b[^>]*>[\s\S]*?<\/\1\s*>|<[^>]+>|[^<]+/gi,token=>{
+    if (/^<!--|^<(?:script|style|code|pre)\b/i.test(token)) return token;
+    if (!token.startsWith('<')) return translate(token);
+    token=token.replace(/\b(placeholder|title|aria-label|alt)="([^"]*)"/g,(_,attribute,value)=>attribute+'="'+translate(value)+'"');
+    if (/^<a\b/i.test(token)) token=token.replace(/href="([^"]*)"/, (attribute,href)=>{
+      if (!href || href.startsWith('#')) return attribute;
+      const url=new URL(decode(href),BASE+'/');
+      const target=url.origin===BASE && paths.get(url.pathname);
+      return target?'href="'+esc(target+url.search+url.hash)+'"':attribute;
+    });
+    return token;
+  });
   return html;
 }
 export async function generateInternationalPages(output) {
