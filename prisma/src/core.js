@@ -2649,7 +2649,7 @@ function createExecutionResults(executed,partial){
           previewButton.setAttribute('aria-expanded','true');
           previewButton.textContent='Cerrar vista previa';
           document.addEventListener('keydown',handlePreviewKeydown,true);
-          closeButton.focus({preventScroll:true});
+          try{closeButton.focus({preventScroll:true});}catch{closeButton.focus();}
         };
         previewButton.addEventListener('click',()=>{
           if(panel.isConnected&&!panel.classList.contains('hidden'))closePreview();
