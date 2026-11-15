@@ -1,8 +1,8 @@
-name: Qwen staging live interpreter smoke
+name: Qwen staging live hybrid smoke
 on:
   push:
     branches:
-      - qwen-staging-live-smoke-manual
+      - feature/qwen-hybrid-production-routing-20261114
 permissions:
   contents: read
 jobs:
@@ -16,7 +16,7 @@ jobs:
           node-version: '22'
       - name: Check isolated staging readiness without inference
         env:
-          QWEN_STAGING_URL: https://d2681ae1.prisma-queen-staging.pages.dev
+          QWEN_STAGING_URL: https://0d467fde.prisma-queen-staging.pages.dev
         run: |
           set -euo pipefail
           ready=false
@@ -39,7 +39,7 @@ jobs:
           NODE
       - name: Run exactly one real Qwen interpretation, with no retry
         env:
-          QWEN_STAGING_URL: https://d2681ae1.prisma-queen-staging.pages.dev
+          QWEN_STAGING_URL: https://0d467fde.prisma-queen-staging.pages.dev
         run: |
           set -euo pipefail
           status=$(curl --silent --show-error --max-time 45 \
@@ -63,6 +63,35 @@ jobs:
           console.log(JSON.stringify(evidence));
           if(!ok)throw Error('REAL_QWEN_INTERPRETATION_ACCEPTANCE_FAILED');
           NODE
+      - name: Validate one real Qwen multi-step plan, with one inference
+        env:
+          QWEN_STAGING_URL: https://0d467fde.prisma-queen-staging.pages.dev
+        run: |
+          set -euo pipefail
+          status=$(curl --silent --show-error --max-time 65 \
+            --request POST \
+            --header "Origin: $QWEN_STAGING_URL" \
+            --header 'Content-Type: application/json' \
+            --data '{"text":"Extrae la segunda página del PDF y conviértela a Word","files":[{"name":"informe.pdf","type":"application/pdf","size":1250}],"maxInferences":1}' \
+            --output "$RUNNER_TEMP/qwen-plan.json" \
+            --write-out '%{http_code}' \
+            "$QWEN_STAGING_URL/api/core/plan")
+          QWEN_PLAN_HTTP_STATUS="$status" node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const status=Number(process.env.QWEN_PLAN_HTTP_STATUS);
+          let result={};try{result=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/qwen-plan.json','utf8'));}catch{}
+          const steps=result.plan?.steps||[];
+          const ids=steps.map(s=>s.tool_id);
+          const ok=status===200&&result.ok===true&&result.source==='queen'&&result.plan?.intent==='execute'&&
+            ids.length===2&&ids[0]==='pdf-extract'&&ids[1]==='pdf-to-word'&&
+            steps[1].dependsOn?.includes(steps[0].id)&&steps[1].inputs?.includes('step:'+steps[0].id)&&
+            result.metrics?.inferences===1;
+          const evidence={httpStatus:status,ok:result.ok===true,source:result.source||null,intent:result.plan?.intent||null,
+            steps:steps.map(s=>({id:s.id,tool_id:s.tool_id,inputs:s.inputs,dependsOn:s.dependsOn,params:s.params})),
+            metrics:result.metrics||null,code:result.code||null};
+          console.log(JSON.stringify(evidence));
+          if(!ok)throw Error('REAL_QWEN_MULTI_STEP_PLAN_ACCEPTANCE_FAILED');
+          NODE
       - name: Preserve sanitized live evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -71,4 +100,5 @@ jobs:
           path: |
             ${{ runner.temp }}/qwen-ready.json
             ${{ runner.temp }}/qwen-result.json
+            ${{ runner.temp }}/qwen-plan.json
           if-no-files-found: ignore
