@@ -1,17 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {onRequest,STABLE_CORE_ORIGIN} from '../functions/api/_middleware.js';
+import {onRequest,STABLE_CORE_ORIGIN,QWEN_INTERPRETER_ORIGIN} from '../functions/api/_middleware.js';
 
-test('Qwen interpreter stays on the immutable known-good backend until current deployment secrets are verified',async()=>{
+test('Qwen interpreter is proxied only to the dedicated isolated Qwen service',async()=>{
  let nextCalled=0,upstream;
  const request=new Request('https://prismaspace.space/api/core/qwen-interpret',{method:'POST',
   headers:{Origin:'https://prismaspace.space','Content-Type':'application/json'},body:'{}'});
  const response=await onRequest({request,next:async()=>{nextCalled++;return new Response('wrong-route');}},
-  {fetcher:async(req)=>{upstream=req;return new Response('stable',{status:200});}});
- assert.equal(await response.text(),'stable');
- assert.equal(nextCalled,0);assert.equal(new URL(upstream.url).origin,STABLE_CORE_ORIGIN);
+  {fetcher:async(req)=>{upstream=req;return new Response('qwen-service',{status:200});}});
+ assert.equal(await response.text(),'qwen-service');
+ assert.equal(nextCalled,0);assert.equal(new URL(upstream.url).origin,QWEN_INTERPRETER_ORIGIN);
  assert.equal(new URL(upstream.url).pathname,'/api/core/qwen-interpret');
- assert.equal(response.headers.get('X-Prisma-Core-Backend'),'stable-17a6c338');
+ assert.equal(upstream.headers.get('Origin'),QWEN_INTERPRETER_ORIGIN);
+ assert.equal(response.headers.get('X-Prisma-Core-Backend'),'qwen-dedicated-service');
 });
 
 test('all other production API routes remain on the known-good credential-preserving backend',async()=>{
