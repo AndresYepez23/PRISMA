@@ -171,6 +171,23 @@ const server=http.createServer((req,res)=>{
   const mismatchReply=await page.evaluate(()=>window.testReplies.at(-1));
   assert.match(mismatchReply,/Word.*no en PDF/);assert.equal(await page.locator('.core-result-download').count(),beforeMismatch);
   report.cases.push({name:'chat-blocks-source-mismatch',reply:mismatchReply,noNewDownload:true});
+  while(await page.locator('.core-attachment-remove').count())await page.locator('.core-attachment-remove').first().click();
+  await page.locator('#core-file-input').setInputFiles({name:'cuatro-paginas.pdf',mimeType:'application/pdf',buffer:fs.readFileSync(out+'/cuatro-paginas.pdf')});
+  const beforeRange=await page.locator('.core-result-download').count(),beforeRangeReplies=await page.evaluate(()=>window.testReplies.length);
+  await page.locator('#core-input').fill('Extrae la página 8 de este PDF');await page.locator('#core-send').click();
+  await page.waitForFunction(n=>!document.querySelector('#core-send').disabled&&window.testReplies.length>n,beforeRangeReplies);
+  const rangeReply=await page.evaluate(()=>window.testReplies.at(-1));assert.match(rangeReply,/4 páginas.*8/);
+  assert.equal(await page.locator('.core-result-download').count(),beforeRange);
+  report.cases.push({name:'chat-blocks-out-of-range-page',reply:rangeReply,noNewDownload:true});
+  await page.locator('#core-input').fill('2');await page.locator('#core-send').click();
+  await page.waitForFunction(n=>document.querySelectorAll('.core-result-download').length>n,beforeRange);
+  const correctedDownload=page.waitForEvent('download');await page.locator('.core-result-download button').filter({hasText:/^Descargar$/}).last().click();
+  const corrected=await correctedDownload;assert.match(corrected.suggestedFilename(),/\.pdf$/);await corrected.saveAs(out+'/pagina-corregida.pdf');
+  const correctionText=await page.evaluate(async bytes=>{
+   const {runTool}=await import('/src/engines.js');return (await runTool('pdf-text',[new File([new Uint8Array(bytes)],'corregido.pdf',{type:'application/pdf'})],{})).text;
+  },Array.from(fs.readFileSync(out+'/pagina-corregida.pdf')));
+  assert.match(correctionText,/PAGE 2/);assert.doesNotMatch(correctionText,/PAGE [134]/);
+  report.cases.push({name:'chat-corrects-range-without-replaying-old-conversion',onlyPageTwo:true,download:corrected.suggestedFilename()});
   assert.equal(report.apiAttempts.some(x=>x.method==='POST'),false,'local assessment must not dispatch inference');
  }finally{
   fs.writeFileSync(out+'/results.json',JSON.stringify(report,null,2));

@@ -5,6 +5,7 @@ import {validateFileRequest,validateFileToolInputs,inspectExecutionFile,fileVali
 import {tools} from '../src/registry.js';
 import {runTool} from '../src/engines.js';
 import {createTaskMemory} from '../src/core-task-memory.js';
+import {planCapabilityRequest} from '../src/core-capabilities.js';
 import {validateQueenPlan} from '../src/queen-plan.js';
 import {executeQueenDAG} from '../src/queen-execution.js';
 import {runToolBatch} from '../src/core-execution.js';
@@ -41,6 +42,16 @@ test('video requested with a photo is blocked without opening a compression engi
  const r=await validateFileRequest('Comprime este video',[file('foto.jpg','image/jpeg')],options({kind:'image',readable:true}));
  assert.equal(r.code,'SOURCE_CONTRADICTION');
  await assert.rejects(validateFileToolInputs(tool('video-compress'),[file('foto.jpg','image/jpeg')],{},options({kind:'image'})),e=>e.code==='INCOMPATIBLE_FILE');
+});
+test('ambiguous image dimensions stay in the existing local clarification flow',async()=>{
+ const input=file('foto.jpg','image/jpeg');
+ const r=await validateFileRequest('Redimensiona esta imagen',[input],options({kind:'image',readable:true}));assert.equal(r.ok,true);
+ const p=planCapabilityRequest('Redimensiona esta imagen',[input]);assert.equal(p.type,'needs-input');assert.equal(p.steps.length,0);
+});
+test('media container MIME types and complete PDF sets retain compatible local routes',async()=>{
+ await validateFileToolInputs(tool('audio-convert'),[file('audio.m4a','audio/mp4')],{format:'wav'},options({kind:'audio'}));
+ const r=await validateFileRequest('Une estos tres PDF',[file(),file(),file('word.docx',mime)],{inspect:async f=>({kind:f.name.endsWith('.docx')?'docx':'pdf'})});
+ assert.equal(r.code,'SOURCE_CONTRADICTION');
 });
 test('unreadable, empty and mislabeled files do not authorize a tool',async()=>{
  assert.equal((await validateFileRequest('Convierte este PDF a Word',[file()],options({kind:'pdf',readable:false}))).code,'UNREADABLE_FILE');

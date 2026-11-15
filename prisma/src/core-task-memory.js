@@ -13,7 +13,7 @@ export function createTaskMemory({maxBytes=120*1024*1024,maxChats=8,ttl=30*60*10
   // objective, not resurrect a prior successful split or conversion.
   // Confirmations only resume a task that is genuinely waiting, never replay a completed job.
   const confirmReply=/^(?:si|adelante|ejecuta|procede|confirmo|reintenta|intentalo de nuevo|vuelve a intentar|hazlo|continua)[.!\s]*$/.test(q);
-  const uploadReply=/^(?:aqui(?: esta(?: el archivo| el pdf)?)?|ahi|adjunto|te envio|ya (?:lo )?(?:subi|cargue|adjunte)|listo|hazlo|este archivo|el archivo|el pdf|procesa (?:los |estos |mis )?archivos?(?: adjuntos?)?|procesa (?:este |el )?(?:archivo|pdf)|continua (?:con )?(?:el |los )?archivos?|\d|png|webp|jpg)[.!?\s]*$/.test(q);
+  const uploadReply=/^(?:aqui(?: esta(?: el archivo| el pdf)?)?|ahi|adjunto|te envio|ya (?:lo )?(?:subi|cargue|adjunte)|listo|hazlo|este archivo|el archivo|el pdf|procesa (?:los |estos |mis )?archivos?(?: adjuntos?)?|procesa (?:este |el )?(?:archivo|pdf)|continua (?:con )?(?:el |los )?archivos?|(?:paginas?\s+)?\d+(?:\s*-\s*\d+)?|png|webp|jpg)[.!?\s]*$/.test(q);
   const formatReply=/^(?:a|en|como)\s+(?:word|docx|pdf|png|jpe?g|webp|csv|json|excel|xlsx|mp3|wav|txt|html)[.!?\s]*$/.test(q);
   if(waiting&&now()-waiting.updated<ttl&&(confirmReply||uploadReply||formatReply)){
    const replaced=newFiles.length&&waiting.files.length&&waiting.files.some(file=>!newFiles.includes(file));

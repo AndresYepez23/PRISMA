@@ -3,7 +3,7 @@ import {parsePdfPageSelection} from './pdf-split-options.js';
 const inspections=new WeakMap();
 const norm=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const labels={pdf:'PDF',docx:'Word (.docx)',image:'imagen',video:'vídeo',audio:'audio',text:'texto',csv:'CSV',json:'JSON',excel:'Excel',zip:'ZIP'};
-const kindOf=value=>/pdf/.test(value)?'pdf':/docx|wordprocessingml|\bword\b/.test(value)?'docx':/image|foto|png|jpe?g|webp|gif|bmp|svg/.test(value)?'image':/video|mp4|mov|mkv|webm|avi/.test(value)?'video':/audio|mp3|wav|ogg|flac|aac|m4a/.test(value)?'audio':/csv/.test(value)?'csv':/json/.test(value)?'json':/xlsx?|spreadsheet/.test(value)?'excel':/text|txt|markdown|html?/.test(value)?'text':'';
+const kindOf=value=>/^audio\//.test(value)?'audio':/^video\//.test(value)?'video':/pdf/.test(value)?'pdf':/docx|wordprocessingml|\bword\b/.test(value)?'docx':/image|foto|png|jpe?g|webp|gif|bmp|svg/.test(value)?'image':/video|mp4|mov|mkv|webm|avi/.test(value)?'video':/audio|mp3|wav|ogg|flac|aac|m4a/.test(value)?'audio':/csv/.test(value)?'csv':/json/.test(value)?'json':/xlsx?|spreadsheet/.test(value)?'excel':/text|txt|markdown|html?/.test(value)?'text':'';
 const blocked=(code,message)=>({ok:false,code,message});
 export const fileValidationError=(code,message)=>Object.assign(Error(message),{code,fileValidation:true});
 export async function inspectExecutionFile(file,inspect){
@@ -40,7 +40,7 @@ export async function validateFileRequest(text,files,{inspect,tools=[]}={}){
  if(isInformationalIntent(text))return {ok:true};
  const q=norm(instruction).split(/[,;.!?]|\s+(?:pero|y)\s+/).filter(s=>!/^\s*(?:no\b|sin\b|nunca\b)/.test(s)).join(' ');
  if(!/\b(?:conviert\w*|convertir|transform\w*|comprim\w*|extra\w*|une|unir|fusion\w*|junta\w*|divide\w*|dividir|recorta\w*|redimensiona\w*|quita\w*|elimina\w*|rota\w*|gira\w*|procesa\w*|ocr)\b/.test(q))return {ok:true};
- const source=q.match(/\b(?:este|esta|estos|estas|el|la|los|las|del|desde|de)\s+(?:(?:archivo|documento)\s+)?(pdf|docx|word|video|imagen|foto|audio|csv|json|excel)\b/);
+ const source=q.match(/\b(?:este|esta|estos|estas|el|la|los|las|del|desde|de)\s+(?:(?:dos|tres|cuatro|cinco|seis|\d+)\s+)?(?:(?:archivo|documento)s?\s+)?(pdf|docx|word|video|imagen|foto|audio|csv|json|excel)\b/);
  if(!files.length)return source||/\b(?:este|el|un|los|estos)\s+(?:archivo|documento)s?\b/.test(q)?blocked('MISSING_FILE','Adjunta el archivo de origen para «'+instruction.slice(0,120)+'». Comprobaré su formato antes de ejecutar.'):{ok:true};
  const numbers={dos:2,tres:3,cuatro:4,cinco:5,seis:6};
  const exact=q.match(/\b(?:une|unir|fusiona|junta|combina)\s+(?:(?:estos|los|mis)\s+)?(\d+|dos|tres|cuatro|cinco|seis)\s+(?:pdf|archivos|documentos)\b/);
