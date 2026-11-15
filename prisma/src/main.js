@@ -541,11 +541,15 @@ async function refreshProviderConnectionStatuses(){
     }
   }
   if($('#openrouter-usage'))void refreshOpenRouterUsage();
-  const count=Object.values(central.providers||{}).filter(Boolean).length;
+  const hiddenProviders=new Set(['requesty','huggingface']);
+  const count=Object.entries(central.providers||{}).filter(([provider,enabled])=>enabled&&!hiddenProviders.has(provider)).length;
+  const visibleCredentials=Object.entries(central.credentialSlots||{})
+    .filter(([provider])=>!hiddenProviders.has(provider))
+    .reduce((total,[,info])=>total+Number(info?.count||0),0);
   const summary=$('#connections-summary');
   if(summary){
     const capacity=central.capacity||{};
-    summary.textContent=count+' motores disponibles · '+Number(capacity.configuredCredentials||0)+' credenciales · pool '+Number(capacity.dailyBudget||0)+'/día · '+Number(capacity.visitorDailyLimit||0)+'/día por IP';
+    summary.textContent=count+' motores disponibles · '+visibleCredentials+' credenciales · pool '+Number(capacity.dailyBudget||0)+'/día · '+Number(capacity.visitorDailyLimit||0)+'/día por IP';
   }
   const usageNote=$('#inference-usage-summary');
   if(usageNote){
