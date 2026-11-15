@@ -1,0 +1,80 @@
+name: Qwen production live interpreter smoke
+on:
+  push:
+    branches:
+      - test/qwen-production-live-smoke-20261115
+permissions:
+  contents: read
+jobs:
+  qwen-production-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Wait for the exact production Pages build without inference
+        env:
+          PRODUCTION_URL: https://prismaspace.space
+          EXPECTED_PRODUCTION_SHA: a522320f067d9bb67450deb6b6b8a01f0553ccbe
+        run: |
+          set -euo pipefail
+          ready=false
+          for attempt in $(seq 1 30); do
+            if curl --silent --show-error --max-time 10 \
+              "$PRODUCTION_URL/prisma-build.json" \
+              --output "$RUNNER_TEMP/prisma-build.json"; then
+              if node --input-type=module -e "import fs from 'node:fs';const b=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+'/prisma-build.json','utf8'));if(b.build!==process.env.EXPECTED_PRODUCTION_SHA)process.exit(1);"; then
+                ready=true
+                break
+              fi
+            fi
+            sleep 10
+          done
+          test "$ready" = true
+          curl --silent --show-error --max-time 10 \
+            "$PRODUCTION_URL/api/core/qwen-interpret" \
+            --output "$RUNNER_TEMP/qwen-production-ready.json"
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/qwen-production-ready.json','utf8'));
+          if(r.ready!==true)throw Error('PRODUCTION_QWEN_INTERPRETER_NOT_READY');
+          console.log(JSON.stringify({ready:true,deploymentCommit:r.deploymentCommit||null}));
+          NODE
+      - name: Run exactly one real production Qwen interpretation, with no retry
+        env:
+          PRODUCTION_URL: https://prismaspace.space
+        run: |
+          set -euo pipefail
+          status=$(curl --silent --show-error --max-time 45 \
+            --request POST \
+            --header "Origin: $PRODUCTION_URL" \
+            --header 'Content-Type: application/json' \
+            --data '{"text":"Extrae la segunda página del PDF y conviértela a Word","files":[{"name":"informe.pdf","type":"application/pdf","size":1250}]}' \
+            --output "$RUNNER_TEMP/qwen-production-result.json" \
+            --write-out '%{http_code}' \
+            "$PRODUCTION_URL/api/core/qwen-interpret")
+          QWEN_HTTP_STATUS="$status" node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const status=Number(process.env.QWEN_HTTP_STATUS);
+          let result={};try{result=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/qwen-production-result.json','utf8'));}catch{}
+          const ids=result.tool_ids||[];
+          const ok=status===200&&result.ok===true&&result.source==='qwen-core'&&result.intent==='tools'&&
+            ids.indexOf('pdf-extract')>=0&&ids.indexOf('pdf-to-word')>ids.indexOf('pdf-extract')&&
+            result.metrics?.inferences===1;
+          const evidence={httpStatus:status,ok:result.ok===true,source:result.source||null,intent:result.intent||null,
+            toolIds:ids,metrics:result.metrics||null,deploymentCommit:result.deploymentCommit||null,code:result.code||null};
+          console.log(JSON.stringify(evidence));
+          if(!ok)throw Error('PRODUCTION_QWEN_INTERPRETATION_ACCEPTANCE_FAILED');
+          NODE
+      - name: Preserve sanitized production evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen-production-live-smoke
+          path: |
+            ${{ runner.temp }}/prisma-build.json
+            ${{ runner.temp }}/qwen-production-ready.json
+            ${{ runner.temp }}/qwen-production-result.json
+          if-no-files-found: ignore
