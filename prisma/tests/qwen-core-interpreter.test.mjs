@@ -144,7 +144,7 @@ test('production interpreter cannot be enabled on unrelated or preview hosts',as
 
 test('staging readiness probe exposes only its own deployment commit without inference',async()=>{
  const env={QUEEN_ENABLED:'1',QUEEN_STAGE:'staging',QWEN_CORE_STAGING_ENABLED:'1',CF_PAGES_COMMIT_SHA:'test-commit'};
- const good=await onRequestGet({request:new Request('https://abc.prisma-queen-staging.pages.dev/api/core/qwen-interpret'),env});
+ const good=await onRequestGet({request:new Request('https://abcdef12.prisma-queen-staging.pages.dev/api/core/qwen-interpret'),env});
  assert.deepEqual(await good.json(),{ready:true,deploymentCommit:'test-commit'});
  const bad=await onRequestGet({request:new Request('https://prismaspace.pages.dev/api/core/qwen-interpret'),env});
  assert.deepEqual(await bad.json(),{ready:false,deploymentCommit:null});
