@@ -18,6 +18,7 @@ import "./tests/settings-ui.test.mjs";
 import "./tests/core-mobile-prism-layout.test.mjs";
 import "./tests/core-website-preview.test.mjs";
 import "./tests/i18n.test.mjs";
+import "./tests/pwa-update-lifecycle.test.mjs";
 
 // Cloudflare Pages secrets are runtime-only bindings, not build-time variables.
 // Production credential readiness is verified by read-only runtime smoke tests.
