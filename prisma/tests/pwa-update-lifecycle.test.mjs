@@ -43,7 +43,7 @@ test('runtime update reload is available only through an explicit user action', 
   assert.match(handler, /textContent='Recargar'/);
   assert.match(handler, /action\.addEventListener\('click',\(\)=>window\.location\.reload\(\)/,
     'only the user clicking Recargar may trigger the update reload');
-  assert.match(handler, /dataPrismaRuntimeUpdate/,
+  assert.match(handler, /prismaRuntimeUpdate/,
     'duplicate update notices must be suppressed');
 });
 
