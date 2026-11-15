@@ -9,7 +9,8 @@ import { compressVideoNative, preferNativeVideoCompression, localizedVideoError 
 import { selectImageCandidates, imageFailureDecision } from './image-routing.js';
 import { runAdvancedTextTool } from './advanced-text-tools.js';
 import { LOCAL_CREATOR_TOOL_IDS, runLocalCreatorTool } from './local-creator-tools.js';
-import {inspectArchiveFormat} from './file-inspection.js';
+import {inspectArchiveFormat,validateFileToolInputs} from './file-inspection.js';
+import {tools as executionTools} from './registry.js';
 const PDF_LIB='https://esm.sh/pdf-lib@1.17.1';
 const QR='https://esm.sh/qrcode@1.5.4';
 const MAMMOTH='https://esm.sh/mammoth@1.9.1';
@@ -341,7 +342,7 @@ function formatXmlText(source){
  }
  return lines.join('\n');
 }
-async function inspectFile(file){
+async function inspectFile(file,{deep=false}={}){
  if(!file)throw Error('Selecciona un archivo.');
  const head=new Uint8Array(await file.slice(0,32).arrayBuffer());
  const hex=[...head].map(x=>x.toString(16).padStart(2,'0')).join(' ').toUpperCase();
@@ -352,27 +353,56 @@ async function inspectFile(file){
  else if(starts(0x89,0x50,0x4e,0x47))signature='PNG';
  else if(starts(0xff,0xd8,0xff))signature='JPEG';
  else if(starts(0x47,0x49,0x46,0x38))signature='GIF';
+ else if(starts(0x42,0x4d))signature='BMP';
+ else if(starts(0x49,0x49,0x2a,0)||starts(0x4d,0x4d,0,0x2a))signature='TIFF';
  else if(starts(0x50,0x4b,0x03,0x04))signature='ZIP / DOCX / XLSX / PPTX';
  else if(ascii.slice(0,4)==='RIFF'&&ascii.slice(8,12)==='WEBP')signature='WebP';
- else if(ascii.slice(4,8)==='ftyp')signature='MP4 / ISO Base Media';
+ else if(ascii.slice(0,4)==='RIFF'&&ascii.slice(8,12)==='WAVE')signature='WAV';
+ else if(ascii.slice(4,8)==='ftyp')signature=/avif|avis|heic|heix|mif1|msf1/.test(ascii.slice(8,16))?'Imagen ISO Base Media':'MP4 / ISO Base Media';
  else if(ascii.slice(0,3)==='ID3'||starts(0xff,0xfb))signature='MP3';
  else if(ascii.slice(0,4)==='OggS')signature='OGG';
  else if(ascii.slice(0,4)==='fLaC')signature='FLAC';
- let kind=({PDF:'pdf',PNG:'image',JPEG:'image',GIF:'image',WebP:'image',MP3:'audio',OGG:'audio',FLAC:'audio','MP4 / ISO Base Media':'video'})[signature]||'';
+ let kind=({PDF:'pdf',PNG:'image',JPEG:'image',GIF:'image',BMP:'image',TIFF:'image','Imagen ISO Base Media':'image',WebP:'image',WAV:'audio',MP3:'audio',OGG:'audio',FLAC:'audio','MP4 / ISO Base Media':'video'})[signature]||'';
  let basis=kind?'binary-signature':'unrecognized';
+ // MP4 and Ogg are containers, not proof of an audio/video stream layout.
+ // Preserve their existing media decoder routes; the engine validates streams.
+ if(signature==='MP4 / ISO Base Media'&&(/M4A/.test(ascii)||file.type.startsWith('audio/')||/\.m4a$/i.test(file.name)))kind='audio';
+ if(signature==='OGG'&&file.type.startsWith('video/'))kind='video';
  if(starts(0x50,0x4b,0x03,0x04)){
   const archive=await inspectArchiveFormat(file);kind=archive.kind;signature=archive.signature;basis='archive-directory';
- }else if(!kind&&/\.(?:txt|md|markdown|html?|csv|json)$/i.test(file.name)){
+ }else if(!kind&&/\.(?:txt|md|markdown|html?|csv|json|svg)$/i.test(file.name)){
   const sample=new Uint8Array(await file.slice(0,4096).arrayBuffer());
   try{
    new TextDecoder('utf-8',{fatal:true}).decode(sample,{stream:file.size>sample.length});
    if(sample.length&&!sample.some(b=>b===0||(b<32&&![9,10,13].includes(b)))){
-    kind=/\.csv$/i.test(file.name)?'csv':/\.json$/i.test(file.name)?'json':'text';
+    kind=/\.svg$/i.test(file.name)&&/<svg\b/i.test(new TextDecoder().decode(sample))?'image':/\.csv$/i.test(file.name)?'csv':/\.json$/i.test(file.name)?'json':'text';
     signature='Texto UTF-8 compatible (muestra); subtipo según extensión';basis='text-sample-and-extension';
    }
   }catch{/* Unknown binary or another encoding: do not claim a text conversion. */}
  }
- return {inspection:{kind,basis,signature},text:['Nombre: '+file.name,'Tamaño: '+formatBytesEngine(file.size),'Tipo MIME declarado: '+(file.type||'No indicado'),'Última modificación: '+(file.lastModified?new Date(file.lastModified).toLocaleString('es-CO'):'No indicada'),'Extensión: '+(file.name.includes('.')?file.name.split('.').pop().toUpperCase():'Sin extensión'),'Firma detectada: '+signature,'Primeros bytes (hex): '+hex,'Vista ASCII: '+ascii].join('\n'),summary:'Inspección local. No se ha subido el archivo.'};
+ const inspection={kind,basis,signature,format:({PNG:'png',JPEG:'jpg',WebP:'webp',GIF:'gif'})[signature]||null};
+ if(deep&&kind==='pdf'){
+  const pdfjs=await getPdfJs();let task;
+  try{
+   task=pdfjs.getDocument({data:new Uint8Array(await bytes(file)),stopAtErrors:true});
+   const pdf=await task.promise;inspection.pages=pdf.numPages;inspection.readable=true;
+   inspection.restricted=(await pdf.getPermissions())!==null;
+   inspection.hasSelectableText=false;inspection.textCheckedPages=Math.min(3,pdf.numPages);
+   if(!inspection.restricted)for(let n=1;n<=inspection.textCheckedPages;n++){
+    const page=await pdf.getPage(n),content=await page.getTextContent();
+    if(content.items.some(item=>String(item.str||'').trim()))inspection.hasSelectableText=true;
+   }
+  }catch(error){if(error.name==='PasswordException')inspection.requiresPassword=true;else inspection.readable=false;}
+  finally{await task?.destroy().catch(()=>{});}
+ }else if(deep&&kind==='docx'){
+  const mammoth=await load(MAMMOTH);
+  try{await mammoth.extractRawText({arrayBuffer:await bytes(file)});inspection.readable=true;}catch{inspection.readable=false;}
+ }else if(deep&&kind==='image'&&typeof Image==='function'){
+  const image=new Image(),url=URL.createObjectURL(file);let timer;
+  try{await new Promise((resolve,reject)=>{timer=setTimeout(()=>reject(Error('IMAGE_DECODE_TIMEOUT')),5000);image.onload=resolve;image.onerror=reject;image.src=url;});inspection.width=image.width;inspection.height=image.height;inspection.readable=true;}catch{inspection.readable=false;}
+  finally{clearTimeout(timer);image.src='';URL.revokeObjectURL(url);}
+ }
+ return {inspection,text:['Nombre: '+file.name,'Tamaño: '+formatBytesEngine(file.size),'Tipo MIME declarado: '+(file.type||'No indicado'),'Última modificación: '+(file.lastModified?new Date(file.lastModified).toLocaleString('es-CO'):'No indicada'),'Extensión: '+(file.name.includes('.')?file.name.split('.').pop().toUpperCase():'Sin extensión'),'Firma detectada: '+signature,'Primeros bytes (hex): '+hex,'Vista ASCII: '+ascii].join('\n'),summary:'Inspección local. No se ha subido el archivo.'};
 }
 async function jsonToExcel(p){
  const source=String(p.text||'').trim();if(!source)throw Error('Pega una lista JSON.');
@@ -1607,7 +1637,7 @@ async function dispatchTool(id,files=[],p={},cb){
  if(id==='video-thumbnail'||id==='video-gif'||id==='video-mute'||id==='audio-trim')return mediaAdvanced(id,files,p,cb);
  if(id==='qr-scan')return scanQr(files[0]);
  if(id==='hash-file')return hashFile(files[0]);
- if(id==='file-inspector')return inspectFile(files[0]);
+ if(id==='file-inspector')return inspectFile(files[0],p);
  if(id==='json-xlsx')return jsonToExcel(p);
  if(id==='image-social-kit')return socialImageKit(files[0],p,cb);
  if(id==='qr-vcard'){
@@ -1653,6 +1683,6 @@ async function dispatchTool(id,files=[],p={},cb){
 
 export async function runTool(id,files=[],p={},cb){
  const start=Date.now();recordCoreMetric(id,'requested',{files:files.length});
- try{validateImageParameters(id,p);const result=await verifyImageResult(id,await dispatchTool(id,files,p,cb),p,files);validateAgentStepResult(id,result);recordCoreMetric(id,'succeeded',{duration:Date.now()-start,files:files.length});return result;}
+ try{validateImageParameters(id,p);await validateFileToolInputs(executionTools.find(t=>t.id===id),files,p,{inspect:file=>inspectFile(file,{deep:true})});const result=await verifyImageResult(id,await dispatchTool(id,files,p,cb),p,files);validateAgentStepResult(id,result);recordCoreMetric(id,'succeeded',{duration:Date.now()-start,files:files.length});return result;}
  catch(error){recordCoreMetric(id,'failed',{duration:Date.now()-start,files:files.length});throw error;}
 }

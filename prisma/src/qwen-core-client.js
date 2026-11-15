@@ -1,3 +1,5 @@
+import {isInformationalIntent} from './core-capabilities.js';
+import {tools} from './registry.js';
 // The browser never receives Qwen's credentials or a tool-execution command.
 // Hints only re-rank EXISTING catalog entries; Core still plans and validates.
 // Client-side prefilter only; the server owns the stricter workflow match
@@ -15,14 +17,25 @@ export function isKnownScannedCsvExcelCandidate(text,files=[]){
 }
 const QWEN_CORE_BACKOFF_MS=30000;
 let unavailableUntil=0;
+const inflight=new Map();
 export function prioritizeQwenCoreTools(catalog,hint){
  if(!Array.isArray(catalog))return [];
  if(hint?.source!=='qwen-core'||hint?.intent!=='tools'||!Array.isArray(hint.tool_ids))return catalog;
  const chosen=[...new Set(hint.tool_ids)].filter(id=>typeof id==='string');
  const indexed=new Map(catalog.map(c=>[c.id,c]));
+ if(chosen.some(id=>!indexed.has(id)))return catalog;
  return [...chosen.filter(id=>indexed.has(id)).map(id=>indexed.get(id)),...catalog.filter(c=>!chosen.includes(c.id))];
 }
-export async function requestQwenCoreInterpretation({text,files=[]},{fetchImpl=fetch,signal,timeoutMs=30500,now=Date.now}={}){
+export function requestQwenCoreInterpretation(payload,options={}){
+ const text=String(payload?.text||'').trim(),files=Array.isArray(payload?.files)?payload.files:[];
+ if(!text||isInformationalIntent(text)||/^(?:hola|hola prisma|gracias|saludos|[\d\s+*/().=-]+)[.!?\s]*$/i.test(text)||files.reduce((n,f)=>n+(Number(f.size)||0),0)>50*1024*1024)return Promise.resolve(null);
+ const key=JSON.stringify([text,files.map(f=>[f.name,f.type,f.size])]);
+ if(!options.signal&&inflight.has(key))return inflight.get(key);
+ const request=interpretOnce({text,files},options);
+ if(!options.signal){inflight.set(key,request);request.finally(()=>{if(inflight.get(key)===request)inflight.delete(key);});}
+ return request;
+}
+async function interpretOnce({text,files=[]},{fetchImpl=fetch,signal,timeoutMs=30500,now=Date.now}={}){
  if(signal?.aborted||now()<unavailableUntil)return null;
  const controller=new AbortController(),abort=()=>controller.abort();
  if(signal?.aborted)abort();else signal?.addEventListener('abort',abort,{once:true});
@@ -37,7 +50,10 @@ export async function requestQwenCoreInterpretation({text,files=[]},{fetchImpl=f
   const payload=await response.json();
   if(payload?.available===false){unavailableUntil=Math.max(unavailableUntil,now()+QWEN_CORE_BACKOFF_MS);return null;}
   if(payload?.ok!==true||payload.source!=='qwen-core'||!['tools','question','clarify'].includes(payload.intent)||
-   !Array.isArray(payload.tool_ids)||payload.tool_ids.length>8||payload.tool_ids.some(id=>typeof id!=='string'))return null;
+   !Array.isArray(payload.tool_ids)||payload.tool_ids.length>8||new Set(payload.tool_ids).size!==payload.tool_ids.length||
+   (payload.intent==='tools')!==(payload.tool_ids.length>0)||payload.tool_ids.some(id=>!tools.some(t=>t.id===id&&['ready','beta'].includes(t.status)))){
+    unavailableUntil=Math.max(unavailableUntil,now()+QWEN_CORE_BACKOFF_MS);return null;
+   }
   unavailableUntil=0;
   return {source:'qwen-core',intent:payload.intent,tool_ids:payload.tool_ids,metrics:payload.metrics||null};
  }catch{
