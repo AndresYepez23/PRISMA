@@ -1,5 +1,5 @@
 import { renderToolFields } from './tool-fields.js';
-import { initPrismaCore, setPrismaCoreViewActive } from './core.js';
+import { initPrismaCore, setPrismaCoreViewActive, startNewPrismaConversation } from './core.js';
 import { planPdfSplit } from './pdf-split-options.js';
 import { installMobileSidebarGestures } from './sidebar-gestures.js';
 import { localizedVideoError } from './video-compression.js';
@@ -1246,8 +1246,13 @@ function scrollToCurrentView(){
   target.scrollIntoView({behavior:reduceMotion?'auto':'smooth',block:'start'});
 }
 function showView(view){
+  const enteringCore=view==='core'&&activeView!=='core';
   activeView=view;activeCategory='all';searchTerm='';$('#global-search').value='';
-  render();closeSidebar();closeSidebarSearch();scrollToCurrentView();
+  render();
+  // Entering Core from the tools workspace starts a clean draft; old chats
+  // remain available only through the conversation history.
+  if(enteringCore)startNewPrismaConversation();
+  closeSidebar();closeSidebarSearch();scrollToCurrentView();
 }
 
 function setupHeroInteraction(){
