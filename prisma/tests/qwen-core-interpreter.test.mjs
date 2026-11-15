@@ -18,6 +18,13 @@ test('Qwen Core only returns known tools in correct order, never arbitrary code'
  assert.throws(()=>validateQwenCoreInterpretation({intent:'tools',tool_ids:['pdf-extract']},ids,['pdf-extract']));
 });
 
+test('Qwen Core accepts up to eight distinct catalog tools and rejects nine',()=>{
+ const ids=Array.from({length:8},(_,i)=>'tool-'+i);
+ assert.deepEqual(validateQwenCoreInterpretation({intent:'tools',tool_ids:ids},ids),{intent:'tools',tool_ids:ids});
+ assert.throws(()=>validateQwenCoreInterpretation({intent:'tools',tool_ids:[...ids,'tool-8']},[...ids,'tool-8']));
+ assert.equal(QWEN_CORE_INTERPRET_LIMITS.toolIds,8);
+ assert.equal(QWEN_CORE_INTERPRET_LIMITS.outputTokens,128);
+});
 test('semantic candidates belong to the registry and exclude prohibited operations',()=>{
  const options=qwenCoreCandidates('No comprimas el PDF, extrae la segunda página',pdf);
  assert.ok(options.length<=QWEN_CORE_INTERPRET_LIMITS.candidates);
