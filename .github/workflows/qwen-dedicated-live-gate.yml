@@ -1,0 +1,25 @@
+name: Qwen dedicated service live release gate
+on:
+  push:
+    branches:
+      - feat/qwen-dedicated-interpreter-proxy-20261115
+      - main
+permissions:
+  contents: read
+jobs:
+  qwen-dedicated-real:
+    if: github.ref != 'refs/heads/main' || contains(github.event.head_commit.message, '[qwen-dedicated-release]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - name: Check out exact commit
+        uses: actions/checkout@v4
+      - name: Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate proxy isolation and Qwen interpreter contracts
+        run: |
+          node --test prisma/tests/stable-api-bridge.test.mjs prisma/tests/qwen-core-production-routing.test.mjs prisma/tests/qwen-core-interpreter.test.mjs prisma/tests/qwen-core-client.test.mjs
+      - name: Verify deployed build and provider bindings then send exactly one Qwen inference
+        run: node prisma/scripts/qwen-dedicated-release-gate.mjs

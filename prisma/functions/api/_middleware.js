@@ -3,6 +3,9 @@
 // deployment. No credentials are copied, retrieved, or embedded in this file.
 // Keep this explicit until a *new* production deployment passes a binding regression gate.
 export const STABLE_CORE_ORIGIN = 'https://17a6c338.prismaspace.pages.dev';
+// Dedicated, isolated Qwen inference service. It owns its Qwen credentials and D1;
+// production Pages does not need to copy or expose any Qwen secrets.
+export const QWEN_INTERPRETER_ORIGIN = 'https://prisma-queen-staging.pages.dev';
 
 export function isPrismaSpaceHost(hostname) {
   return hostname === 'prismaspace.space' ||
@@ -25,7 +28,9 @@ export async function onRequest({ request, next }, { fetcher = fetch } = {}) {
     });
   }
 
-  const target = new URL(incoming.pathname + incoming.search, STABLE_CORE_ORIGIN);
+  const qwenInterpreter = incoming.pathname === '/api/core/qwen-interpret';
+  const targetOrigin = qwenInterpreter ? QWEN_INTERPRETER_ORIGIN : STABLE_CORE_ORIGIN;
+  const target = new URL(incoming.pathname + incoming.search, targetOrigin);
   const headers = new Headers(request.headers);
   if (origin) headers.set('Origin', target.origin);
   const referer = headers.get('Referer');
@@ -72,6 +77,6 @@ export async function onRequest({ request, next }, { fetcher = fetch } = {}) {
     } catch { /* retain original invalid Location for upstream semantics */ }
   }
   out.headers.set('Cache-Control', 'no-store');
-  out.headers.set('X-Prisma-Core-Backend', 'stable-17a6c338');
+  out.headers.set('X-Prisma-Core-Backend', qwenInterpreter ? 'qwen-dedicated-service' : 'stable-17a6c338');
   return out;
 }
