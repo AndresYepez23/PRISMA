@@ -1,3 +1,4 @@
+import {observeQueenProvider} from '../../_lib/queen-observations.js';
 import { getProviderHold, setProviderHold } from "../../_lib/provider-health.js";
 import { allowedModel } from "../../_lib/model-catalog.js";
 import { checkLimits, refundFailedProviderUsage } from "../../_lib/limits.js";
@@ -370,6 +371,11 @@ async function executeChatRequest({ request, env }, markReserved) {
     try {
       const data=await env.AI.run(model,{
         messages:normalized.openaiMessages,
+        // Gemma 4/Qwen 3.8 can spend the entire output budget on hidden
+        // reasoning and return no visible answer. Verified in Workers AI:
+        // disable that mode for interactive chat so Core gets actual text.
+        ...(["@cf/google/gemma-4-26b-a4b-it","@cf/qwen/qwen3.8-27b"].includes(model)
+          ? {chat_template_kwargs:{enable_thinking:false}} : {}),
         max_tokens:clamp(payload.maxOutputTokens,128,1700,900),
         temperature:0.6,
         stream:false
@@ -509,6 +515,7 @@ async function executeChatRequest({ request, env }, markReserved) {
 // release their reservation, while per-visitor attempt caps continue to apply.
 // Invalid or throttled requests never reserve anything, so nothing is refunded.
 export async function onRequestPost(context){
+ const queenObservedStart=Date.now();
  let reservedProvider=null;
  let response;
  try{
@@ -535,6 +542,11 @@ export async function onRequestPost(context){
   try{await refundFailedProviderUsage(context.env,reservedProvider);}catch(refundError){
    console.warn("Prisma failed-inference budget release failed.",String(refundError?.message||refundError).slice(0,120));
   }
+ }
+ if(context.env.QUEEN_ENABLED==='1'&&reservedProvider&&response?.headers.get('Content-Type')?.includes('application/json')){
+  // A clone preserves the existing response and model selector behavior.
+  const data=await response.clone().json().catch(()=>null);
+  if(data?.model)await observeQueenProvider(context.env,{provider:reservedProvider,model:data.model,capability:'chat',status:response.status,durationMs:Date.now()-queenObservedStart,usage:data.usage});
  }
  return response;
 }

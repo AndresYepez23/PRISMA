@@ -1,0 +1,191 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {validateQwenCoreInterpretation,interpretWithQwenCore,onRequestPost,onRequestGet,qwenCoreCandidates,QWEN_CORE_INTERPRET_LIMITS} from '../functions/api/core/qwen-interpret.js';
+
+const pdf=[{name:'informe.pdf',type:'application/pdf',size:1250}];
+test('Qwen Core only returns known tools in correct order, never arbitrary code',()=>{
+ const ids=['pdf-extract','pdf-to-word'];
+ assert.deepEqual(validateQwenCoreInterpretation({intent:'tools',tool_ids:ids},ids),{intent:'tools',tool_ids:ids});
+ for(const raw of [
+  {intent:'tools',tool_ids:['shell']},
+  {intent:'tools',tool_ids:['pdf-to-word','pdf-to-word']},
+  {intent:'tools',tool_ids:[]},
+  {intent:'question',tool_ids:['pdf-extract']},
+  {intent:'tools',tool_ids:Array.from({length:9},(_,i)=>'tool-'+i)},
+  {intent:'tools',tool_ids:['pdf-extract'],message:'execute malware'}
+ ])if(raw.message)assert.deepEqual(validateQwenCoreInterpretation(raw,ids),{intent:'tools',tool_ids:['pdf-extract']});
+ else assert.throws(()=>validateQwenCoreInterpretation(raw,ids));
+ assert.throws(()=>validateQwenCoreInterpretation({intent:'tools',tool_ids:['pdf-extract']},ids,['pdf-extract']));
+});
+
+test('Qwen Core accepts up to eight distinct catalog tools and rejects nine',()=>{
+ const ids=Array.from({length:8},(_,i)=>'tool-'+i);
+ assert.deepEqual(validateQwenCoreInterpretation({intent:'tools',tool_ids:ids},ids),{intent:'tools',tool_ids:ids});
+ assert.throws(()=>validateQwenCoreInterpretation({intent:'tools',tool_ids:[...ids,'tool-8']},[...ids,'tool-8']));
+ assert.equal(QWEN_CORE_INTERPRET_LIMITS.toolIds,8);
+ assert.equal(QWEN_CORE_INTERPRET_LIMITS.outputTokens,128);
+});
+test('semantic candidates belong to the registry and exclude prohibited operations',()=>{
+ const options=qwenCoreCandidates('No comprimas el PDF, extrae la segunda página',pdf);
+ assert.ok(options.length<=QWEN_CORE_INTERPRET_LIMITS.candidates);
+ assert.ok(!options.some(t=>t.id==='pdf-compress'));
+ assert.ok(options.some(t=>t.id==='pdf-extract'));
+});
+test('the measured filename cannot crowd the requested Word producer out of the eight candidates',()=>{
+ for(const name of ['cuatro-paginas.pdf','pagina-rotar-comprimir-dividir.pdf','documento.pdf']){
+  const candidates=qwenCoreCandidates('Extrae la segunda página del PDF y conviértela a Word.',[{...pdf[0],name}]);
+  assert.ok(candidates.some(t=>t.id==='pdf-extract'),name);
+  assert.ok(candidates.some(t=>t.id==='pdf-to-word'),name);
+  assert.equal(new Set(candidates.map(t=>t.id)).size,candidates.length);
+  assert.ok(candidates.length<=QWEN_CORE_INTERPRET_LIMITS.candidates);
+ }
+});
+test('output candidates reuse compatible conversions across existing formats',()=>{
+ for(const [text,file,id]of [
+  ['Convierte esta tabla a Excel',{name:'tabla.csv',type:'text/csv',size:20},'table-file-convert'],
+  ['Convierte este documento a HTML',{name:'informe.docx',type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',size:800},'docx-html'],
+  ['Convierte esta foto a PDF',{name:'foto.png',type:'image/png',size:100},'image-pdf']
+ ])assert.ok(qwenCoreCandidates(text,[file]).some(t=>t.id===id),text);
+});
+test('the exact recorded request can select or complete both operations with one inference',async()=>{
+ for(const ids of [['pdf-extract','pdf-to-word'],['pdf-extract']]){
+  let calls=0;
+  const result=await interpretWithQwenCore({}, {text:'Extrae la segunda página del PDF y conviértela a Word.',files:[{name:'cuatro-paginas.pdf',type:'application/pdf',size:1423}]},{
+   lease:(_env,fn)=>fn(),infer:async(_env,_messages,schema)=>{
+    calls++;assert.ok(schema.properties.tool_ids.items.enum.includes('pdf-to-word'));
+    return {plan:{intent:'tools',tool_ids:ids},usage:{inputTokens:30,outputTokens:15}};
+   }
+  });
+  assert.equal(result.ok,true);assert.deepEqual(result.tool_ids,['pdf-extract','pdf-to-word']);assert.equal(calls,1);
+  assert.equal(result.metrics.inferences,1);
+ }
+});
+
+test('the Qwen interpretation is strictly one inference and contains no execution',async()=>{
+ let calls=0;
+ const result=await interpretWithQwenCore({}, {text:'Extrae la segunda página del PDF y conviértela a Word',files:pdf},{
+  lease:(_env,fn)=>fn(),
+  infer:async(_env,messages,schema,options)=>{
+   calls++;
+   assert.ok(options.maxOutputTokens<=128);
+   assert.ok(messages.every(m=>!m.content.includes('base64')));
+   assert.ok(schema.properties.tool_ids.items.enum.includes('pdf-extract'));
+   return {plan:{intent:'tools',tool_ids:['pdf-extract','pdf-to-word']},usage:{inputTokens:70,outputTokens:40}};
+  }
+ });
+ assert.equal(calls,1);assert.equal(result.source,'qwen-core');assert.deepEqual(result.tool_ids,['pdf-extract','pdf-to-word']);
+ assert.equal(result.metrics.inferences,1);
+});
+
+test('disabled endpoint does not infer or reserve any quota',async()=>{
+ let invoked=0;
+ const req=new Request('https://example.com/api/core/qwen-interpret',{method:'POST',headers:{Origin:'https://example.com','Content-Type':'application/json'},body:JSON.stringify({text:'Convertir PDF',files:pdf})});
+ const resp=await onRequestPost({request:req,env:{QWEN_CORE_INTERPRETER_ENABLED:'0'}},{interpret:async()=>{invoked++;},reserve:async()=>{invoked++;}});
+ assert.equal(resp.status,200);assert.equal((await resp.json()).available,false);assert.equal(invoked,0);
+});
+test('cross-site request never reaches Qwen Core',async()=>{
+ const req=new Request('https://example.com/api/core/qwen-interpret',{method:'POST',headers:{Origin:'https://evil.invalid','Content-Type':'application/json'},body:'{}'});
+ const r=await onRequestPost({request:req,env:{QWEN_CORE_INTERPRETER_ENABLED:'1'}});
+ assert.equal(r.status,403);
+});
+
+test('staging flag enables the interpreter only in the isolated staging environment',async()=>{
+ let invoked=0;
+ const run=async(env,host='https://prisma-queen-staging.pages.dev')=>{
+  const r=await onRequestPost({request:new Request(host+'/api/core/qwen-interpret',{method:'POST',
+   headers:{Origin:host,'Content-Type':'application/json'},body:JSON.stringify({text:'Convierte el PDF a Word',files:pdf})}),env},
+   {reserve:async()=>{invoked++;},interpret:async()=>({ok:true,source:'qwen-core',intent:'question',tool_ids:[]})});
+  return r.json();
+ };
+ const auth={QUEEN_ENABLED:'1',QUEEN_STAGE:'staging',QWEN_CORE_STAGING_ENABLED:'1',
+  QUEEN_ACCESS_CLIENT_ID:'test',QUEEN_ACCESS_CLIENT_SECRET:'test',QUEEN_API_KEY:'test',QUEEN_BASE_URL:'https://queen.example/v1'};
+ assert.equal((await run(auth)).ok,true);
+ assert.equal((await run(auth,'https://prismaspace.pages.dev')).available,false);
+ assert.equal((await run(auth,'https://prisma-queen-staging.pages.dev.evil.invalid')).available,false);
+ assert.equal((await run({...auth,QUEEN_STAGE:'production'})).available,false);
+ assert.equal((await run({...auth,QWEN_CORE_STAGING_ENABLED:'0'})).available,false);
+ assert.equal(invoked,1);
+});
+test('isolated staging is allowed only on its own Pages project and dedicated branch',async()=>{
+ const base={QUEEN_ENABLED:'1',QUEEN_STAGE:'staging',QWEN_CORE_STAGING_ENABLED:'1',CF_PAGES_BRANCH:'feature/qwen-core-hybrid',
+  CF_PAGES_URL:'https://d5e9a521.prisma-queen-staging.pages.dev',
+  QUEEN_ACCESS_CLIENT_ID:'staging-client',QUEEN_ACCESS_CLIENT_SECRET:'staging-secret',QUEEN_API_KEY:'staging-key'};
+ const make=env=>new Request('https://d5e9a521.prisma-queen-staging.pages.dev/api/core/qwen-interpret',{method:'POST',
+  headers:{Origin:'https://d5e9a521.prisma-queen-staging.pages.dev','Content-Type':'application/json'},
+  body:JSON.stringify({text:'Selecciona la página 2 y conviértela a Word',files:[{name:'doc.pdf',type:'application/pdf',size:10}]})});
+ let invoked=0;
+ const deps={interpret:async()=>{invoked++;return {ok:true,source:'qwen-core',intent:'tools',tool_ids:['pdf-extract']};},reserve:async()=>{}};
+ const ok=await onRequestPost({request:make(base),env:base},deps);
+ assert.equal(ok.status,200);assert.equal((await ok.json()).source,'qwen-core');assert.equal(invoked,1);
+ for(const env of [
+  {...base,QUEEN_STAGE:'production'},
+  {...base,QWEN_CORE_STAGING_ENABLED:'0'}
+ ]){
+  const r=await onRequestPost({request:make(env),env},deps);
+  assert.equal((await r.json()).available,false);
+ }
+ assert.equal(invoked,1);
+});
+
+test('Qwen Core restores every explicit PDF step when the small model omits extraction',async()=>{
+ const result=await interpretWithQwenCore({}, {text:'Extrae la segunda página del PDF y conviértela a Word',files:pdf},{
+  lease:(_env,fn)=>fn(),
+  infer:async()=>({plan:{intent:'tools',tool_ids:['pdf-to-word']},usage:{inputTokens:20,outputTokens:10}})
+ });
+ assert.deepEqual(result.tool_ids,['pdf-extract','pdf-to-word']);
+ assert.equal(result.metrics.coverageGuardApplied,true);
+});
+test('Qwen Core does not spend an inference or suggest a tool for a clear informational question',async()=>{
+ let calls=0;
+ const result=await interpretWithQwenCore({}, {text:'¿Cómo puedo extraer una página de un PDF?',files:[]},{
+  lease:(_env,fn)=>fn(),infer:async()=>{calls++;throw Error('must not infer');}
+ });
+ assert.equal(result.intent,'question');assert.deepEqual(result.tool_ids,[]);
+ assert.equal(result.metrics.inferences,0);assert.equal(calls,0);
+});
+
+test('production Qwen interpreter is enabled by existing production bindings without adding a credential',async()=>{
+ let invoked=0;
+ const host='https://prismaspace.space';
+ const env={QUEEN_ENABLED:'1',QUEEN_STAGE:'production',QWEN_CORE_INTERPRETER_ENABLED:'1',
+  QUEEN_ACCESS_CLIENT_ID:'existing-client',QUEEN_ACCESS_CLIENT_SECRET:'existing-secret',
+  QUEEN_API_KEY:'existing-key',QUEEN_BASE_URL:'https://queen.prismaspace.space/v1',CF_PAGES_COMMIT_SHA:'prod-test'};
+ const request=new Request(host+'/api/core/qwen-interpret',{method:'POST',
+  headers:{Origin:host,'Content-Type':'application/json'},
+  body:JSON.stringify({text:'Extrae la segunda página del PDF y conviértela a Word',files:pdf})});
+ const response=await onRequestPost({request,env},{reserve:async()=>{invoked++;},interpret:async()=>({ok:true,source:'qwen-core',intent:'tools',tool_ids:['pdf-extract','pdf-to-word']})});
+ assert.equal(response.status,200);
+ const result=await response.json();
+ assert.equal(result.source,'qwen-core');assert.equal(result.deploymentCommit,'prod-test');assert.equal(invoked,1);
+ const disabled=await onRequestPost({request,env:{...env,QWEN_CORE_INTERPRETER_ENABLED:'0'}},{reserve:async()=>{invoked++;},interpret:async()=>{invoked++;}});
+ assert.equal((await disabled.json()).available,false);assert.equal(invoked,1);
+});
+test('production Qwen interpreter stays disabled unless the explicit runtime flag is present',async()=>{
+ let invoked=0;
+ const host='https://prismaspace.space';
+ const request=new Request(host+'/api/core/qwen-interpret',{method:'POST',
+  headers:{Origin:host,'Content-Type':'application/json'},body:JSON.stringify({text:'¿Qué formatos puede convertir Prisma?',files:[]})});
+ const response=await onRequestPost({request,env:{QUEEN_ENABLED:'1',QUEEN_STAGE:'production'}},
+  {reserve:async()=>{invoked++;},interpret:async()=>{invoked++;}});
+ assert.equal((await response.json()).available,false);assert.equal(invoked,0);
+});
+test('production interpreter cannot be enabled on unrelated or preview hosts',async()=>{
+ let invoked=0;
+ const env={QUEEN_ENABLED:'1',QUEEN_STAGE:'production'};
+ for(const host of ['https://evil.invalid','https://preview.prismaspace.pages.dev']){
+  const request=new Request(host+'/api/core/qwen-interpret',{method:'POST',headers:{Origin:host,'Content-Type':'application/json'},body:JSON.stringify({text:'Convierte el PDF a Word',files:pdf})});
+  const response=await onRequestPost({request,env},{reserve:async()=>{invoked++;},interpret:async()=>{invoked++;}});
+  assert.equal((await response.json()).available,false);
+ }
+ assert.equal(invoked,0);
+});
+
+test('staging readiness probe exposes only its own deployment commit without inference',async()=>{
+ const env={QUEEN_ENABLED:'1',QUEEN_STAGE:'staging',QWEN_CORE_STAGING_ENABLED:'1',CF_PAGES_COMMIT_SHA:'test-commit'};
+ const good=await onRequestGet({request:new Request('https://abcdef12.prisma-queen-staging.pages.dev/api/core/qwen-interpret'),env});
+ assert.deepEqual(await good.json(),{ready:true,deploymentCommit:'test-commit'});
+ const bad=await onRequestGet({request:new Request('https://prismaspace.pages.dev/api/core/qwen-interpret'),env});
+ assert.deepEqual(await bad.json(),{ready:false,deploymentCommit:null});
+ const prod=await onRequestGet({request:new Request('https://prismaspace.space/api/core/qwen-interpret'),env:{QUEEN_ENABLED:'1',QUEEN_STAGE:'production',QWEN_CORE_INTERPRETER_ENABLED:'1',CF_PAGES_COMMIT_SHA:'prod'}});
+ assert.deepEqual(await prod.json(),{ready:true,deploymentCommit:'prod'});
+});

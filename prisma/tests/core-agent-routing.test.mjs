@@ -529,6 +529,25 @@ assert.ok(cooled.indexOf('sensenova')<cooled.indexOf('kilo'),
 assert.equal(selectTaskModel('cloudflare','coding','balanced',[{id:'@cf/qwen/qwen3.8-27b'}]),'@cf/qwen/qwen3.8-27b');
 assert.equal(selectTaskModel('pollinations','coding','balanced',[{id:'qwen/qwen3-coder-30b-a3b-instruct'}]),'qwen/qwen3-coder-30b-a3b-instruct');
 assert.equal(selectTaskModel('gemini','reasoning','smart',[{id:'gemini-3.8-flash'}]),'gemini-3.8-flash');
+const exactComparison='Explícame las diferencias entre Qwen y GPT y dime cuál utilizarías para programar.';
+assert.equal(chooseCoreReasoning('reasoning',exactComparison),'balanced');
+assert.equal(chooseCoreResponseLength('reasoning',exactComparison),'medium');
+assert.equal(selectTaskModel('cloudflare','reasoning','balanced',CHAT_MODELS.cloudflare),'@cf/google/gemma-4-26b-a4b-it');
+assert.equal(selectTaskModel('cloudflare','reasoning','smart',CHAT_MODELS.cloudflare),'@cf/google/gemma-4-26b-a4b-it');
+assert.equal(selectTaskModel('cloudflare','planner','smart',CHAT_MODELS.cloudflare),'@cf/google/gemma-4-26b-a4b-it');
+assert.ok(!CHAT_MODELS.cloudflare.some(m=>m.id.includes('deepseek-v4.1-flash')),
+ 'Do not offer a paid-only Workers AI model on the Workers Free deployment');
+const cfChatSource=readFileSync(new URL('../functions/api/ai/chat.js',import.meta.url),'utf8');
+assert.match(cfChatSource,/chat_template_kwargs:\{enable_thinking:false\}/,
+ 'Gemma 4 needs visible answer tokens rather than thinking-only output');
+const reasoningEngineSource=readFileSync(new URL('../src/engines.js',import.meta.url),'utf8');
+assert.match(reasoningEngineSource,/task==='reasoning'&&p\.length==='medium'\?900/,
+ 'Short comparisons should not force a 1,900+ token generation');
+assert.match(reasoningEngineSource,/task==='reasoning'\?30000:16000/,
+ 'Reasoning requests need enough time to finish before fallback');
+assert.match(reasoningEngineSource,/length:id==='ai-compare-options'\?\(p\.length\|\|'medium'\):'long'/,
+ 'Comparative questions must preserve the requested response length');
+
 assert.equal(selectTaskModel('openrouter','general','fast',[{id:'openrouter/free'}]),'openrouter/free');
 assert.equal(selectTaskModel('sensenova','general','balanced',[{id:'sensenova-6.8-flash-lite'}]),'sensenova-6.8-flash-lite');
 assert.equal(selectTaskModel('zai','reasoning','smart',[{id:'glm-4.7-flash'}]),'glm-4.7-flash');
@@ -875,7 +894,7 @@ assert.equal(chooseCoreResponseLength('songwriting','Crea una canción completa'
 assert.equal(chooseCoreReasoning('coding','¿Qué es HTML?'),'balanced');
 
 // Connection panel exposes independently tracked image quota, not only text usage.
-const connectionsSource=readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
+const connectionsSource=(readFileSync(new URL('../src/main.js',import.meta.url),'utf8')+readFileSync(new URL('../src/tool-fields.js',import.meta.url),'utf8'));
 assert.match(connectionsSource,/central\.imageUsage\?\.\[provider\]/);
 assert.match(connectionsSource,/cloudflare-image-usage/);
 assert.match(connectionsSource,/pollinations-image-usage/);
@@ -938,7 +957,7 @@ assert.match(chatSource,/refundFailedProviderUsage\(context\.env,reservedProvide
 const economyCore=readFileSync(new URL('../src/core.js',import.meta.url),'utf8');
 assert.match(economyCore,/chooseCoreContextOptions\(task,taskText\)/);
 assert.match(economyCore,/asksAboutPrisma/,'Provider catalog must not be sent with every question');
-const economyMain=readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
+const economyMain=(readFileSync(new URL('../src/main.js',import.meta.url),'utf8')+readFileSync(new URL('../src/tool-fields.js',import.meta.url),'utf8'));
 assert.match(economyMain,/readInferenceUsage\(\)/);
 assert.match(economyMain,/tokens reportados/);
 
@@ -1059,7 +1078,7 @@ assert.deepEqual(findConversations(searchFixture,'').map(x=>x.id),['b','c','a'])
 assert.equal(findConversations(searchFixture,'',1).length,1);
 assert.match(findConversations(searchFixture,'implantes')[0].preview,/implantes/);
 const uiHtml=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-const uiMain=readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
+const uiMain=(readFileSync(new URL('../src/main.js',import.meta.url),'utf8')+readFileSync(new URL('../src/tool-fields.js',import.meta.url),'utf8'));
 assert.match(uiHtml,/id="conversation-search-layer"/);
 assert.match(uiHtml,/id="conversation-search-results"/);
 assert.match(uiHtml,/id="conversation-search-field-slot"/);
@@ -1160,7 +1179,7 @@ assert.match(videoEngineSource,/compressVideoNative\(file,p,cb\)/);
 assert.match(videoEngineSource,/trunc\(iw\*min\(1,/,'Portrait videos must limit longest dimension, not just width');
 assert.match(videoEngineSource,/preferNativeVideoCompression/);
 assert.match(videoEngineSource,/blob\.size>=files\[0\]\.size/,'Do not report success for larger files');
-const videoMainSource=readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
+const videoMainSource=(readFileSync(new URL('../src/main.js',import.meta.url),'utf8')+readFileSync(new URL('../src/tool-fields.js',import.meta.url),'utf8'));
 assert.match(videoMainSource,/case 'video-compress':return selectField/);
 
 
@@ -1369,7 +1388,7 @@ assert.throws(()=>planPdfSplit({mode:'parts',parts:10},4),/superar/i);
 assert.throws(()=>planPdfSplit({mode:'chunk',chunkSize:0},9),/bloque/i);
 assert.throws(()=>planPdfSplit({mode:'selected',pages:''},9),/indica/i);
 
-const splitUiSource=readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
+const splitUiSource=(readFileSync(new URL('../src/main.js',import.meta.url),'utf8')+readFileSync(new URL('../src/tool-fields.js',import.meta.url),'utf8'));
 assert.match(splitUiSource,/setupPdfSplitOptions\(\)/);
 assert.match(splitUiSource,/planPdfSplit\(readParams\(\),count\)/);
 assert.match(splitUiSource,/case 'pdf-split':return selectField/);

@@ -3,24 +3,32 @@ import { generateSeoPages } from "./seo/generate.mjs";
 import { generateInternationalPages } from "./seo/generate-international.mjs";
 // Abort publication if Core can no longer discover or safely chain its tools.
 import "./tests/core-agent-routing.test.mjs";
+import "./tests/file-conversion-assessment.test.mjs";
+import "./tests/core-file-references.test.mjs";
 import "./tests/core-model-session.test.mjs";
 import "./tests/conversation-history.test.mjs";
 import "./tests/provider-orchestration.test.mjs";
+import "./tests/production-binding-guard.test.mjs";
 import "./tests/core-intelligence-benchmark.test.mjs";
 import "./tests/developer-api.test.mjs";
+import "./tests/queen.test.mjs";
 import "./tests/cloudflare-whisper.test.mjs";
 import "./tests/welcome-email.test.mjs";
 import "./tests/settings-ui.test.mjs";
 import "./tests/core-mobile-prism-layout.test.mjs";
 import "./tests/i18n.test.mjs";
 
+// Cloudflare Pages secrets are runtime-only bindings, not build-time variables.
+// Production credential readiness is verified by read-only runtime smoke tests.
 const output = new URL("./dist/", import.meta.url);
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 
-for (const file of ["index.html", "styles.css", "aurora-system.css", "_headers", "privacy.html", "manifest.webmanifest"]) {
+for (const file of ["index.html", "styles.css", "aurora-system.css", "_headers", "privacy.html", "manifest.webmanifest", "ads.txt"]) {
   await copyFile(new URL("./" + file, import.meta.url), new URL("./dist/" + file, import.meta.url));
 }
+
+await import("./tests/ads-txt.test.mjs");
 
 await copyFile(new URL("./seo/landing.css", import.meta.url), new URL("./dist/seo.css", import.meta.url));
 

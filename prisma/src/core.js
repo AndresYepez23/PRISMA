@@ -1,3 +1,7 @@
+import { requestQueenPlan, queenFailureDescription } from './queen-client.js';
+import { assessQwenCorePlanCoverage } from './qwen-core-plan-coverage.js';
+import { requestQwenCoreInterpretation, prioritizeQwenCoreTools, isKnownScannedCsvExcelCandidate } from './qwen-core-client.js';
+import { executeQueenDAG, createQueenExecutionState } from './queen-execution.js';
 import { recordCoreMetric } from './core-telemetry.js';
 import { planCapabilityRequest } from './core-capabilities.js';
 import { isExplicitResearchRequest, searchPrismaWeb, formatResearchSources } from './core-research.js';
@@ -10,7 +14,7 @@ import { getCentralProviderStatus } from './provider-connections.js';
 import { loadLocalBrain, rankLocalTools } from './local-brain.js';
 import { buildSmartLocalFlow } from './smart-flows.js';
 import { coreToolCatalog, searchCoreTools, planCoreOfflineAction, describeCoreTools, isToolDiscoveryQuestion, coreCapabilityContext } from './core-tool-intelligence.js';
-import { planFileConversion } from './file-conversions.js';
+import { planFileConversion, planFileAssessment, assessFileConversions } from './file-conversions.js';
 import { openImageEditor, initImageEditor, applyImageText } from './core-image-editor.js';
 import { renderMarkdownSafe } from './core-markdown.js';
 import { imageAnalysisIntent, isBatchImageTranscription } from './core-image-analysis.js';
@@ -30,8 +34,9 @@ import { mergeConversationLists, serializeConversation, hasConversationMessages,
 import { readConversationSnapshot, queueConversationSnapshot, clearConversationSnapshot } from './conversation-storage.js';
 import { createGeneratedFileKey, saveGeneratedFile, loadGeneratedFile, deleteGeneratedFilesForChat, clearGeneratedFiles } from './core-result-storage.js';
 import { validateAgentStepResult } from './core-agent-guard.js';
+import { validateFileRequest } from './file-inspection.js';
 import { buildConversationContext, chooseCoreReasoning, chooseCoreResponseLength, chooseCoreContextOptions } from './core-context.js';
-import { normalizeConversationModelSelection, beginConversationModelTurn, selectManualConversationModel, selectAutomaticConversationModel, pinConversationModel, conversationModelRequest } from './core-model-session.js';
+import { normalizeConversationModelSelection, beginConversationModelTurn, selectManualConversationModel, selectAutomaticConversationModel, pinConversationModel, conversationModelRequest, coreProviderPickerState } from './core-model-session.js';
 import { describeCoreModel, isCoreChatModel, suggestedCoreModel, displayedConversationPreference } from './core-model-experience.js';
 
 const $ = (selector, root=document) => root.querySelector(selector);
@@ -93,6 +98,7 @@ let pendingPlan = null;
 let busy = false;
 let executionActive = false;
 let cancelRequested = false;
+let queenPlanningController = null;
 let centralProviders = { gemini: false, huggingface: false, groq: false, cloudflare: false, pollinations: false, openrouter: false, kilo:false, requesty:false, sensenova:false, zai:false, aihubmix:false };
 let centralFeatures = { pollinationsImages:false, cloudflareImages:false, huggingfaceImages:false, huggingfaceAudio:false, groqAudio:false, openrouterChat:false };
 let centralModelCatalog = { chat:{}, image:{}, audio:{} };
@@ -433,14 +439,16 @@ function renderChatModelOptions(){
  const providers=[...MODEL_PROVIDER_ORDER,...Object.keys(catalog).filter(p=>!MODEL_PROVIDER_ORDER.includes(p)).sort()];
  list.replaceChildren();let visible=0;
  for(const provider of providers){
-  if(!providerAvailability(provider,'chat').available)continue;
+  const availability=providerAvailability(provider,'chat');
   const models=(Array.isArray(catalog[provider])?catalog[provider]:[]).filter(isCoreChatModel);
-  if(!models.length)continue;
-  visible+=models.length;
+  const picker=coreProviderPickerState({available:availability.available,configured:centralConfigured?.[provider],
+   personal:provider==='pollinations'&&Boolean(readPollinationsToken()),reason:availability.reason,models});
+  if(!picker.visible)continue;
+  visible++;
   const suggested=suggestedCoreModel(provider,models),expanded=expandedModelProvider===provider;
   const currentProvider=chosen.provider===provider;
   const section=document.createElement('section');
-  section.className='core-model-provider'+(expanded?' is-expanded':'');
+  section.className='core-model-provider'+(expanded?' is-expanded':'')+(picker.selectable?'':' is-unavailable');
   const toggle=document.createElement('button');toggle.type='button';
   toggle.className='core-model-provider-toggle';
   toggle.setAttribute('aria-expanded',String(expanded));
@@ -448,12 +456,13 @@ function renderChatModelOptions(){
   const copy=document.createElement('span');copy.className='core-model-provider-copy';
   const title=document.createElement('strong');title.textContent=MODEL_PROVIDER_LABELS[provider]||provider;
   const subtitle=document.createElement('small');
-  subtitle.textContent=currentProvider?'Elegido: '+modelLabel(chosen.provider,chosen.model):
+  subtitle.textContent=!picker.selectable?picker.status+' · '+picker.reason:
+   currentProvider?'Elegido: '+modelLabel(chosen.provider,chosen.model):
    models.length+' modelos · sugerido: '+(suggested?.name||suggested?.id||'Automático');
   copy.append(title,subtitle);
   const trail=document.createElement('span');trail.className='core-model-provider-trailing';
   const state=document.createElement('span');state.className='core-model-provider-count';
-  state.textContent=currentProvider?'Elegido':String(models.length);
+  state.textContent=picker.selectable?(currentProvider?'Elegido':String(models.length)):picker.status;
   const chevron=document.createElement('span');chevron.className='core-model-chevron';chevron.textContent='⌄';
   trail.append(state,chevron);toggle.append(copy,trail);
   toggle.addEventListener('click',()=>{expandedModelProvider=expanded?'':provider;renderChatModelOptions();});
@@ -465,25 +474,28 @@ function renderChatModelOptions(){
     const meta=describeCoreModel(model);
     const row=document.createElement('button');row.type='button';
     row.className='core-model-option'+(selected?' is-current':'');
+    row.disabled=!picker.selectable;
     row.setAttribute('aria-pressed',String(selected));
+    if(!picker.selectable)row.title=picker.reason;
     const info=document.createElement('span');info.className='core-model-option-copy';
     const name=document.createElement('strong');name.textContent=model.name||model.id;
     const specialty=document.createElement('small');specialty.textContent=model.specialty||meta.description;
     const kind=document.createElement('span');kind.className='core-model-capability';kind.textContent=meta.label;
     info.append(name,specialty,kind);
     const action=document.createElement('span');action.className='core-model-option-state';
-    action.textContent=selected?'Elegido':model.id===suggested?.id?'Sugerido':'Elegir';
+    action.textContent=!picker.selectable?'No disponible':selected?'Elegido':model.id===suggested?.id?'Sugerido':'Elegir';
     row.append(info,action);
-    row.addEventListener('click',()=>chooseConversationModel(provider,model.id));
+    if(picker.selectable)row.addEventListener('click',()=>chooseConversationModel(provider,model.id));
     options.append(row);
    }
+   if(!models.length){const note=document.createElement('p');note.className='core-model-empty';note.textContent=picker.reason;options.append(note);}
    section.append(options);
   }
   list.append(section);
  }
  if(!visible){
   const empty=document.createElement('p');empty.className='core-model-empty';
-  empty.textContent='No hay proveedores de chat disponibles por ahora. Los modelos no configurados se mantienen ocultos.';
+  empty.textContent='No se pudo obtener el catálogo de modelos. Comprueba la conexión e inténtalo de nuevo.';
   list.append(empty);
  }
  if(panel)panel.scrollTop=scrollTop;
@@ -926,7 +938,7 @@ function setBusy(value){
   $('#core-file-button').disabled=value;
   const sendLabel=$('#core-send-label');if(sendLabel)sendLabel.textContent=value?'Trabajando…':'Enviar';
   $('#core-composer').setAttribute('aria-busy',String(value));
-  const cancelButton=$('#core-cancel');if(cancelButton){cancelButton.classList.toggle('hidden',!(value&&executionActive));cancelButton.disabled=false;}
+  const cancelButton=$('#core-cancel');if(cancelButton){cancelButton.classList.toggle('hidden',!(value&&(executionActive||queenPlanningController)));cancelButton.disabled=false;}
   // A conversational turn already has an inline thinking indicator. Keep the
   // separate progress rail for real tool executions only, never for LLM latency.
   if(value&&executionActive)setProgress(.02,'Preparando herramienta…');
@@ -1127,6 +1139,7 @@ function compatibleFiles(tool,files){
 }
 function validatePlan(plan){
   if(!plan||typeof plan!=='object'||!Array.isArray(plan.steps))throw new Error('El plan no tiene el formato esperado.');
+  if(plan.userRequest&&assessQwenCorePlanCoverage(plan.userRequest,plan.steps).needsSemanticReview)throw Error('El plan no cubre todas las condiciones de la solicitud.');
   if(plan.steps.length>MAX_STEPS)throw new Error('El plan supera el máximo seguro de '+MAX_STEPS+' operaciones.');
   const ready=new Map(tools.filter(tool=>['ready','beta'].includes(tool.status)).map(tool=>[tool.id,tool]));
   let inputs=attachments.map(file=>({name:file.name,type:file.type||''}));
@@ -1212,6 +1225,23 @@ function showPlan(plan,steps){
   const cancel=document.createElement('button');cancel.type='button';cancel.className='button button-quiet';cancel.textContent='Cancelar plan';cancel.addEventListener('click',()=>{pendingPlan=null;panel.classList.add('hidden');status('Plan cancelado.');});
   const run=document.createElement('button');run.type='button';run.className='button button-primary';run.textContent='Autorizar y ejecutar';run.addEventListener('click',executePlan);
   actions.append(cancel,run);panel.append(actions);
+}
+function showQwenCoreOptions(hint){
+ const matches=(hint?.tool_ids||[]).map(id=>tools.find(t=>t.id===id&&['ready','beta'].includes(t.status))).filter(Boolean).slice(0,3);
+ if(!matches.length)return false;
+ const panel=$('#core-plan');if(!panel)return false;
+ pendingPlan=null;panel.replaceChildren();panel.classList.remove('hidden');
+ const head=document.createElement('strong');head.textContent='Opciones sugeridas por Qwen';panel.append(head);
+ const explanation=document.createElement('p');explanation.textContent='El plan automático no cubre todos los pasos. Elige una herramienta para configurarla; nada se ha ejecutado.';panel.append(explanation);
+ const actions=document.createElement('div');actions.className='core-plan-actions';
+ for(const tool of matches){
+  const button=document.createElement('button');button.type='button';button.className='button button-quiet';button.textContent=tool.name;
+  button.addEventListener('click',()=>{panel.classList.add('hidden');document.querySelector('[data-view="explore"]')?.click();const search=document.querySelector('#explore-search');if(search){search.value=tool.name;search.dispatchEvent(new Event('input',{bubbles:true}));search.focus();}});
+  actions.append(button);
+ }
+ const back=document.createElement('button');back.type='button';back.className='button button-quiet';back.textContent='Volver al chat';back.addEventListener('click',()=>{panel.classList.add('hidden');$('#core-input')?.focus();});
+ actions.append(back);panel.append(actions);
+ return true;
 }
 function buildLocalPlan(userText){
   const q=String(userText||'').toLowerCase();
@@ -1863,9 +1893,68 @@ async function interpretAttachedImageText(userText){
  }
 }
 async function requestPlan(userText){
+  cancelRequested=false;
+  pendingPlan=null;$('#core-plan')?.classList.add('hidden');
   const resolvedTask=taskMemory.resolve(activeConversationId,userText,attachments);
-  const capabilityPlan=planCapabilityRequest(resolvedTask.request||userText,resolvedTask.files,resolvedTask.task);
-  if(capabilityPlan){
+  if(resolvedTask.cancelled){pendingPlan=null;$('#core-plan')?.classList.add('hidden');addMessage('assistant','Tarea cancelada.');return;}
+  const coreRequest=resolvedTask.request||userText;
+  if(resolvedTask.clarification){addMessage('assistant',resolvedTask.clarification);return;}
+  const preflight=await validateFileRequest(coreRequest,resolvedTask.files,{tools,inspect:file=>runTool('file-inspector',[file],{deep:true})});
+  if(cancelRequested)return;
+  if(!preflight.ok){
+    attachments=resolvedTask.files;renderAttachments();
+    taskMemory.wait(activeConversationId,coreRequest,resolvedTask.files);
+    addMessage('assistant',preflight.message,{engine:'prisma-core-local'});
+    status('Revisa los archivos o la solicitud antes de ejecutar.','info');return;
+  }
+  // Read-only prerequisites must finish before a tool matcher can turn a
+  // mentioned format into an executable conversion or a missing-target reply.
+  const assessment=planFileAssessment(coreRequest,resolvedTask.files);
+  let fileAssessmentCompleted=false;
+  if(assessment){
+    if(assessment.type==='needs-input'){
+      taskMemory.wait(activeConversationId,coreRequest,resolvedTask.files);
+      addMessage('assistant',assessment.message);return;
+    }
+    let compatible=true;
+    const reply=await assessFileConversions(resolvedTask.files,{run:runTool,progress:message=>status(message),
+      askTarget:!assessment.continueConversion,onInspection:result=>{compatible=compatible&&result.compatible;}});
+    attachments=resolvedTask.files;renderAttachments();
+    addMessage('assistant',reply,{engine:'prisma-core-local'});
+    if(!assessment.continueConversion||!compatible){
+      if(compatible)taskMemory.wait(activeConversationId,'Convierte el archivo'+(assessment.destination?' a '+assessment.destination:''),attachments);
+      status('Tipo y conversiones evaluados localmente. El archivo original sigue disponible.','success');return;
+    }
+    // Keep the full original request: later planners must still account for
+    // extraction, compression or other transformations as well as conversion.
+    fileAssessmentCompleted=true;
+  }
+  const capabilityPlan=planCapabilityRequest(coreRequest,resolvedTask.files,resolvedTask.task);
+  // Grounded scanned CSV pipelines use the existing five-step backend graph,
+  // not Qwen's generic 2B multi-step synthesis. This does not call a model.
+  if(isKnownScannedCsvExcelCandidate(coreRequest,resolvedTask.files)){
+   const controller=new AbortController();queenPlanningController=controller;
+   let response=null;
+   try{
+    status('Organizando la conversión local de escaneo a Excel…');
+    response=await requestQueenPlan({text:coreRequest,files:resolvedTask.files},{signal:controller.signal,bypassCircuit:true});
+   }finally{queenPlanningController=null;}
+   if(cancelRequested)return;
+   if(response?.source==='queen-hybrid-local'&&response.plan?.intent==='execute'){
+    const plan={...response.plan,queen:true,queenCompiled:true,
+      queenMetrics:response.metrics,userRequest:coreRequest,queenStartedAt:Date.now()};
+    const steps=plan.steps.map(s=>({tool:tools.find(t=>t.id===s.tool_id),params:s.params,reason:s.id}));
+    if(steps.every(({tool})=>tool&&['local','browser'].includes(tool.mode))){
+     attachments=resolvedTask.files;renderAttachments();
+     pendingPlan={plan,steps};
+     addMessage('assistant','Preparé las cinco operaciones locales para convertir el escaneo CSV a Excel. Comprobaré cada resultado.');
+     await executeQueenPlan();return;
+    }
+   }
+  }
+  if(await coordinateWithQueen(coreRequest,resolvedTask))return;
+  const incompleteCapabilityPlan=capabilityPlan?.type==='ready'&&assessQwenCorePlanCoverage(coreRequest,capabilityPlan.steps).needsSemanticReview;
+  if(capabilityPlan&&!incompleteCapabilityPlan){
     if(capabilityPlan.type!=='ready'){
       recordCoreMetric('core','clarification');
       taskMemory.wait(activeConversationId,resolvedTask.request||userText,resolvedTask.files);
@@ -2044,8 +2133,8 @@ async function requestPlan(userText){
   if(speechIntent(userText)){await fulfillSpeechRequest(userText);return;}
   // Explicit conversions take priority over generic chat or PDF edit heuristics.
   const previousTexts=messages.slice(-9,-1).filter(message=>message.role==='user').map(message=>message.content);
-  const fileConversion=planFileConversion(userText,attachments,previousTexts);
-  if(fileConversion){
+  const fileConversion=planFileConversion(coreRequest,resolvedTask.files,previousTexts,{assessmentComplete:fileAssessmentCompleted});
+  if(fileConversion&&!(fileConversion.type==='ready'&&assessQwenCorePlanCoverage(userText,fileConversion.steps).needsSemanticReview)){
     if(fileConversion.type!=='ready'){
       // Preserve the conversion objective while asking for format or source file.
       // A later "A Word" or "Procesa los archivos adjuntos" must not repeat a PDF split.
@@ -2055,6 +2144,7 @@ async function requestPlan(userText){
       return;
     }
     const plan={message:fileConversion.message,steps:fileConversion.steps,userRequest:userText,needs_clarification:false,combineFinalFiles:true,conversion:true};
+    attachments=resolvedTask.files;renderAttachments();
     const steps=validatePlan(plan);
     pendingPlan={plan,steps};
     addMessage('assistant',fileConversion.message);
@@ -2062,7 +2152,7 @@ async function requestPlan(userText){
     return;
   }
   const pdfAction=buildPdfEditPlan(userText);
-  if(pdfAction){
+  if(pdfAction&&!(pdfAction.type==='execute'&&assessQwenCorePlanCoverage(userText,pdfAction.plan?.steps).needsSemanticReview)){
    if(pdfAction.type!=='execute'){addMessage('assistant',pdfAction.message);status('Edición de documentos lista.','info');return;}
    const plan=pdfAction.plan;
    const steps=validatePlan(plan);
@@ -2079,7 +2169,7 @@ async function requestPlan(userText){
   }
   const previousUserTexts=messages.slice(-9,-1).filter(m=>m.role==='user').map(m=>m.content);
   const guidedFlow=buildSmartLocalFlow(userText,attachments,previousUserTexts);
-  if(guidedFlow){
+  if(guidedFlow&&!(guidedFlow.type==='ready'&&assessQwenCorePlanCoverage(userText,guidedFlow.steps).needsSemanticReview)){
     if(guidedFlow.type!=='ready'){
       addMessage('assistant',guidedFlow.message);
       status('Entendí la operación: falta información para ejecutarla.','info');
@@ -2098,7 +2188,7 @@ async function requestPlan(userText){
   // image privacy/effects, video speed/orientation, audio normalization,
   // file inspection, hashes and safe text processing.
   const directLocal=planCoreOfflineAction(userText,attachments,previousUserTexts);
-  if(directLocal){
+  if(directLocal&&!(directLocal.type==='ready'&&assessQwenCorePlanCoverage(userText,directLocal.steps).needsSemanticReview)){
     if(directLocal.type!=='ready'){
       addMessage('assistant',directLocal.message);
       status('Falta un dato necesario para ejecutar esta herramienta.','info');
@@ -2158,6 +2248,11 @@ async function requestPlan(userText){
     // Prisma Mini / browser-based models are deliberately excluded from the
     // independent Core fallback. Only deterministic, shipped operations apply.
     const localPlan=buildLocalPlan(userText);
+    if(assessQwenCorePlanCoverage(userText,localPlan.steps||[]).needsSemanticReview){
+      const hint=await requestQwenCoreInterpretation({text:coreRequest,files:attachments});
+      if(!showQwenCoreOptions(hint))addMessage('assistant','No ejecutaré un plan que omita pasos de tu solicitud. Especifica el resultado final o utiliza Explorar.');
+      status('Plan incompleto; no se modificaron archivos.','warning');return;
+    }
     let localSteps;
     try{localSteps=validatePlan(localPlan);}catch(error){addMessage('assistant','No pude preparar una operación local segura: '+error.message);status('No se pudo preparar el trabajo.','warning');return;}
     if(!localSteps.length){addMessage('assistant',localPlan.message);status('Sin conexión de IA: capacidad local no disponible para esta solicitud.','warning');return;}
@@ -2201,8 +2296,11 @@ async function requestPlan(userText){
     }
     if(extracted.length)attachmentContext='\n\nCONTENIDO EXTRAÍDO EN EL DISPOSITIVO (solo el texto necesario se incluye en la solicitud al motor de IA; los archivos originales permanecen disponibles para ejecutar herramientas):\n'+extracted.join('\n\n').slice(0,22000);
   }
+  // The new Qwen route never depends on Prisma Mini; keep Mini optional only
+  // for the untouched legacy route if a user has expressly enabled it.
+  const qwenEligible=attachments.length>0&&(incompleteCapabilityPlan||/(?:primero|despu[eé]s|luego|adem[aá]s|y\s+(?:convierte|transforma|extrae|gira|quita|elimina|crea|exporta))/i.test(userText));
   let miniShortlist=null;
-  if(localBrainEnabled){
+  if(localBrainEnabled&&!qwenEligible){
     try{
       const baseline=compactPlanningCatalog(userText);
       // The semantic model only reorders known, safe tools; it never executes an action.
@@ -2215,7 +2313,11 @@ async function requestPlan(userText){
       if(miniButton)miniButton.textContent='Activar Prisma Mini';
     }
   }
-  const plannerPrompt=buildPlannerPrompt(userText+attachmentContext.slice(0,7500),miniShortlist);
+  // Qwen only ranks known tools for unresolved composite work; never executes.
+  let qwenHint=null;
+  if(qwenEligible)qwenHint=await requestQwenCoreInterpretation({text:coreRequest,files:attachments});
+  const shortlist=prioritizeQwenCoreTools(qwenEligible?compactPlanningCatalog(userText):(miniShortlist||compactPlanningCatalog(userText)),qwenHint);
+  const plannerPrompt=buildPlannerPrompt(userText+attachmentContext.slice(0,7500),shortlist);
   let plan,steps;
   // Provider/network errors must not trigger a second costly inference request.
   // Deterministic tools already ran without consuming inference; plan only
@@ -2228,19 +2330,20 @@ async function requestPlan(userText){
   },(p,msg)=>{status(msg||'Planificando…');setProgress(.04+Math.max(0,Math.min(1,Number(p)||0))*.12,msg||'Planificando…');});
   try{
     plan=parsePlan(result.text);
-    if(!plan.needs_clarification)steps=validatePlan(plan);
+    if(!plan.needs_clarification)steps=validatePlan({...plan,userRequest:userText});
   }catch(firstError){
     // Avoid a second large planner request that wastes quotas. Use the local
     // rule-based planner when it can identify a safe operation; otherwise
     // explain the limitation instead of silently showing a dead approval form.
     console.warn('Prisma Core plan invalid; using deterministic fallback',firstError?.message||firstError);
+    plan=null;steps=null;
     const local=buildLocalPlan(userText);
-    if(local.steps?.length){
+    if(local.steps?.length&&!assessQwenCorePlanCoverage(userText,local.steps).needsSemanticReview){
       const safeLocal=local.steps.every(step=>tools.some(tool=>tool.id===step.tool_id&&['local','browser'].includes(tool.mode)));
       if(safeLocal){plan=local;steps=validatePlan(local);}
     }
     if(!plan){
-      addMessage('assistant','Entendí tu solicitud, pero no pude construir una secuencia segura de herramientas. Intenta describir el resultado final o abre la herramienta correspondiente en Explorar. Los motores de IA siguen disponibles para responder preguntas y redactar contenido.');
+      if(!showQwenCoreOptions(qwenHint))addMessage('assistant','No encontré un plan que cubra todas las condiciones. Puedes precisar el resultado final o abrir las herramientas desde Explorar.');
       status('No fue posible organizar el flujo; prueba una instrucción más específica.','warning');
       return;
     }
@@ -2255,8 +2358,76 @@ async function requestPlan(userText){
   if(requiresApproval){showPlan(plan,steps);status('Este flujo usa servicios externos. Revisa y autoriza antes de continuar.','warning');setProgress(1,'Esperando tu autorización');}
   else{pendingPlan={plan,steps};$('#core-plan').classList.add('hidden');await executePlan();}
 }
+// Queen plans through the backend; the existing runtime still owns permissions,
+// credentials, actual tools, storage and conversation state.
+async function coordinateWithQueen(userText,resolvedTask){
+ // Preserve already-started work only. No new requests to the old broad neural planner.
+ const previous=resolvedTask.task?.execution;
+ if(!previous||!/^(?:contin[uú]a|reintenta|int[eé]ntalo de nuevo)/i.test(userText))return false;
+ attachments=previous.sourceFiles;renderAttachments();
+ const plan={...previous.plan,queenState:previous.state};
+ const steps=plan.steps.map(item=>({tool:tools.find(t=>t.id===item.tool_id),params:item.params,reason:item.id}));
+ if(steps.some(({tool})=>!['local','browser'].includes(tool.mode)))showPlan(plan,steps);
+ else{pendingPlan={plan,steps};await executeQueenPlan();}
+ return true;
+}
+async function executeQueenPlan(){
+  if(!pendingPlan||executionActive)return;
+  const {plan}=pendingPlan;pendingPlan=null;
+  const chatId=activeConversationId,sourceFiles=[...attachments];
+  $('#core-plan').classList.add('hidden');executionActive=true;cancelRequested=false;setBusy(true);
+  const state=plan.queenState||createQueenExecutionState();
+  try{
+    const outcome=await executeQueenDAG(plan,sourceFiles,{
+      state,startedAt:plan.queenStartedAt,initialInferences:plan.queenMetrics?.inferences??1,
+      cancel:()=>cancelRequested||activeConversationId!==chatId,
+      authorize:()=>true, // Entered through the existing approval panel for external steps.
+      run:async(id,files,params,cb)=>{
+        const step=plan.steps.find(s=>s.id===state.activeStepId);
+        const requested={...params,...credentials(),...(step?.delegation?{provider:step.delegation.provider,model:step.delegation.model}:{})};
+        if(['ai-assistant','ai-youtube-kit','ai-study-notes','ai-code-helper','ai-webpage','music-lyrics'].includes(id)){
+          const selection=activeChatRecord()?.modelSelection;
+          if(selection?.mode==='manual')Object.assign(requested,conversationModelRequest(selection));
+          else requested.allowFallback=true;
+        }
+        const result=await runTool(id,files,requested,cb);
+        if(['ai-assistant','ai-youtube-kit','ai-study-notes','ai-code-helper','ai-webpage','music-lyrics'].includes(id)&&result?.provider&&result?.model){
+          const chat=conversations.find(c=>c.id===chatId);if(chat){chat.modelSelection=pinConversationModel(chat.modelSelection,result,Date.now());if(chatId===activeConversationId)renderModelPicker();}
+        }
+        return result;
+      },
+      repair:plan.queenCompiled?null:async({step,code,signal})=>{
+        const response=await requestQueenPlan({text:plan.userRequest,files:sourceFiles,context:{...plan.queenContext,failedStep:{id:step.id,tool_id:step.tool_id,params:step.params,code}},repair:true},{signal});
+        if(response?.source!=='queen'||response.plan.steps.length!==1)throw Error('REPAIR_UNAVAILABLE');
+        return response.plan.steps[0];
+      },
+      progress:(p,message)=>{status(message||(plan.queenCompiled?'Ejecutando operaciones locales del escaneo…':'Ejecutando herramientas seleccionadas por Qwen…'));setProgress(p,message||'Ejecutando…');}
+    });
+    const cards=outcome.results.flatMap((entry,i)=>executionCards(tools.find(t=>t.id===entry.tool_id)?.name||entry.tool_id,entry.verification.status,entry.result,i));
+    await persistGeneratedResults(cards);
+    if(chatId!==activeConversationId)return;
+    const pending=outcome.results.flatMap(r=>r.verification.unverified);
+    addMessage('assistant',outcome.verified?'Los resultados pasaron las comprobaciones independientes.':
+      'Las herramientas produjeron estos resultados. Quedan comprobaciones pendientes: '+[...new Set(pending)].join(', ')+'.',
+      {results:cards,queenVerification:{status:outcome.status,steps:outcome.results.map(r=>({id:r.id,...r.verification}))}});
+    taskMemory.save(chatId,{files:outcome.results.flatMap(r=>r.files),originals:sourceFiles,steps:plan.steps,text:outcome.results.map(r=>r.result.text||'').join('\n')});
+    recordCoreMetric('core',outcome.verified?'queen-verified':'queen-verification-pending',{duration:outcome.metrics.durationMs});
+    status(outcome.verified?'Resultados verificados.':'Resultados producidos; verificación parcial.',outcome.verified?'success':'warning');
+    recordCompletedCoreTask({fileTask:sourceFiles.length>0||outcome.results.some(r=>r.files.length>0)||isGuestFileTask({text:plan.userRequest})});
+    attachments=[];$('#core-file-input').value='';
+  }catch(error){
+    const cards=(error.partialResults||[]).flatMap((entry,i)=>executionCards(entry.tool_id,'Resultado parcial',entry.result,i));
+    await persistGeneratedResults(cards);
+    const {queenState:discardedState,...savedPlan}=plan;
+    taskMemory.save(chatId,{files:(error.partialResults||[]).flatMap(r=>r.files),originals:sourceFiles,steps:plan.steps,
+      execution:{plan:savedPlan,state,sourceFiles}});
+    if(chatId===activeConversationId)addMessage('assistant',(plan.queenCompiled?'El flujo local del escaneo no pudo completarse. ':'Qwen no pudo completar y verificar la tarea. ')+queenFailureDescription(error)+' Se conservaron los resultados disponibles.',{results:cards,partial:true});
+    recordCoreMetric('core','queen-failed');status('Tarea detenida; resultados parciales conservados.','error');
+  }finally{executionActive=false;setBusy(false);renderAttachments();}
+}
 async function executePlan(){
   if(!pendingPlan||executionActive)return;
+  if(pendingPlan.plan.queen)return executeQueenPlan();
   const {plan,steps}=pendingPlan;pendingPlan=null;
   $('#core-plan').classList.add('hidden');executionActive=true;cancelRequested=false;setBusy(true);
   const executed=[];let currentFiles=[...attachments],lastText='',successful=false,allResultFilesSaved=true;
@@ -2551,6 +2722,7 @@ async function sendMessage(){
   if(busy)return;
   const input=$('#core-input'),text=input.value.trim();
   if(!text&&!attachments.length)return;
+  pendingPlan=null;$('#core-plan')?.classList.add('hidden');
   const transcriptionMode=activeChatRecord()?.creativeMode==='transcription';
   if(transcriptionMode&&!attachments.some(file=>file.type?.startsWith('audio/')||/\\.(mp3|m4a|wav|ogg|opus|webm|flac|aac)$/i.test(file.name))){status('Adjunta un archivo de audio para transcribirlo.','warning');return;}
   // Preserve both the draft and attached files when a fifth guest task is
@@ -2674,8 +2846,10 @@ export function initPrismaCore(){
     const remote=Array.isArray(event.detail?.conversations)?event.detail.conversations:null;
     const previousActiveId=activeConversationId;
     let activeConversationChanged=false;
-    // Merge remote history without changing the user's reading position.
-    if(!remote&&(busy||executionActive))return;
+    // Never replace the active in-memory turn with a stale cloud snapshot.
+    // A sync event can arrive after the user's message was added but before
+    // the assistant has finished executing the tool or generating its reply.
+    if(busy||executionActive)return;
     if(remote){
       const synced=mergeConversationLists(remote,conversations).filter(hasConversationMessages);
       conversations=retainActiveConversationDraft(conversations,synced,activeConversationId);
@@ -2765,7 +2939,7 @@ export function initPrismaCore(){
       miniButton.disabled=false;
     }
   });
-  $('#core-cancel').addEventListener('click',()=>{if(!executionActive||!busy)return;cancelRequested=true;$('#core-cancel').disabled=true;status('Detendré la secuencia al terminar la operación actual…','warning');});
+  $('#core-cancel').addEventListener('click',()=>{if(queenPlanningController){cancelRequested=true;queenPlanningController.abort();status('Planificación cancelada.','info');return;}if(!executionActive||!busy)return;cancelRequested=true;$('#core-cancel').disabled=true;status('Detendré la secuencia al terminar la operación actual…','warning');});
   $('#core-input').addEventListener('keydown',event=>{
     if(event.key!=='Enter'||event.shiftKey)return;
     let shortcut='enter';
