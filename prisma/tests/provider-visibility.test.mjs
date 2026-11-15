@@ -17,6 +17,8 @@ test('Lab IA connection cards and provider catalogue hide Requesty and Hugging F
     main.indexOf('let openRouterUsageRequest')
   );
   assert.doesNotMatch(connections, /Requesty|Hugging Face|requesty|huggingface|hf-model-summary/i);
+  assert.match(main, /hiddenProviders=new Set\(\['requesty','huggingface'\]\)/);
+  assert.match(main, /visibleCredentials=Object\.entries\(central\.credentialSlots\|\|\{\}\)/);
   assert.doesNotMatch(providerCards, /Requesty|Hugging Face|requesty|huggingface/i);
   assert.doesNotMatch(html, /Hugging Face|Requesty/i);
 });
