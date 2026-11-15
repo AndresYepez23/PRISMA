@@ -24,7 +24,7 @@ jobs:
             if curl --silent --show-error --max-time 10 \
               "$QWEN_STAGING_URL/api/core/qwen-interpret" \
               --output "$RUNNER_TEMP/qwen-ready.json"; then
-              if node --input-type=module -e "const r=JSON.parse(require('node:fs').readFileSync(process.env.RUNNER_TEMP+'/qwen-ready.json','utf8'));if(r.ready!==true)process.exit(1);"; then
+              if node --input-type=module -e "import fs from 'node:fs';const r=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+'/qwen-ready.json','utf8'));if(r.ready!==true)process.exit(1);"; then
                 ready=true
                 break
               fi
