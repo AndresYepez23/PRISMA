@@ -244,7 +244,7 @@
         "Open the tool directory"
       ]
     ],
-    "pair": null,
+    "pair": "/guias/conservar-ceros-csv-excel/",
     "sources": []
   },
   {
@@ -352,5 +352,953 @@
         "IRCC Help Centre"
       ]
     ]
+  },
+  {
+    "language": "es",
+    "path": "/herramientas/tiempo-de-lectura/",
+    "title": "Tiempo de lectura: calcula minutos según palabras y ritmo",
+    "description": "Estima el tiempo de lectura de un texto con un ritmo de 80 a 400 palabras por minuto. Comprueba el cálculo y sus límites antes de planear una lectura.",
+    "tool": "reading-time-local",
+    "intro": "Pega un borrador y elige cuántas palabras por minuto quieres usar para estimar su duración. El cálculo se realiza en tu navegador y sirve para planear una lectura, una clase o la extensión de un artículo.",
+    "sections": [
+      [
+        "Elegir texto y ritmo",
+        "Abre la herramienta, pega únicamente el texto que se leerá y ajusta las palabras por minuto. El valor inicial es 220 y el control admite entre 80 y 400. Usa un ritmo que represente a tu público; leer fórmulas, estudiar conceptos nuevos o leer en voz alta puede requerir más tiempo."
+      ],
+      [
+        "Ejemplo que puedes comprobar",
+        "Un texto de 220 palabras a 220 palabras por minuto da 60 segundos. A 110 palabras por minuto, el mismo texto da 120 segundos. La fórmula es palabras ÷ ritmo × 60, redondeada hacia arriba al segundo entero. Puedes comparar dos ritmos sin modificar tu borrador."
+      ],
+      [
+        "Qué cuenta como palabra",
+        "El contador divide el texto por espacios, tabulaciones y saltos de línea. Dos fragmentos separados por espacios cuentan como dos palabras; una cadena sin espacios cuenta como una. No interpreta significado ni segmenta correctamente todos los sistemas de escritura. Revisa el total si el texto contiene mucho código, enlaces o símbolos."
+      ],
+      [
+        "Interpretar el resultado",
+        "La duración no incluye imágenes, pausas, preguntas ni tiempo de comprensión. No mide tu velocidad personal: para calibrarla, cronometra una lectura real y compara. Si preparas una exposición, ensaya también los silencios y las diapositivas en lugar de usar esta cifra como duración garantizada."
+      ]
+    ],
+    "faqs": [
+      [
+        "¿Cómo calculo una duración para lectura en voz alta?",
+        "Elige un ritmo basado en un ensayo cronometrado y pega solo el guion que pronunciarás. Añade por tu cuenta el tiempo de pausas y demostraciones."
+      ],
+      [
+        "¿Por qué difiere de otro contador?",
+        "Cada contador puede separar palabras de forma distinta. Este usa fragmentos separados por espacios en blanco y redondea la duración al segundo superior."
+      ]
+    ],
+    "related": [
+      [
+        "/herramientas/contador-de-palabras/",
+        "Contar palabras, caracteres y líneas"
+      ],
+      [
+        "/herramientas/comparar-textos/",
+        "Revisar cambios entre dos borradores"
+      ]
+    ],
+    "pair": "/en/tools/reading-time-calculator/",
+    "sources": []
+  },
+  {
+    "language": "en",
+    "path": "/en/tools/reading-time-calculator/",
+    "title": "Reading Time Calculator: Estimate Minutes at Your Own Pace",
+    "description": "Calculate a text’s reading time using 80–400 words per minute. Check the formula, word count and limits when planning an article or a spoken script.",
+    "tool": "reading-time-local",
+    "intro": "Paste the text you plan to read and choose a words-per-minute rate. Prisma estimates the duration locally in your browser so you can compare a draft with your available time.",
+    "sections": [
+      [
+        "Set the text and reading pace",
+        "Open the tool, paste the passage and select a rate between 80 and 400 words per minute. The starting value is 220. Use a pace appropriate for your readers: unfamiliar technical material, study and reading aloud often take longer than scanning familiar prose."
+      ],
+      [
+        "Check a worked example",
+        "At 220 words per minute, a 220-word passage takes 60 seconds. At 110 words per minute, it takes 120 seconds. The calculation is word count ÷ rate × 60, rounded up to the next whole second. Change the pace to compare estimates for the same passage."
+      ],
+      [
+        "Understand the word count",
+        "The counter treats fragments separated by whitespace as words. Spaces, tabs and line breaks split the text; an uninterrupted string counts as one word. This is not linguistic segmentation and may be unsuitable for writing systems without spaces or passages dominated by code, links and symbols."
+      ],
+      [
+        "Allow time for more than words",
+        "Images, pauses, questions and comprehension are outside the estimate. The tool does not measure your actual reading speed. Time a representative passage to choose a realistic rate; for a presentation, rehearse transitions and demonstrations as well as the spoken script."
+      ]
+    ],
+    "faqs": [
+      [
+        "Can I estimate a speech with this calculator?",
+        "You can enter the spoken script and choose a pace based on a timed rehearsal. Add time for pauses, audience interaction and demonstrations separately."
+      ],
+      [
+        "Why does another calculator give a different answer?",
+        "Word splitting and rounding can differ. This calculator uses whitespace-separated fragments and rounds the final duration up to a whole second."
+      ]
+    ],
+    "related": [
+      [
+        "/en/tools/count-words-characters-and-lines/",
+        "Count words, characters and lines"
+      ],
+      [
+        "/en/tools/text-difference-checker/",
+        "Compare two versions of a draft"
+      ]
+    ],
+    "pair": "/herramientas/tiempo-de-lectura/",
+    "sources": []
+  },
+  {
+    "language": "es",
+    "path": "/herramientas/formatear-json/",
+    "title": "Formatear JSON: validar sintaxis y aplicar sangría",
+    "description": "Pega JSON para validar su sintaxis y darle sangría de 2, 4 espacios o tabulaciones. Revisa ejemplos de errores y límites con números e identificadores.",
+    "tool": "json-format",
+    "intro": "Convierte una respuesta JSON compacta en una estructura legible para revisar objetos y listas. La herramienta analiza el texto en tu navegador, aplica la sangría elegida e informa si la sintaxis no es válida.",
+    "sections": [
+      [
+        "Formatear un ejemplo válido",
+        "Pega {\"pedido\":23,\"pagado\":true,\"articulos\":[\"libro\",\"mapa\"]}, elige la sangría y ejecuta. El resultado separa propiedades y elementos en líneas para facilitar su lectura. Las comillas, los booleanos true y false y el valor null siguen las reglas de JSON."
+      ],
+      [
+        "Corregir un JSON inválido",
+        "El ejemplo {\"pedido\":23,} tiene una coma final que JSON no permite. Elimina esa coma y vuelve a ejecutar. Las claves deben ir entre comillas dobles: {pedido:23} tampoco es válido. Los comentarios y las cadenas entre comillas simples no pertenecen a JSON. El mensaje del navegador orienta sobre el fallo; la herramienta no repara datos automáticamente."
+      ],
+      [
+        "Revisar los datos sensibles al análisis",
+        "El formato usa JSON.parse y JSON.stringify de JavaScript. No ordena alfabéticamente las claves ni conserva espacios originales. Las claves duplicadas conservan el último valor y los números muy largos pueden perder precisión: usa cadenas para identificadores como \"00123\" o enteros que deban mantenerse exactos. Guarda el original antes de sustituirlo."
+      ],
+      [
+        "Distinguir sintaxis y estructura",
+        "Un JSON bien formado puede tener campos equivocados para una API. Formatear no valida un contrato JSON Schema ni comprueba reglas del negocio. Si necesitas verificar campos obligatorios o tipos, usa un esquema conocido y compara el resultado con la documentación del servicio."
+      ]
+    ],
+    "faqs": [
+      [
+        "¿Formatear ordena las propiedades?",
+        "No. El objetivo es aplicar sangría a la estructura que analiza JavaScript; no se realiza una ordenación alfabética."
+      ],
+      [
+        "¿Por qué cambia un identificador numérico largo?",
+        "JavaScript usa números con precisión limitada. Representa los identificadores exactos como cadenas JSON y conserva una copia del dato original."
+      ]
+    ],
+    "related": [
+      [
+        "/herramientas/minificar-json/",
+        "Minificar JSON"
+      ],
+      [
+        "/herramientas/validar-json-schema/",
+        "Validar la estructura con JSON Schema"
+      ],
+      [
+        "/herramientas/json-a-csv/",
+        "Convertir una lista JSON en CSV"
+      ]
+    ],
+    "pair": "/en/tools/json-formatter/",
+    "sources": [
+      [
+        "https://www.json.org/json-en.html",
+        "Sintaxis de JSON"
+      ]
+    ]
+  },
+  {
+    "language": "en",
+    "path": "/en/tools/json-formatter/",
+    "title": "JSON Formatter: Validate Syntax and Apply Readable Indentation",
+    "description": "Format JSON with 2 spaces, 4 spaces or tabs in your browser. Learn to fix syntax errors and protect long numeric identifiers before formatting.",
+    "tool": "json-format",
+    "intro": "Make a compact JSON response easier to inspect. Prisma parses the pasted text locally, applies your selected indentation and reports invalid JSON syntax.",
+    "sections": [
+      [
+        "Try a valid JSON example",
+        "Paste {\"order\":23,\"paid\":true,\"items\":[\"book\",\"map\"]}, select indentation and run the formatter. The output puts properties and list items on readable lines. JSON supports double-quoted strings, numbers, objects, arrays, true, false and null."
+      ],
+      [
+        "Recognize a syntax error",
+        "The input {\"order\":23,} has a trailing comma and is invalid JSON. Remove the final comma and try again. The input {order:23} also fails because object keys require double quotes. Comments and single-quoted strings are not JSON. The browser’s parsing message helps locate the problem; the formatter does not guess repairs."
+      ],
+      [
+        "Protect values that parsing can change",
+        "Formatting uses JavaScript JSON.parse and JSON.stringify. It does not alphabetize keys or preserve original whitespace. Duplicate keys retain the last value, and long numbers can lose precision. Store exact identifiers such as \"00123\" and very large integer IDs as strings, and keep the source before replacing it with formatted output."
+      ],
+      [
+        "Check structure separately",
+        "Valid JSON syntax does not prove a response follows an API contract. A misspelled property or incorrect value type may still be valid JSON. Use a known JSON Schema to check expected fields and types, and verify application-specific requirements against the service documentation."
+      ]
+    ],
+    "faqs": [
+      [
+        "Does this formatter sort object keys?",
+        "No. It adds indentation to the structure parsed by JavaScript; it does not perform alphabetical sorting."
+      ],
+      [
+        "Why can a long numeric ID change?",
+        "JavaScript numbers have limited precision. Use JSON strings for exact identifiers and keep the original source."
+      ]
+    ],
+    "related": [
+      [
+        "/en/tools/minify-json/",
+        "Minify JSON"
+      ],
+      [
+        "/en/tools/validate-json-with-json-schema/",
+        "Validate a structure with JSON Schema"
+      ],
+      [
+        "/en/tools/convert-json-to-csv/",
+        "Convert a JSON list to CSV"
+      ]
+    ],
+    "pair": "/herramientas/formatear-json/",
+    "sources": [
+      [
+        "https://www.json.org/json-en.html",
+        "JSON syntax reference"
+      ]
+    ]
+  },
+  {
+    "language": "es",
+    "path": "/herramientas/html-a-markdown/",
+    "title": "HTML a Markdown: convertir un fragmento de contenido básico",
+    "description": "Convierte HTML pegado a Markdown en el navegador: títulos, párrafos, listas, enlaces y código básico. Revisa los límites de tablas y formato complejo.",
+    "tool": "html-to-markdown-local",
+    "intro": "Pega un fragmento HTML que puedas revisar y obtén Markdown básico para documentación o apuntes. La herramienta procesa el texto localmente; no descarga páginas desde una dirección web.",
+    "sections": [
+      [
+        "Probar una conversión pequeña",
+        "Pega <h2>Notas</h2><p>Una <strong>idea</strong> clara.</p>. El resultado contiene el título ## Notas y el párrafo Una **idea** clara. Comprueba primero un fragmento pequeño antes de convertir un documento mayor; el límite de entrada es de 200.000 caracteres."
+      ],
+      [
+        "Qué formato se conserva",
+        "Se convierten encabezados, párrafos, negritas, cursivas, listas, saltos de línea, citas, código básico y enlaces admitidos. Revisa la sintaxis y la vista previa en tu editor de destino. Los enlaces relativos siguen siendo relativos: al mover el documento, pueden apuntar a otra ubicación."
+      ],
+      [
+        "Qué necesita revisión manual",
+        "Las tablas se reducen a texto y no se reconstruyen como tablas Markdown. No se conserva el diseño CSS, las columnas, los formularios ni los componentes interactivos. Un fragmento complejo puede perder jerarquía o espaciado. Conserva el HTML original para comparar y recuperar contenido que necesite edición."
+      ],
+      [
+        "Trabajar con HTML pegado",
+        "Pega el código de contenido, no una URL. Se omiten scripts, estilos e iframes; no se ejecuta código ni se recogen recursos de una página. Esto no certifica que el Markdown sea seguro para publicarlo: revisa las direcciones de los enlaces y el contenido antes de llevarlo a otro sistema."
+      ]
+    ],
+    "faqs": [
+      [
+        "¿Convierte una web completa al pegar su dirección?",
+        "No. Debes pegar el fragmento HTML. La herramienta no navega, inicia sesión ni descarga una web."
+      ],
+      [
+        "¿Puedo recuperar la maquetación de una tabla?",
+        "No de forma automática. La salida conserva texto básico; reconstruye y comprueba manualmente cualquier tabla o diseño complejo."
+      ]
+    ],
+    "related": [
+      [
+        "/herramientas/markdown-a-html/",
+        "Convertir Markdown básico a HTML"
+      ],
+      [
+        "/herramientas/comparar-textos/",
+        "Comparar dos versiones del contenido"
+      ]
+    ],
+    "pair": "/en/tools/html-to-markdown/",
+    "sources": []
+  },
+  {
+    "language": "en",
+    "path": "/en/tools/html-to-markdown/",
+    "title": "HTML to Markdown: Convert Pasted Content Fragments",
+    "description": "Convert pasted HTML headings, paragraphs, lists, links and basic code to Markdown locally. Check table, layout and relative-link limitations.",
+    "tool": "html-to-markdown-local",
+    "intro": "Turn a pasted HTML fragment into basic Markdown for notes or documentation. The conversion runs in your browser and works with the supplied markup rather than fetching a web address.",
+    "sections": [
+      [
+        "Start with a small example",
+        "Paste <h2>Notes</h2><p>One <strong>clear</strong> idea.</p>. The result contains the heading ## Notes and the paragraph One **clear** idea. Check a short fragment before converting a larger document. The input limit is 200,000 characters."
+      ],
+      [
+        "Review supported markup",
+        "Headings, paragraphs, bold, emphasis, lists, line breaks, blockquotes, basic code and permitted links become Markdown. Review both the source and a rendered preview in your destination editor. Relative links remain relative and may resolve differently when you move the document to another location."
+      ],
+      [
+        "Handle complex content manually",
+        "Tables become plain text rather than reconstructed Markdown tables. CSS layout, columns, forms and interactive components are not preserved. Complex fragments may lose spacing or hierarchy. Keep the original HTML and compare the output before replacing content in a repository or documentation system."
+      ],
+      [
+        "Paste content rather than a URL",
+        "The converter does not visit websites, sign in or fetch page resources. Scripts, styles and iframes are omitted from the result, and pasted code is not executed. The output is not a security certification: inspect link destinations and content before publishing the Markdown in another system."
+      ]
+    ],
+    "faqs": [
+      [
+        "Can I convert a whole website by entering its URL?",
+        "No. Paste the HTML content you want to convert. The tool does not browse or download pages."
+      ],
+      [
+        "Will an HTML table retain its layout?",
+        "No. Tables are reduced to text, so rebuild and verify any structured table manually in your target editor."
+      ]
+    ],
+    "related": [
+      [
+        "/en/tools/convert-basic-markdown-to-html/",
+        "Convert basic Markdown to HTML"
+      ],
+      [
+        "/en/tools/text-difference-checker/",
+        "Compare two versions of the content"
+      ]
+    ],
+    "pair": "/herramientas/html-a-markdown/",
+    "sources": []
+  },
+  {
+    "language": "es",
+    "path": "/herramientas/convertir-csv-tsv/",
+    "title": "Convertir CSV a TSV y TSV a CSV con separadores elegidos",
+    "description": "Pega una tabla CSV o TSV y cambia su separador. Conserva comillas y saltos dentro de campos y revisa ejemplos antes de importar el resultado.",
+    "tool": "csv-to-tsv-local",
+    "intro": "Adapta una tabla de texto para una aplicación que espera comas, punto y coma o tabulaciones. Elige la dirección de conversión y el separador CSV; la operación se realiza en tu navegador.",
+    "sections": [
+      [
+        "Elegir dirección y separador",
+        "Para CSV a TSV, elige si tu CSV usa coma o punto y coma. Para TSV a CSV, la entrada se interpreta con tabulaciones y el selector define el separador CSV de salida. No elijas el separador por la apariencia de Excel: abre el texto y comprueba qué carácter separa realmente sus columnas."
+      ],
+      [
+        "Comprobar un ejemplo con coma interna",
+        "En CSV con coma, nombre,nota seguido de Ana,\"Hola, mundo\" representa dos columnas. Al convertir a TSV, el separador entre nombre y nota pasa a ser una tabulación; la coma de Hola, mundo sigue siendo parte del valor. Prueba también un campo con comillas dobles, que CSV expresa duplicándolas dentro de un campo entrecomillado."
+      ],
+      [
+        "Conservar campos complejos",
+        "Los saltos de línea y separadores dentro de un campo entrecomillado se conservan. La salida utiliza comillas cuando son necesarias, también en TSV. Una entrada con comillas sin cerrar se rechaza; corrige el texto de origen antes de convertir. Comprueba que la aplicación receptora admita campos TSV entrecomillados y con saltos internos."
+      ],
+      [
+        "Revisar el resultado importado",
+        "El conversor cambia el formato de separación, no interpreta números ni fechas. Un identificador 00123 permanece texto en la conversión, pero Excel puede inferir un número al abrirlo. Revisa el número de columnas, unas filas representativas y los campos multilínea en el programa de destino; conserva siempre el original."
+      ]
+    ],
+    "faqs": [
+      [
+        "¿La herramienta decide automáticamente qué separador tengo?",
+        "No. Selecciona coma o punto y coma para el CSV y elige la dirección. La entrada TSV utiliza tabulaciones."
+      ],
+      [
+        "¿Cambiar CSV por TSV evita que Excel elimine ceros?",
+        "No. El programa que importa puede inferir tipos. Importa los identificadores como texto y comprueba las celdas."
+      ]
+    ],
+    "related": [
+      [
+        "/herramientas/convertir-archivos-csv-excel-json/",
+        "Convertir archivos CSV, JSON y Excel"
+      ],
+      [
+        "/guias/csv-una-sola-columna-excel/",
+        "Solucionar un CSV que aparece en una sola columna"
+      ],
+      [
+        "/guias/conservar-ceros-csv-excel/",
+        "Conservar ceros iniciales al importar"
+      ]
+    ],
+    "pair": "/en/tools/csv-tsv-converter/",
+    "sources": []
+  },
+  {
+    "language": "en",
+    "path": "/en/tools/csv-tsv-converter/",
+    "title": "CSV to TSV and TSV to CSV Converter with Separator Controls",
+    "description": "Convert pasted CSV or TSV using comma, semicolon or tab separators. Preserve quoted fields and embedded newlines, then verify the destination import.",
+    "tool": "csv-to-tsv-local",
+    "intro": "Change a pasted table between CSV and TSV when another application expects a different separator. Select the conversion direction and CSV separator; processing takes place locally in your browser.",
+    "sections": [
+      [
+        "Choose the direction and CSV separator",
+        "For CSV to TSV, select comma or semicolon to match the input CSV. For TSV to CSV, tabs separate input columns and the selector sets the output CSV separator. Check the actual text rather than assuming a separator from how a spreadsheet displays the file."
+      ],
+      [
+        "Test a comma inside a value",
+        "With comma-separated CSV, name,note followed by Ana,\"Hello, world\" is a two-column table. Converting it to TSV replaces the column separator with a tab while keeping the comma inside Hello, world. Double quotes inside quoted fields use doubled quotes; inspect a sample containing them before importing a larger table."
+      ],
+      [
+        "Preserve quoted multiline fields",
+        "Quoted field values can contain newlines and separators. The output adds quotes where required, including in TSV. Unclosed or malformed quoted input is rejected so you can correct the source. Verify that the receiving application supports quoted TSV fields and embedded newlines; TSV handling varies between applications."
+      ],
+      [
+        "Verify the destination import",
+        "The converter changes separators without interpreting values as numbers or dates. The value 00123 remains text during conversion, but spreadsheet software can infer a number when importing. Check column counts, representative rows and multiline cells in the destination application, and keep the source table."
+      ]
+    ],
+    "faqs": [
+      [
+        "Does the converter automatically detect my CSV separator?",
+        "No. Select comma or semicolon and choose the conversion direction. TSV input uses tab characters."
+      ],
+      [
+        "Will converting to TSV protect leading zeros in Excel?",
+        "Not by itself. Import identifier columns as text and verify the loaded cells before saving the workbook."
+      ]
+    ],
+    "related": [
+      [
+        "/en/tools/convert-csv-excel-and-json-files/",
+        "Convert CSV, JSON and Excel files"
+      ],
+      [
+        "/en/guides/keep-leading-zeros-csv-excel/",
+        "Keep leading zeros when importing CSV"
+      ],
+      [
+        "/en/tools/convert-csv-to-json/",
+        "Convert CSV records to JSON"
+      ]
+    ],
+    "pair": "/herramientas/convertir-csv-tsv/",
+    "sources": []
+  },
+  {
+    "language": "es",
+    "path": "/guias/acentos-caracteres-csv-excel/",
+    "title": "Acentos y ñ incorrectos en un CSV de Excel: revisar UTF-8",
+    "description": "Distingue un error de codificación de un problema de columnas. Importa CSV UTF-8 en Excel, entiende el BOM y conserva una copia de los datos originales.",
+    "tool": "table-file-convert",
+    "intro": "Si un CSV muestra BogotÃ¡ en lugar de Bogotá, puede haberse leído con una codificación distinta de la usada al guardarlo. Cambiar el separador no corrige ese problema. Trabaja sobre una copia y comprueba primero cómo está codificado el archivo original.",
+    "sections": [
+      [
+        "Separar los dos diagnósticos",
+        "Prueba una muestra con las columnas nombre,ciudad y la fila Muñoz,Bogotá. Si ambas columnas aparecen pero las letras cambian, revisa la codificación. Si toda la fila queda en una celda, revisa además el delimitador. Son ajustes independientes; no sustituyas todas las comas ni elimines las tildes para ocultar el error."
+      ],
+      [
+        "Importar con vista previa",
+        "En las versiones de Excel que lo incluyen, abre Datos → Obtener datos → Desde texto/CSV. Selecciona UTF-8 como origen del archivo cuando esa sea su codificación, confirma el delimitador y revisa Muñoz y Bogotá antes de cargar. Los nombres de los menús varían según versión. Si UTF-8 no muestra los caracteres correctos, consulta la codificación de la exportación original."
+      ],
+      [
+        "Qué hace el BOM",
+        "El BOM es una marca al inicio del archivo que ayuda a Excel a reconocer UTF-8. No repara letras ya sustituidas por signos de interrogación ni cambia la codificación de los bytes restantes. Si vuelves a exportar, elige CSV UTF-8 cuando esté disponible y comprueba también qué admite el programa que recibirá el archivo."
+      ],
+      [
+        "Cuándo sirve convertir a XLSX",
+        "Si el CSV original ya es UTF-8 y se lee correctamente, el conversor de Prisma puede crear un XLSX. Comprueba encabezados únicos, delimitador, acentos y una muestra de filas. La lectura CSV de esta herramienta usa UTF-8; no ofrece selección de Windows-1252 ni recupera texto que ya se guardó dañado. No lo uses como reparación automática de cualquier codificación."
+      ],
+      [
+        "Comprobar el resultado",
+        "Cierra y vuelve a abrir la copia final. Compara nombres con ñ, tildes y códigos con el original; conserva ambos archivos hasta terminar la revisión. Si el original conserva las letras, vuelve a importarlo correctamente. Si ya contiene ?, busca una exportación anterior: adivinar los caracteres puede alterar los datos."
+      ]
+    ],
+    "faqs": [
+      [
+        "¿Agregar BOM recupera las tildes perdidas?",
+        "No. Facilita reconocer un archivo UTF-8, pero no reconstruye caracteres que ya se perdieron al guardar."
+      ],
+      [
+        "¿La codificación también decide dónde van las columnas?",
+        "No. La codificación interpreta caracteres; el delimitador separa campos. Revisa ambos por separado."
+      ],
+      [
+        "¿Prisma detecta todas las codificaciones de CSV?",
+        "No. Este conversor lee el CSV como UTF-8. Para otra codificación, importa el original con una aplicación que permita elegirla y exporta una copia correcta."
+      ]
+    ],
+    "related": [
+      [
+        "/guias/csv-una-sola-columna-excel/",
+        "CSV que aparece en una sola columna"
+      ],
+      [
+        "/guias/conservar-ceros-csv-excel/",
+        "Conservar ceros iniciales"
+      ],
+      [
+        "/herramientas/convertir-archivos-csv-excel-json/",
+        "Convertir CSV, Excel y JSON"
+      ]
+    ],
+    "pair": "/en/guides/csv-utf8-excel/",
+    "sources": [
+      [
+        "https://support.microsoft.com/es-es/excel/opening-csv-utf-8-files-correctly-in-excel",
+        "Microsoft: abrir CSV UTF-8 correctamente en Excel"
+      ]
+    ]
+  },
+  {
+    "language": "en",
+    "path": "/en/guides/csv-utf8-excel/",
+    "title": "CSV UTF-8 in Excel: Fix Garbled Accents and Check the BOM",
+    "description": "Check CSV encoding when Excel displays garbled accents. Import with a preview, understand what a UTF-8 BOM does, and avoid overwriting the original data.",
+    "tool": "table-file-convert",
+    "intro": "A CSV that shows BogotÃ¡ instead of Bogotá may have been decoded with the wrong character encoding. Changing commas to semicolons will not fix the letters. Keep the source file and check its encoding before saving changes.",
+    "sections": [
+      [
+        "Check characters separately from columns",
+        "Use a sample headed name,city with the row Muñoz,Bogotá. If the two columns are present but the names are garbled, investigate encoding. If the whole row occupies one cell, also check the delimiter. Do not remove accents or replace every comma to conceal the underlying problem."
+      ],
+      [
+        "Import instead of relying on a double-click",
+        "Where available, use Excel Data → Get Data → From Text/CSV. Choose UTF-8 as the file origin when the source is UTF-8, check the delimiter and inspect Muñoz and Bogotá in the preview. Menu labels depend on your version. If UTF-8 still produces incorrect letters, establish the encoding used by the original export."
+      ],
+      [
+        "Understand the BOM",
+        "A byte order mark at the beginning can help Excel identify UTF-8. It does not convert the remaining bytes or recover characters already replaced with question marks. When exporting another copy, select CSV UTF-8 if available and check whether the receiving application accepts a BOM."
+      ],
+      [
+        "Use XLSX only after checking the source",
+        "Prisma can convert an already valid UTF-8 CSV to XLSX. Check unique headers, the separator, accented characters and representative rows. Its CSV reader uses UTF-8; it does not offer a Windows-1252 selector or automatically repair text saved with damaged characters. An XLSX conversion cannot reconstruct missing source data."
+      ],
+      [
+        "Reopen and compare",
+        "Open the final copy again and compare accents, names and identifiers with the source. If the original still has the correct characters, import it again with the right encoding. If it already contains ?, retrieve an earlier export instead of guessing the missing letters."
+      ]
+    ],
+    "faqs": [
+      [
+        "Does adding a BOM restore lost accents?",
+        "No. A BOM helps identify UTF-8; it cannot recover characters lost during an earlier save."
+      ],
+      [
+        "Does UTF-8 determine the CSV separator?",
+        "No. Encoding determines how bytes represent characters. Commas, semicolons and tabs are separate delimiter choices."
+      ],
+      [
+        "Can Prisma detect every CSV encoding?",
+        "No. This converter reads CSV as UTF-8. For another encoding, use an importer that lets you select it and export a verified UTF-8 copy first."
+      ]
+    ],
+    "related": [
+      [
+        "/en/guides/keep-leading-zeros-csv-excel/",
+        "Keep leading zeros in Excel"
+      ],
+      [
+        "/en/tools/convert-csv-excel-and-json-files/",
+        "Convert CSV, Excel and JSON files"
+      ],
+      [
+        "/en/guides/how-to-review-a-csv-file-before-analyzing-it/",
+        "Review CSV structure before analysis"
+      ]
+    ],
+    "pair": "/guias/acentos-caracteres-csv-excel/",
+    "sources": [
+      [
+        "https://support.microsoft.com/en-us/excel/opening-csv-utf-8-files-correctly-in-excel",
+        "Microsoft: opening CSV UTF-8 files correctly in Excel"
+      ]
+    ]
+  },
+  {
+    "language": "es",
+    "path": "/guias/conservar-ceros-csv-excel/",
+    "title": "Conservar ceros iniciales de un CSV al importarlo en Excel",
+    "description": "Importa códigos como 00123 en Excel sin perder ceros iniciales. Aprende a usar columnas de texto y por qué las comillas o el formato visual no bastan.",
+    "tool": "table-file-convert",
+    "intro": "Los códigos de producto, identificadores y códigos postales no siempre son números para calcular. Al abrir un CSV directamente, Excel puede convertir 00123 en 123. La prevención consiste en conservar el valor como texto desde la importación.",
+    "sections": [
+      [
+        "Ejemplo que puedes comprobar",
+        "Un CSV con codigo,nombre y la fila 00123,Ana debe conservar los cinco caracteres de 00123. Guarda el archivo original antes de abrirlo o corregirlo. Si solo queda 123, no puedes saber por ese valor cuántos ceros tenía el identificador."
+      ],
+      [
+        "Elegir texto antes de cargar",
+        "En las versiones que ofrecen Datos → Desde texto/CSV, abre la importación o transformación y asigna Texto a la columna de códigos antes de cargarla. Si hay un paso automático que convierte esa columna a número, elimínalo o ajústalo antes de la conversión. Confirma que las celdas resultantes muestran 00123; los menús pueden variar según versión."
+      ],
+      [
+        "CSV y XLSX no conservan lo mismo",
+        "CSV guarda campos de texto sin tipos persistentes de columna. Las comillas delimitan un campo pero no obligan a Excel a interpretarlo como texto. Prisma lee los campos CSV como cadenas al convertirlos a XLSX; revisa la copia generada. Si vuelves a guardar como CSV y lo abres directamente, Excel puede inferir los tipos otra vez."
+      ],
+      [
+        "No confundir apariencia con recuperación",
+        "Un formato visual como 00000 puede mostrar ceros delante de un número sin recuperar el identificador original. Solo rellena posiciones si una fuente fiable establece una longitud fija. Revisa también códigos largos y fechas: una conversión automática puede haber cambiado su valor, no solo su aspecto."
+      ]
+    ],
+    "faqs": [
+      [
+        "¿Puedo recuperar los ceros después de guardar como número?",
+        "Solo si el original u otra regla documentada permite establecer el valor. No adivines identificadores a partir de su longitud aparente."
+      ],
+      [
+        "¿Basta con escribir el código entre comillas en el CSV?",
+        "No. Excel puede seguir interpretándolo como un número. Importa la columna como texto."
+      ],
+      [
+        "¿Cambiar después el formato de la celda a Texto restaura el dato?",
+        "No restaura caracteres ya eliminados. Vuelve a importar el original con el tipo correcto."
+      ]
+    ],
+    "related": [
+      [
+        "/herramientas/convertir-archivos-csv-excel-json/",
+        "Convertir CSV a XLSX"
+      ],
+      [
+        "/guias/csv-una-sola-columna-excel/",
+        "Separar las columnas del CSV"
+      ],
+      [
+        "/guias/acentos-caracteres-csv-excel/",
+        "Revisar acentos y codificación UTF-8"
+      ]
+    ],
+    "pair": "/en/guides/keep-leading-zeros-csv-excel/",
+    "sources": [
+      [
+        "https://support.microsoft.com/en-us/excel/get-started/import-or-export-text-txt-or-csv-files",
+        "Microsoft: importar o exportar archivos de texto y CSV (en inglés)"
+      ]
+    ]
+  },
+  {
+    "language": "es",
+    "path": "/guias/no-puedo-copiar-texto-pdf/",
+    "title": "No puedo copiar texto de un PDF: escaneo, permisos o extracción",
+    "description": "Identifica por qué no puedes seleccionar texto de un PDF. Distingue escaneos, restricciones y problemas de extracción, y prepara OCR solo cuando corresponda.",
+    "tool": "pdf-text",
+    "intro": "Que un PDF muestre letras no significa que contenga texto seleccionable. Una página puede ser una imagen, tener una capa de texto defectuosa o estar restringida. Identificar el caso evita convertir el archivo sin necesidad.",
+    "sections": [
+      [
+        "Probar selección y búsqueda",
+        "Intenta seleccionar una palabra y buscar una frase visible. En un PDF digital normal, ambas acciones suelen funcionar. Si se selecciona toda la página como imagen o no aparece texto al buscar, puede ser un escaneo. Es una pista, no una prueba definitiva: fuentes, caracteres convertidos a curvas y capas OCR defectuosas también afectan la selección."
+      ],
+      [
+        "Si existe una capa de texto",
+        "Abre Extraer texto de PDF y procesa una copia. Compara un párrafo con el original: las columnas y tablas pueden salir desordenadas, y algunas fuentes producen caracteres incorrectos. Por ejemplo, verifica que una cifra 1.250 no se convierta en 1250 al limpiar saltos o espacios. La extracción no reconstruye el diseño ni realiza OCR."
+      ],
+      [
+        "Si solo hay imágenes",
+        "Exporta las páginas necesarias con PDF a PNG, descarga el ZIP y extrae las imágenes. Abre Imagen a texto, selecciona una imagen y el idioma correspondiente y ejecuta OCR; repite para las páginas que necesites. Este recorrido entrega texto reconocido, no un PDF con una nueva capa de búsqueda. Revisa nombres, cifras, signos y tildes antes de reutilizarlos."
+      ],
+      [
+        "Si el documento está restringido",
+        "Consulta los permisos en tu lector PDF y solicita al emisor una copia accesible o la autorización correspondiente. Estas herramientas no prometen quitar contraseñas ni restricciones. Si el documento ni siquiera abre, pide una copia válida antes de intentar extraerlo."
+      ],
+      [
+        "Cuándo pedir un original mejor",
+        "Un escaneo borroso, cortado o de bajo contraste puede dar OCR incorrecto. Conviene solicitar el documento digital o volver a escanear con buena orientación y nitidez. Conserva el PDF original para comparar: una salida con muchas palabras no demuestra que la transcripción sea fiel."
+      ]
+    ],
+    "faqs": [
+      [
+        "¿PDF a Word reconoce automáticamente un escaneo?",
+        "No en este recorrido. La conversión de PDF digital usa su texto existente; una página escaneada necesita OCR primero."
+      ],
+      [
+        "¿Puedo pasar directamente un PDF al OCR de imágenes?",
+        "La herramienta Imagen a texto recibe una imagen. Exporta primero la página como PNG y extrae el archivo del ZIP."
+      ],
+      [
+        "¿El OCR conserva tablas y diseño?",
+        "No garantiza esa estructura. La salida es texto que debes comparar y ordenar cuando sea necesario."
+      ]
+    ],
+    "related": [
+      [
+        "/herramientas/extraer-texto-pdf/",
+        "Extraer una capa de texto existente"
+      ],
+      [
+        "/herramientas/pdf-a-png/",
+        "Exportar páginas como PNG"
+      ],
+      [
+        "/herramientas/imagen-a-texto/",
+        "Reconocer texto de una imagen"
+      ],
+      [
+        "/herramientas/pdf-a-word/",
+        "Convertir PDF digital a Word"
+      ]
+    ],
+    "pair": "/en/guides/cannot-copy-text-from-pdf/",
+    "sources": [
+      [
+        "https://helpx.adobe.com/reader/desktop/copy-content-pdfs.html",
+        "Adobe: copiar contenido de un PDF (en inglés)"
+      ],
+      [
+        "https://helpx.adobe.com/uk/acrobat/desktop/create-documents/scan-documents-to-pdfs/recognize-text.html",
+        "Adobe: reconocimiento de texto en PDF escaneados (en inglés)"
+      ]
+    ]
+  },
+  {
+    "language": "en",
+    "path": "/en/guides/cannot-copy-text-from-pdf/",
+    "title": "Cannot Copy Text from a PDF? Check Scans, Permissions and OCR",
+    "description": "Diagnose a PDF with unselectable text. Check for scans, restrictions or a damaged text layer, then choose text extraction or image OCR with clear limits.",
+    "tool": "pdf-text",
+    "intro": "Visible lettering does not prove that a PDF contains selectable text. A page may be an image, have an unreliable text layer or restrict copying. Identify the cause before converting the document.",
+    "sections": [
+      [
+        "Test selection and search",
+        "Try selecting a word and searching for a visible phrase. Both usually work in a normal digital PDF. If the page selects as one image or search finds no text, it may be a scan. This is only a clue: outlined letters, unusual fonts and faulty OCR layers can also prevent useful selection."
+      ],
+      [
+        "Extract existing digital text",
+        "Open Extract Text from a PDF and process a copy. Compare a paragraph with the original, especially numbers and column order. For example, confirm that 1,250 has not become 1250 during later cleanup. Extraction reads existing text; it does not perform OCR or recreate the page layout. Broken character mappings can still produce incorrect output."
+      ],
+      [
+        "Use image OCR for scanned pages",
+        "Export the required pages with PDF to PNG, download the ZIP and extract its images. Open Image to Text, select an image and the correct language, then run OCR. Repeat for the pages you need. This workflow returns recognized text rather than adding a searchable layer to the original PDF. Check names, numbers, punctuation and accents against the page."
+      ],
+      [
+        "Check restrictions separately",
+        "Inspect the document permissions in your PDF reader. Ask the sender for an accessible copy or the appropriate authorization when copying is restricted. These tools do not promise password removal or restriction bypass. If the file cannot open at all, obtain a valid copy first."
+      ],
+      [
+        "Know when to improve the source",
+        "A blurred, cropped or low-contrast scan can produce plausible but incorrect words. Request the original digital document or a clearer scan when possible. Keep the source for comparison; a long OCR result is not evidence of an accurate transcription."
+      ]
+    ],
+    "faqs": [
+      [
+        "Does PDF to Word automatically recognize a scan?",
+        "Not in this workflow. Digital PDF conversion uses existing text. An image-only page needs OCR first."
+      ],
+      [
+        "Can I upload the PDF directly to Image to Text?",
+        "The image OCR tool takes an image. Export the page as PNG and extract it from the ZIP first."
+      ],
+      [
+        "Will OCR reproduce tables and page layout?",
+        "It returns recognized text without guaranteeing the original structure. Review and rearrange the result as needed."
+      ]
+    ],
+    "related": [
+      [
+        "/en/tools/extract-text-from-a-pdf/",
+        "Extract an existing PDF text layer"
+      ],
+      [
+        "/en/tools/convert-pdf-to-png/",
+        "Export PDF pages as PNG"
+      ],
+      [
+        "/en/tools/convert-image-to-text-with-ocr/",
+        "Recognize text in an image"
+      ],
+      [
+        "/en/tools/free-pdf-to-word-converter/",
+        "Convert a digital PDF to Word"
+      ]
+    ],
+    "pair": "/guias/no-puedo-copiar-texto-pdf/",
+    "sources": [
+      [
+        "https://helpx.adobe.com/reader/desktop/copy-content-pdfs.html",
+        "Adobe: copy content from PDFs"
+      ],
+      [
+        "https://helpx.adobe.com/uk/acrobat/desktop/create-documents/scan-documents-to-pdfs/recognize-text.html",
+        "Adobe: recognize text in scanned PDFs"
+      ]
+    ]
+  },
+  {
+    "language": "es",
+    "path": "/soluciones/unir-pdf-e-imagenes/",
+    "title": "Unir PDF e imágenes en un archivo: convertir y combinar",
+    "description": "Combina un PDF con fotos JPG o PNG en dos pasos: convierte las imágenes y une los PDF. Revisa el orden, las páginas y la legibilidad antes de compartir.",
+    "tool": "image-pdf",
+    "intro": "El unidor de PDF recibe documentos PDF, no una mezcla de fotos y documentos. Para añadir imágenes a un PDF existente, primero conviértelas a PDF y después combina los documentos resultantes.",
+    "sections": [
+      [
+        "Planificar el orden",
+        "Ejemplo: tienes un informe de dos páginas y dos fotografías de anexos. El resultado esperado es un PDF de cuatro páginas: informe primero y una imagen por página después. Anota el orden antes de convertir. Si las fotos deben intercalarse, prepara archivos separados o divide el PDF en los bloques necesarios antes de unirlo."
+      ],
+      [
+        "Convertir las imágenes",
+        "Abre Imágenes a PDF, selecciona las fotos en el orden previsto y elige A4 o Carta. La herramienta coloca una imagen por página, ajustada con márgenes; comprueba orientación y nitidez en la descarga. Trabaja con formatos que tu navegador pueda abrir, como JPG o PNG. La opción Ajustar a imagen del formulario no cambia el tamaño en el motor actual: usa A4 o Carta."
+      ],
+      [
+        "Unir los documentos PDF",
+        "Abre Unir PDF y añade el informe y el PDF recién creado con las imágenes. Revisa el orden de los archivos antes de ejecutar. Descarga el documento combinado y verifica que tiene las cuatro páginas del ejemplo. Si cambias el orden, vuelve a unir desde los originales para evitar añadir la misma página dos veces."
+      ],
+      [
+        "Revisar lo que la conversión no hace",
+        "Las imágenes siguen siendo imágenes: no se añade texto seleccionable ni mejora una foto borrosa. La conversión incorpora las imágenes como JPEG, por lo que transparencia y metadatos originales no se conservan. Los PDF unidos pueden mantener tamaños de página diferentes. Comprueba texto pequeño, firmas y bordes, y conserva los archivos originales."
+      ],
+      [
+        "Compartir o cargar la copia",
+        "Si el destino tiene un límite de peso, compara el tamaño real del archivo final con ese requisito. Convertir y unir no garantiza reducirlo. No cambies una firma digital ni reemplaces un original firmado cuando el destinatario necesite verificarlo; confirma antes qué copia admite."
+      ]
+    ],
+    "faqs": [
+      [
+        "¿Puedo poner JPG directamente en Unir PDF?",
+        "No. Convierte primero las imágenes a PDF y añade ese resultado al unidor."
+      ],
+      [
+        "¿Cada imagen ocupa una página?",
+        "Sí. En este recorrido, dos imágenes producen dos páginas antes de unirlas al documento existente."
+      ],
+      [
+        "¿Obtendré un documento editable?",
+        "Las fotos se incorporan como imágenes. Usa OCR por separado si necesitas reconocer su texto, y revisa el resultado."
+      ]
+    ],
+    "related": [
+      [
+        "/herramientas/jpg-a-pdf/",
+        "Convertir fotos JPG a PDF"
+      ],
+      [
+        "/herramientas/png-a-pdf/",
+        "Convertir imágenes PNG a PDF"
+      ],
+      [
+        "/herramientas/unir-pdf/",
+        "Unir los documentos PDF"
+      ],
+      [
+        "/herramientas/dividir-pdf/",
+        "Preparar bloques para intercalar páginas"
+      ]
+    ],
+    "pair": null,
+    "sources": []
+  },
+  {
+    "language": "en",
+    "path": "/en/guides/filled-pdf-appears-blank/",
+    "title": "Filled PDF Appears Blank? Check Saved Fields Before Flattening",
+    "description": "Check whether PDF form answers were saved and visible in another reader. Flatten a verified AcroForm copy only when the recipient accepts a static document.",
+    "tool": "pdf-form-flatten",
+    "intro": "A form that looks filled in one reader can appear empty in another. Unsaved answers, field appearance differences or an unsupported form type are possible causes. Flattening is useful only when the answers exist and the recipient accepts a static copy.",
+    "sections": [
+      [
+        "Verify the saved file first",
+        "Save a copy in the reader used to fill the form, close it and reopen that exact file. Check a sample name, date and checkbox, then open the same copy in another reader if available. If the answers are missing in the saved original, return to the editor or the form issuer; flattening cannot recover answers that were never saved."
+      ],
+      [
+        "Inspect interactive fields",
+        "Prisma's Inspect PDF Form Fields reports names and types of AcroForm fields without displaying their values. Finding fields confirms that an interactive form is present, not that every answer is complete. A scan with printed boxes is not automatically a fillable form. This workflow does not support every PDF form technology, including dynamic XFA forms."
+      ],
+      [
+        "Flatten a verified copy when appropriate",
+        "If the saved answers are correct and the recipient allows a noninteractive copy, open Flatten PDF Form and choose that copy. Download the result and compare every answer and checkbox with the original in another reader. Example: a visible name and checked consent box must both remain present. Do not send a file merely because conversion completed."
+      ],
+      [
+        "Preserve the editable or signed original",
+        "Flattening fixes AcroForm fields into page content and removes their normal fillable behaviour. Keep the editable original separately. It does not encrypt the document or make it impossible to modify with a PDF editor. Do not use this step when a recipient requires live fields, validation buttons or a verifiable digitally signed original; rewriting a signed document can affect signature validation."
+      ],
+      [
+        "Stop when the result is wrong",
+        "If text is missing, clipped or replaced by unexpected characters, retain the source and ask the issuer for a compatible form or export method. The tool does not promise to repair damaged fields, missing font information or all reader differences. A blank result must not replace the completed original."
+      ]
+    ],
+    "faqs": [
+      [
+        "Does finding fields mean the form contains my answers?",
+        "No. The inspector reports field names and types, not the entered values. Open the saved file and inspect the answers yourself."
+      ],
+      [
+        "Can flattening recover an unsaved answer?",
+        "No. It uses the saved document. Return to the original editor if the answers were not stored."
+      ],
+      [
+        "Should I flatten a form before every upload?",
+        "No. Follow the recipient's instructions; some workflows require interactive fields or the original signature validation."
+      ]
+    ],
+    "related": [
+      [
+        "/en/tools/inspect-pdf-form-fields/",
+        "Inspect AcroForm field names and types"
+      ],
+      [
+        "/en/tools/flatten-a-pdf-form/",
+        "Flatten a verified form copy"
+      ],
+      [
+        "/en/guides/document-upload-rejected/",
+        "Check a rejected document upload"
+      ]
+    ],
+    "pair": null,
+    "sources": [
+      [
+        "https://helpx.adobe.com/reader/desktop/fill-forms.html",
+        "Adobe: fill and save PDF forms"
+      ],
+      [
+        "https://www.adobe.com/uk/acrobat/resources/flatten-a-pdf.html",
+        "Adobe: flatten a PDF and preserve an original copy"
+      ]
+    ]
+  },
+  {
+    "language": "en",
+    "path": "/en/guides/document-upload-rejected/",
+    "title": "Document Upload Rejected: Check File Type, Size and the Portal",
+    "description": "Check a document’s extension, actual format, size and readability after an upload error. Choose a real conversion and confirm acceptance in the original portal.",
+    "tool": "file-inspector",
+    "intro": "An upload can fail because of the file itself or the portal session. Start with the exact error and the instructions beside that upload field. A valid PDF is not automatically an acceptable attachment for every service.",
+    "sections": [
+      [
+        "Record the specific requirement",
+        "Check accepted formats, the maximum file size, page or image limits and whether separate attachments are required. Example: if a field requests a PDF and you have a JPG photograph, changing receipt.jpg to receipt.pdf does not convert it. Keep the original and use an image-to-PDF conversion only if the portal permits that document."
+      ],
+      [
+        "Inspect the file, then open it",
+        "Prisma's file inspector reports size and detected format using recognized signatures and, for some archive formats, their contents. Compare the result with the extension and open the file in a suitable viewer. Detection is limited: it does not certify that every page is valid, scan for malware or reproduce a portal's acceptance checks. An unknown signature alone does not prove corruption."
+      ],
+      [
+        "Choose a conversion that addresses the error",
+        "Convert an actual image to PDF, or export Word from its source editor when that format is required. Check the final download rather than the source file's size. Structural PDF optimization can save little on scans and cannot guarantee a target size. Do not remove required pages, reduce evidence to unreadable images or flatten a form when interactive fields or a digital signature are required."
+      ],
+      [
+        "Check filenames and session errors",
+        "Follow the portal's filename rules if it gives any; there is no universal filename rule. If the error refers to a timeout or expired session, reopen the official portal and sign in again before selecting the reviewed file. Avoid repeated submissions until you have checked whether an attachment was already recorded. Contact the service with the error text when its documented requirements are met."
+      ],
+      [
+        "Confirm the attachment in the destination",
+        "Review any portal preview, file listing or confirmation after uploading. For example, a two-page attachment should show both pages in the right order if the portal provides a preview. A local conversion success is not proof that the portal accepted the upload. Prisma prepares files; it does not submit applications or validate eligibility."
+      ]
+    ],
+    "faqs": [
+      [
+        "Why can a PDF open locally but still be rejected?",
+        "The portal may apply its own size, form, format or submission requirements, or the session may have expired. Read the specific error and field instructions."
+      ],
+      [
+        "Does the file inspector prove the upload will work?",
+        "No. It helps inspect format and size, but cannot run the destination service's validation rules."
+      ],
+      [
+        "Should I keep trying different extensions?",
+        "No. Renaming does not convert the file. Choose an allowed format, perform a real conversion and inspect the result."
+      ]
+    ],
+    "related": [
+      [
+        "/en/tools/inspect-file-type-and-signature/",
+        "Inspect file type and size"
+      ],
+      [
+        "/en/tools/convert-jpg-to-pdf/",
+        "Convert a JPG image to PDF"
+      ],
+      [
+        "/en/tools/optimize-pdf-file-size/",
+        "Understand PDF optimization limits"
+      ],
+      [
+        "/en/guides/filled-pdf-appears-blank/",
+        "Check saved PDF form answers"
+      ],
+      [
+        "/en/solutions/combine-documents-one-upload/",
+        "Prepare documents when a field allows one file"
+      ]
+    ],
+    "pair": null,
+    "sources": []
   }
 ]

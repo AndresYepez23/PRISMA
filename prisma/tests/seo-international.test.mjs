@@ -324,9 +324,12 @@ test('SEO navigation labels are in the page language across both catalogues',asy
  }
 });
 
- test('regional catalogue keeps exactly eight approved pages and rejects false equivalents',()=>{
- assert.equal(expansionPages.length,8);
- assert.equal(expansionPages.filter(p=>p.language==='es').length,4);
+ test('regional catalogue preserves published routes and rejects false equivalents',()=>{
+ for(const path of ['/herramientas/crear-tarjetas-anki/','/herramientas/comparar-textos/',
+  '/guias/csv-una-sola-columna-excel/','/guias/preparar-documentos-simo/',
+  '/en/tools/anki-csv-maker/','/en/tools/text-difference-checker/',
+  '/en/guides/keep-leading-zeros-csv-excel/','/en/solutions/combine-documents-one-upload/'])
+  assert.ok(expansionPages.some(p=>p.path===path),'Published route removed: '+path);
  assert.doesNotThrow(()=>validateExpansion(expansionPages));
  assert.throws(()=>validateExpansion([...expansionPages,expansionPages[0]]));
  assert.throws(()=>validateExpansion(expansionPages.map((p,i)=>i===0?{...p,pair:'/missing/'}:p)));

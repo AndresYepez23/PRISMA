@@ -2,6 +2,15 @@
 
 **Lee esta nota primero.** Es una transferencia operativa, no una invitación a auditar de nuevo todo el repositorio. Proyecto: `AndresYepez23/PRISMA`; web: https://prismaspace.space. Objetivo del propietario: **mejorar clics/posicionamiento de las páginas actuales y expandir hasta aproximadamente 50 nuevas páginas por idioma SOLO donde exista intención de búsqueda diferenciada, utilidad real y capacidad demostrable de atraer usuarios**. No rellenar cuotas con páginas de baja calidad.
 
+## Actualización de ejecución — 15-11-2026
+- **#154 ya fusionado** como `c4362a8f42c52d57ed70dd5a5e6206d06c7a62d3`; Cloudflare y el manifiesto del dominio principal confirmaron ese commit y 372 URL (186 ES / 186 EN).
+- La rama `feat/seo-continuity-completion`, creada desde ese `main`, añade las **16 candidatas viables restantes**: lectura, JSON, HTML a Markdown y CSV/TSV en ambos idiomas; UTF-8 CSV y extracción/OCR PDF en ambos idiomas; ceros iniciales y PDF con imágenes en ES; formularios PDF y rechazo de cargas en EN.
+- Sitemap generado: **388 URL (194 ES / 194 EN)**. Son **24 nuevas respecto a la base de 364**, de las 28 candidatas estudiadas. El artículo ES de ceros iniciales es equivalente real del EN ya publicado y ambos tienen enlaces recíprocos.
+- Se completaron controles de texto/ritmo, HTML pegado y conversión CSV/TSV bidireccional; las celdas entrecomilladas, saltos internos y ceros se conservan. El HTML usa contenido inerte sin descargar recursos. Los demás motores y la infraestructura conservan su estado.
+- Validación de este lote: **171 comprobaciones de build y 48 casos Chromium aprobados**, incluidos controles bilingües y resultados reales de los motores modificados. El CI habitual conserva estas verificaciones antes de fusionar.
+- Quedan **4 reservas**: límite de KB, contacto PDF y JSON/XML ES/EN. Las otras **72 oportunidades** de la meta aproximada siguen pendientes de investigación/evidencia; no hay métricas de GSC corroboradas. No generar páginas para completar una cuota.
+- Para retomar, comprobar primero el PR y el despliegue de esta rama; las instrucciones y conteos originales de las secciones siguientes son el checkpoint histórico, no trabajo que deba repetirse.
+
 ## 0. Punto de control verificable (revisar estado remoto antes de ejecutar)
 - `main` al escribir esta nota: `587760c51606548f17b66d62d38a7e25904a7486`, tras PR #129 (i18n y preparación de AdSense).
 - **PR #154**: https://github.com/AndresYepez23/PRISMA/pull/154; rama **`feat/seo-first-expansion`**, HEAD al inicio `9080e1180fbd41d8e31a4a993cf5c04f87162e13`. **Abierto, no fusionado** en la comprobación del 15-11-2026. Aun si este archivo genera otro commit, no perder trabajo posterior.
