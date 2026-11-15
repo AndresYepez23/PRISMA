@@ -31,6 +31,35 @@ test('semantic candidates belong to the registry and exclude prohibited operatio
  assert.ok(!options.some(t=>t.id==='pdf-compress'));
  assert.ok(options.some(t=>t.id==='pdf-extract'));
 });
+test('the measured filename cannot crowd the requested Word producer out of the eight candidates',()=>{
+ for(const name of ['cuatro-paginas.pdf','pagina-rotar-comprimir-dividir.pdf','documento.pdf']){
+  const candidates=qwenCoreCandidates('Extrae la segunda página del PDF y conviértela a Word.',[{...pdf[0],name}]);
+  assert.ok(candidates.some(t=>t.id==='pdf-extract'),name);
+  assert.ok(candidates.some(t=>t.id==='pdf-to-word'),name);
+  assert.equal(new Set(candidates.map(t=>t.id)).size,candidates.length);
+  assert.ok(candidates.length<=QWEN_CORE_INTERPRET_LIMITS.candidates);
+ }
+});
+test('output candidates reuse compatible conversions across existing formats',()=>{
+ for(const [text,file,id]of [
+  ['Convierte esta tabla a Excel',{name:'tabla.csv',type:'text/csv',size:20},'table-file-convert'],
+  ['Convierte este documento a HTML',{name:'informe.docx',type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',size:800},'docx-html'],
+  ['Convierte esta foto a PDF',{name:'foto.png',type:'image/png',size:100},'image-pdf']
+ ])assert.ok(qwenCoreCandidates(text,[file]).some(t=>t.id===id),text);
+});
+test('the exact recorded request can select or complete both operations with one inference',async()=>{
+ for(const ids of [['pdf-extract','pdf-to-word'],['pdf-extract']]){
+  let calls=0;
+  const result=await interpretWithQwenCore({}, {text:'Extrae la segunda página del PDF y conviértela a Word.',files:[{name:'cuatro-paginas.pdf',type:'application/pdf',size:1423}]},{
+   lease:(_env,fn)=>fn(),infer:async(_env,_messages,schema)=>{
+    calls++;assert.ok(schema.properties.tool_ids.items.enum.includes('pdf-to-word'));
+    return {plan:{intent:'tools',tool_ids:ids},usage:{inputTokens:30,outputTokens:15}};
+   }
+  });
+  assert.equal(result.ok,true);assert.deepEqual(result.tool_ids,['pdf-extract','pdf-to-word']);assert.equal(calls,1);
+  assert.equal(result.metrics.inferences,1);
+ }
+});
 
 test('the Qwen interpretation is strictly one inference and contains no execution',async()=>{
  let calls=0;
