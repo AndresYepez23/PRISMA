@@ -34,6 +34,7 @@ import { mergeConversationLists, serializeConversation, hasConversationMessages,
 import { readConversationSnapshot, queueConversationSnapshot, clearConversationSnapshot } from './conversation-storage.js';
 import { createGeneratedFileKey, saveGeneratedFile, loadGeneratedFile, deleteGeneratedFilesForChat, clearGeneratedFiles } from './core-result-storage.js';
 import { validateAgentStepResult } from './core-agent-guard.js';
+import { validateFileRequest } from './file-inspection.js';
 import { buildConversationContext, chooseCoreReasoning, chooseCoreResponseLength, chooseCoreContextOptions } from './core-context.js';
 import { normalizeConversationModelSelection, beginConversationModelTurn, selectManualConversationModel, selectAutomaticConversationModel, pinConversationModel, conversationModelRequest, coreProviderPickerState } from './core-model-session.js';
 import { describeCoreModel, isCoreChatModel, suggestedCoreModel, displayedConversationPreference } from './core-model-experience.js';
@@ -1893,9 +1894,19 @@ async function interpretAttachedImageText(userText){
 }
 async function requestPlan(userText){
   cancelRequested=false;
+  pendingPlan=null;$('#core-plan')?.classList.add('hidden');
   const resolvedTask=taskMemory.resolve(activeConversationId,userText,attachments);
   if(resolvedTask.cancelled){pendingPlan=null;$('#core-plan')?.classList.add('hidden');addMessage('assistant','Tarea cancelada.');return;}
   const coreRequest=resolvedTask.request||userText;
+  if(resolvedTask.clarification){addMessage('assistant',resolvedTask.clarification);return;}
+  const preflight=await validateFileRequest(coreRequest,resolvedTask.files,{tools,inspect:file=>runTool('file-inspector',[file],{deep:true})});
+  if(cancelRequested)return;
+  if(!preflight.ok){
+    attachments=resolvedTask.files;renderAttachments();
+    taskMemory.wait(activeConversationId,coreRequest,resolvedTask.files);
+    addMessage('assistant',preflight.message,{engine:'prisma-core-local'});
+    status('Revisa los archivos o la solicitud antes de ejecutar.','info');return;
+  }
   // Read-only prerequisites must finish before a tool matcher can turn a
   // mentioned format into an executable conversion or a missing-target reply.
   const assessment=planFileAssessment(coreRequest,resolvedTask.files);
@@ -2711,6 +2722,7 @@ async function sendMessage(){
   if(busy)return;
   const input=$('#core-input'),text=input.value.trim();
   if(!text&&!attachments.length)return;
+  pendingPlan=null;$('#core-plan')?.classList.add('hidden');
   const transcriptionMode=activeChatRecord()?.creativeMode==='transcription';
   if(transcriptionMode&&!attachments.some(file=>file.type?.startsWith('audio/')||/\\.(mp3|m4a|wav|ogg|opus|webm|flac|aac)$/i.test(file.name))){status('Adjunta un archivo de audio para transcribirlo.','warning');return;}
   // Preserve both the draft and attached files when a fifth guest task is

@@ -13,10 +13,17 @@ export function createTaskMemory({maxBytes=120*1024*1024,maxChats=8,ttl=30*60*10
   // objective, not resurrect a prior successful split or conversion.
   // Confirmations only resume a task that is genuinely waiting, never replay a completed job.
   const confirmReply=/^(?:si|adelante|ejecuta|procede|confirmo|reintenta|intentalo de nuevo|vuelve a intentar|hazlo|continua)[.!\s]*$/.test(q);
-  const uploadReply=/^(?:aqui|ahi|adjunto|te envio|ya (?:lo )?(?:subi|cargue|adjunte)|listo|hazlo|este archivo|el archivo|el pdf|procesa (?:los |estos |mis )?archivos?(?: adjuntos?)?|procesa (?:este |el )?(?:archivo|pdf)|continua (?:con )?(?:el |los )?archivos?|\d|png$|webp$|jpg$)/.test(q);
+  const uploadReply=/^(?:aqui(?: esta(?: el archivo| el pdf)?)?|ahi|adjunto|te envio|ya (?:lo )?(?:subi|cargue|adjunte)|listo|hazlo|este archivo|el archivo|el pdf|procesa (?:los |estos |mis )?archivos?(?: adjuntos?)?|procesa (?:este |el )?(?:archivo|pdf)|continua (?:con )?(?:el |los )?archivos?|(?:paginas?\s+)?\d+(?:\s*-\s*\d+)?|png|webp|jpg)[.!?\s]*$/.test(q);
   const formatReply=/^(?:a|en|como)\s+(?:word|docx|pdf|png|jpe?g|webp|csv|json|excel|xlsx|mp3|wav|txt|html)[.!?\s]*$/.test(q);
   if(waiting&&now()-waiting.updated<ttl&&(confirmReply||uploadReply||formatReply)){
-   return {task:null,files:newFiles.length?newFiles:waiting.files,request:confirmReply?waiting.request:formatReply?'Convierte '+(/pdf/i.test(waiting.request)?'el PDF':'el archivo')+' '+query:waiting.request+' '+query};
+   const replaced=newFiles.length&&waiting.files.length&&waiting.files.some(file=>!newFiles.includes(file));
+   if(replaced&&!confirmReply&&!formatReply&&!/^continua\b/.test(q)){
+    pending.set(id,{...waiting,files:newFiles,updated:now()});
+    return {task:null,files:newFiles,clarification:'Adjuntaste un archivo diferente. ¿Quieres continuar la tarea pendiente con este archivo o realizar otra operación?'};
+   }
+   const pageReply=q.match(/^(?:(?:la|las)\s+)?(?:paginas?\s+)?(\d+(?:\s*-\s*\d+)?)[.!?\s]*$/);
+   const corrected=pageReply&&/\b(?:pagina|página)s?\s+\d+/i.test(waiting.request)?waiting.request.replace(/(\b(?:pagina|página)s?\s+)\d+(?:\s*(?:a|-)\s*\d+)?/i,'$1'+pageReply[1]):null;
+   return {task:null,files:newFiles.length?newFiles:waiting.files,request:corrected|| (confirmReply?waiting.request:formatReply?'Convierte '+(/pdf/i.test(waiting.request)?'el PDF':'el archivo')+' '+query:waiting.request+' '+query)};
   }
   if(waiting)pending.delete(id);
   if(!task)return {task:null,files:newFiles};
@@ -26,6 +33,9 @@ export function createTaskMemory({maxBytes=120*1024*1024,maxChats=8,ttl=30*60*10
    .filter(clause=>!/^\s*(?:no\b|sin\b|nunca\b|ignora\b|descarta\b)/.test(clause)).join('. ');
   const originalReference=/\b(?:el (?:archivo |documento )?original|los (?:archivos |documentos )?originales|(?:el )?archivo de origen)\b/.test(instruction);
   const resultReference=/\b(?:(?:ese|esa|esos|esas|este|esta|estos|estas) (?:resultado\w*|archivo\w*|documento\w*)|(?:el|los|la|las) (?:ultimo\w* )?(?:resultado\w*|archivo\w*|documento\w*) (?:anterior\w*|generado\w*|que acabas de (?:generar|crear|convertir))|(?:el|los) ultimo\w* (?:resultado\w*|archivo\w*|documento\w*))\b/.test(instruction);
+  const repeat=/^(?:haz lo mismo|repite|reintenta|vuelve a intentar)\b/.test(q);
+  if(newFiles.length&&!repeat){tasks.delete(id);return {task:null,files:newFiles};}
+  if(/^ahora\b/.test(q)&&!originalReference&&!resultReference&&!/^ahora\s+(?:conviert\w*|transform\w*|comprim\w*|redimension\w*|recort\w*)(?:lo|la|los|las)\b/.test(q))return {task:null,files:newFiles};
   const follow=/^(?:a word|a docx|la ultima pagina|tambien|ahora|mejor|con menos|conserva|utiliza el mismo|haz lo mismo|hazlo|continua|todas|la segunda|el segundo|repite|dejala|dejalas|quita(?:le|les)? los metadatos)/.test(q);
   if(!follow&&!originalReference&&!resultReference){if(!/^(?:gracias|muchas gracias|hola|ok|perfecto|listo)[!.\s]*$/.test(q))tasks.delete(id);return {task:null,files:newFiles};}
   let files=newFiles.length?newFiles:originalReference?

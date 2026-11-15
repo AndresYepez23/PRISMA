@@ -6,7 +6,8 @@ test('Qwen tool hints only re-rank existing catalog entries',()=>{
  const catalog=[{id:'pdf-to-word',name:'Word'},{id:'pdf-extract',name:'Extract'},{id:'image-rotate',name:'Rotate'}];
  const hint={source:'qwen-core',intent:'tools',tool_ids:['pdf-extract','shell','pdf-to-word']};
  const result=prioritizeQwenCoreTools(catalog,hint);
- assert.deepEqual(result.map(c=>c.id),['pdf-extract','pdf-to-word','image-rotate']);
+ assert.equal(result,catalog,'an invented tool invalidates the recommendation as a whole');
+ assert.deepEqual(prioritizeQwenCoreTools(catalog,{...hint,tool_ids:['pdf-extract','pdf-to-word']}).map(c=>c.id),['pdf-extract','pdf-to-word','image-rotate']);
  assert.equal(prioritizeQwenCoreTools(catalog,null),catalog);
 });
 test('the browser sends only file metadata, not document bytes or secrets',async()=>{
@@ -43,7 +44,7 @@ test('transient interpreter failures back off without automatic retries',async()
 });
 test('Qwen may return up to eight grounded tool IDs but never more',async()=>{
  resetQwenCoreDisabledForTest();
- const ids=['pdf-extract','image-ocr','text-replace','csv-json','json-xlsx','file-verify','file-rename','zip-create'];
+ const ids=['pdf-extract','image-ocr','text-replace','csv-json','json-xlsx','file-inspector','hash-file','json-format'];
  const accepted=await requestQwenCoreInterpretation({text:'Organiza esta cadena de herramientas'},{fetchImpl:async()=>new Response(JSON.stringify({ok:true,source:'qwen-core',intent:'tools',tool_ids:ids}))});
  assert.deepEqual(accepted.tool_ids,ids);
  const rejected=await requestQwenCoreInterpretation({text:'Una cadena demasiado larga'},{fetchImpl:async()=>new Response(JSON.stringify({ok:true,source:'qwen-core',intent:'tools',tool_ids:[...ids,'shell']}))});

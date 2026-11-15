@@ -82,7 +82,7 @@ export async function executeQueenDAG(plan,files,{run,verify=verifyQueenResult,a
      const code=String(error.verificationCode||'TOOL_FAILED');
      if(cancel()||now()>=state.deadlineAt||error.message==='TASK_TIME_BUDGET')throw error;
      events.push({step:step.id,state:'failed',code});
-     if(!repair||attempt>=QUEEN_LIMITS.repairs||repairs>=QUEEN_LIMITS.repairs||inferences>=maxInferences||!['local','browser'].includes(tool.mode)||rawReceived||error.verificationCode)throw error;
+     if(error.fileValidation||!repair||attempt>=QUEEN_LIMITS.repairs||repairs>=QUEEN_LIMITS.repairs||inferences>=maxInferences||!['local','browser'].includes(tool.mode)||rawReceived||error.verificationCode)throw error;
      // A rejected or timed-out HTTP call still consumed an inference attempt.
      // Reserve it before dispatch and preserve the count across resumptions.
      inferences++;state.inferences=inferences;repairs++;

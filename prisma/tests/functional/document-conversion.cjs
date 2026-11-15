@@ -95,6 +95,7 @@ const server=http.createServer((req,res)=>{
    const {assessFileConversions,planFileConversion}=await import('/src/file-conversions.js');
    const {planWithPrismaCore}=await import('/src/developer-api.js');
    const {resultFiles,runToolBatch}=await import('/src/core-execution.js');
+   const {validateFileRequest}=await import('/src/file-inspection.js');
    const {tools}=await import('/src/registry.js');
    const {PDFDocument,StandardFonts}=await import('https://esm.sh/pdf-lib@1.17.1');
    const JSZip=(await import('https://esm.sh/jszip@3.10.1')).default;
@@ -103,6 +104,40 @@ const server=http.createServer((req,res)=>{
    const input=new File([await pdf.save()],'tres-paginas.pdf',{type:'application/pdf'}),artifacts=[];
    const archive=async(file,name=file.name)=>artifacts.push({name,bytes:Array.from(new Uint8Array(await file.arrayBuffer()))});
    await archive(input);
+   const preflightCases=[];
+   const check=async(name,text,files,code)=>{
+    const r=await validateFileRequest(text,files,{tools,inspect:file=>runTool('file-inspector',[file],{deep:true})});
+    if(r.code!==code)throw Error(name+': expected '+code+', received '+JSON.stringify(r));
+    preflightCases.push({name,code:r.code,message:r.message,realFileBytes:true});
+   };
+   const word=new File([await(await fetch('/tests/fixtures/conversion.docx')).arrayBuffer()],'word.docx',{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+   const four=await PDFDocument.create();for(let n=0;n<4;n++)four.addPage([200,200]).drawText('PAGE '+(n+1));
+   const fourPages=new File([await four.save()],'cuatro-paginas.pdf',{type:'application/pdf'});await archive(fourPages);
+   await check('pdf-request-with-word-bytes','Convierte este PDF a Word',[word],'SOURCE_CONTRADICTION');
+   await check('word-request-with-pdf-bytes','Convierte este Word a PDF',[fourPages],'SOURCE_CONTRADICTION');
+   await check('page-eight-of-four','Extrae la página 8 de este PDF',[fourPages],'PAGE_RANGE');
+   await check('three-pdfs-requested-two-received','Une estos tres PDF',[input,fourPages],'FILE_COUNT');
+   await check('missing-pdf','Convierte este PDF a Word',[],'MISSING_FILE');
+   await check('unreadable-pdf','Convierte este PDF a Word',[new File(['%PDF-1.7\nBROKEN'],'roto.pdf',{type:'application/pdf'})],'UNREADABLE_FILE');
+   await check('unreadable-docx','Convierte este archivo a TXT',[new File([new Uint8Array([80,75,3,4,0,0])],'roto.docx',{type:word.type})],'UNREADABLE_FILE');
+   await check('renamed-word-is-not-pdf','Convierte este PDF a Word',[new File([await word.arrayBuffer()],'renombrado.pdf',{type:'application/pdf'})],'FORMAT_MISMATCH');
+   const protectedPdf=new File([await(await fetch('/tests/fixtures/preflight-protected.pdf')).arrayBuffer()],'protegido.pdf',{type:'application/pdf'});
+   await check('encrypted-pdf','Convierte este PDF protegido a Word',[protectedPdf],'PROTECTED_FILE');
+   const scan=await PDFDocument.create();scan.addPage([200,200]);
+   await check('scan-needs-ocr-before-excel','Convierte este archivo a Excel',[new File([await scan.save()],'escaneo.pdf',{type:'application/pdf'})],'OCR_REQUIRED');
+   const canvas=document.createElement('canvas');canvas.width=32;canvas.height=24;canvas.getContext('2d').fillRect(0,0,32,24);
+   const jpg=new File([await new Promise(r=>canvas.toBlob(r,'image/jpeg'))],'foto.jpg',{type:'image/jpeg'});
+   await check('video-request-with-jpeg-bytes','Comprime este video',[jpg],'SOURCE_CONTRADICTION');
+   let protectedCalls=0;
+   for(const [id,files,params] of [['pdf-extract',[fourPages],{pages:'8'}],['pdf-to-word',[protectedPdf],{}],['video-compress',[jpg],{}]]){
+    let blocked=false;try{await runTool(id,files,params);}catch(error){blocked=error.fileValidation===true;}
+    if(!blocked)throw Error('ENGINE_PREFLIGHT_BYPASSED:'+id);protectedCalls++;
+   }
+   preflightCases.push({name:'execution-gates-cannot-be-bypassed',blockedEngines:protectedCalls});
+   const svg=new File(['<svg xmlns="http://www.w3.org/2000/svg" width="32" height="24"><rect width="32" height="24" fill="red"/></svg>'],'vector.svg',{type:'image/svg+xml'});
+   const svgResult=await runTool('image-convert',[svg],{format:'image/png'});
+   if(!svgResult.blob||svgResult.blob.type!=='image/png')throw Error('SVG_CONVERSION_REGRESSED');
+   preflightCases.push({name:'existing-svg-conversion-preserved',mime:svgResult.blob.type});
    const pdfReport=await assessFileConversions([input],{run:runTool});
    if(!pdfReport.includes('DOCX, PNG, JPG, TXT')||!pdfReport.includes('no conserva imágenes'))throw Error('PDF_ASSESSMENT_INACCURATE');
    const multi=planWithPrismaCore({text:'Extrae la segunda página del PDF y conviértela a Word',files:[input]}).planner;
@@ -124,10 +159,35 @@ const server=http.createServer((req,res)=>{
    if(ambiguous.type!=='needs-input'||ambiguous.steps.length)throw Error('AMBIGUOUS_TARGET_EXECUTED');
    const unsupported=planFileConversion('Convierte este archivo a MP3',[input]);
    if(unsupported.type!=='unsupported'||unsupported.steps.length)throw Error('UNSUPPORTED_TARGET_EXECUTED');
-   return {cases:[{name:'pdf-read-only-assessment',reply:pdfReport},{name:'pdf-second-page-to-word',verifiedText:'SECOND PAGE KEEP 123',otherPagesAbsent:true},{name:'txt-assessment-and-pdf-content-readback',reply:txtReport,textPreserved:true},{name:'ambiguous-and-unsupported-requests',noExecution:true}],artifacts};
+   return {cases:[...preflightCases,{name:'pdf-read-only-assessment',reply:pdfReport},{name:'pdf-second-page-to-word',verifiedText:'SECOND PAGE KEEP 123',otherPagesAbsent:true},{name:'txt-assessment-and-pdf-content-readback',reply:txtReport,textPreserved:true},{name:'ambiguous-and-unsupported-requests',noExecution:true}],artifacts};
   });
   report.cases.push(...controls.cases);
   for(const artifact of controls.artifacts)fs.writeFileSync(out+'/'+artifact.name,Buffer.from(artifact.bytes));
+  await page.waitForFunction(()=>!document.querySelector('#core-send').disabled);
+  await page.locator('#core-file-input').setInputFiles({name:fixture.name,mimeType:fixture.mimeType,buffer});
+  const beforeMismatch=await page.locator('.core-result-download').count(),beforeReplies=await page.evaluate(()=>window.testReplies.length);
+  await page.locator('#core-input').fill('Convierte este PDF a Word');await page.locator('#core-send').click();
+  await page.waitForFunction(n=>!document.querySelector('#core-send').disabled&&window.testReplies.length>n,beforeReplies);
+  const mismatchReply=await page.evaluate(()=>window.testReplies.at(-1));
+  assert.match(mismatchReply,/Word.*no en PDF/);assert.equal(await page.locator('.core-result-download').count(),beforeMismatch);
+  report.cases.push({name:'chat-blocks-source-mismatch',reply:mismatchReply,noNewDownload:true});
+  while(await page.locator('.core-attachment-remove').count())await page.locator('.core-attachment-remove').first().click();
+  await page.locator('#core-file-input').setInputFiles({name:'cuatro-paginas.pdf',mimeType:'application/pdf',buffer:fs.readFileSync(out+'/cuatro-paginas.pdf')});
+  const beforeRange=await page.locator('.core-result-download').count(),beforeRangeReplies=await page.evaluate(()=>window.testReplies.length);
+  await page.locator('#core-input').fill('Extrae la página 8 de este PDF');await page.locator('#core-send').click();
+  await page.waitForFunction(n=>!document.querySelector('#core-send').disabled&&window.testReplies.length>n,beforeRangeReplies);
+  const rangeReply=await page.evaluate(()=>window.testReplies.at(-1));assert.match(rangeReply,/4 páginas.*8/);
+  assert.equal(await page.locator('.core-result-download').count(),beforeRange);
+  report.cases.push({name:'chat-blocks-out-of-range-page',reply:rangeReply,noNewDownload:true});
+  await page.locator('#core-input').fill('2');await page.locator('#core-send').click();
+  await page.waitForFunction(n=>document.querySelectorAll('.core-result-download').length>n,beforeRange);
+  const correctedDownload=page.waitForEvent('download');await page.locator('.core-result-download button').filter({hasText:/^Descargar$/}).last().click();
+  const corrected=await correctedDownload;assert.match(corrected.suggestedFilename(),/\.pdf$/);await corrected.saveAs(out+'/pagina-corregida.pdf');
+  const correctionText=await page.evaluate(async bytes=>{
+   const {runTool}=await import('/src/engines.js');return (await runTool('pdf-text',[new File([new Uint8Array(bytes)],'corregido.pdf',{type:'application/pdf'})],{})).text;
+  },Array.from(fs.readFileSync(out+'/pagina-corregida.pdf')));
+  assert.match(correctionText,/PAGE 2/);assert.doesNotMatch(correctionText,/PAGE [134]/);
+  report.cases.push({name:'chat-corrects-range-without-replaying-old-conversion',onlyPageTwo:true,download:corrected.suggestedFilename()});
   assert.equal(report.apiAttempts.some(x=>x.method==='POST'),false,'local assessment must not dispatch inference');
  }finally{
   fs.writeFileSync(out+'/results.json',JSON.stringify(report,null,2));

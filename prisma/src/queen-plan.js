@@ -1,6 +1,7 @@
 import {tools} from './registry.js';
 import {validateQueenParameters} from './queen-contracts.js';
 import {compatibleInputs} from './core-execution.js';
+import {toolOutputFile} from './core-artifact-contracts.js';
 
 /** @typedef {{id:string,tool_id:string,params:Object,dependsOn:string[],inputs:string[],status:string}} QueenStep */
 /** @typedef {{taskId:string,objective:string,intent:string,steps:QueenStep[],constraints:string[],status:string}} QueenPlan */
@@ -55,6 +56,15 @@ export function validateQueenPlan(raw,{files=[],objective='',taskId=crypto.rando
   visiting.delete(id);visited.add(id);sorted.push(step);
  }
  for(const id of index.keys())visit(id);
+ for(const step of sorted){
+  const tool=tools.find(t=>t.id===step.tool_id);if(!tool.file)continue;
+  for(const ref of step.inputs.filter(r=>r.startsWith('step:'))){
+   const previous=index.get(ref.slice(5)),output=toolOutputFile(previous.tool_id,previous.params);
+   // Existing handoff expands page-image ZIPs into OCR image files.
+   if(previous.tool_id==='pdf-to-image'&&step.tool_id==='image-ocr')continue;
+   if(output&&!compatibleInputs(tool,[output]).length)fail('INCOMPATIBLE_DEPENDENCY');
+  }
+ }
  return {taskId,objective:String(objective).slice(0,4000),intent:raw.intent,message:raw.intent==='execute'?'Plan preparado para '+sorted.length+' operación(es); los resultados se comprobarán después de ejecutar.':raw.message,
   steps:sorted,constraints:['catalog-only','existing-permissions','verify-before-success'],status:'validated',
   needs_clarification:raw.intent==='clarify',question:raw.intent==='clarify'?raw.message:'',execution:{executed:false,verified:false}};

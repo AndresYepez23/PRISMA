@@ -22,6 +22,17 @@ const OUTPUT_FORMAT={
  'pdf-rotate':'pdf','pdf-watermark':'pdf','pdf-page-numbers':'pdf',
  'pdf-add-blank':'pdf','pdf-metadata-clean':'pdf','pdf-form-flatten':'pdf'
 };
+// Only project outputs whose format the existing executor guarantees. Unknown
+// formats stay unknown; the byte verifier still checks the actual result.
+export function toolOutputFile(toolId,params={}){
+ if(toolId==='docx-pdf')return null; // Existing route requires manual browser printing.
+ const format=OUTPUT_FORMAT[toolId]||(toolId==='image-convert'?String(params.format||'image/png').replace('image/',''):
+  toolId==='pdf-to-image'?'zip':toolId==='pdf-text'?'txt':toolId==='docx-html'?'html':
+  toolId==='text-file-convert'||toolId==='table-file-convert'?params.output:null);
+ if(!format)return null;
+ const type=Object.entries(MIME).find(([,value])=>value===format)?.[0]||({txt:'text/plain',html:'text/html',csv:'text/csv'})[format];
+ return type?{name:'resultado.'+(format==='jpeg'?'jpg':format),type}:null;
+}
 const ascii=(bytes,start,length)=>String.fromCharCode(...bytes.slice(start,start+length));
 function sniff(bytes){
  if(bytes.length>=5&&ascii(bytes,0,5)==='%PDF-')return 'pdf';
