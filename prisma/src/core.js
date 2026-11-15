@@ -1900,6 +1900,7 @@ async function requestPlan(userText){
   const coreRequest=resolvedTask.request||userText;
   if(resolvedTask.clarification){addMessage('assistant',resolvedTask.clarification);return;}
   const preflight=await validateFileRequest(coreRequest,resolvedTask.files,{tools,inspect:file=>runTool('file-inspector',[file],{deep:true})});
+  if(cancelRequested)return;
   if(!preflight.ok){
     attachments=resolvedTask.files;renderAttachments();
     taskMemory.wait(activeConversationId,coreRequest,resolvedTask.files);
