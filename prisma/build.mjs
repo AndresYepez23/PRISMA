@@ -16,6 +16,7 @@ import "./tests/cloudflare-whisper.test.mjs";
 import "./tests/welcome-email.test.mjs";
 import "./tests/settings-ui.test.mjs";
 import "./tests/core-mobile-prism-layout.test.mjs";
+import "./tests/core-website-preview.test.mjs";
 import "./tests/i18n.test.mjs";
 
 // Cloudflare Pages secrets are runtime-only bindings, not build-time variables.
