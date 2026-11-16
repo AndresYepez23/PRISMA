@@ -420,6 +420,7 @@ function chooseConversationModel(provider,modelId){
  const availability=providerAvailability(provider,'chat');
  if(!availability.available)return;
  chat.modelSelection=selectManualConversationModel(chat.modelSelection,provider,modelId,Date.now());
+ window.prismaAnalytics?.track('prisma_core_model_selected',{provider_id:provider,model_id:modelId,selection_mode:'manual'});
  chat.creativeMode='chat';chat.updated=Date.now();activeModelTab='chat';
  persistChatHistory();renderModelPicker();renderComposerMode();
  const picker=$('.core-model-settings');if(picker)picker.open=false;
@@ -428,6 +429,7 @@ function chooseConversationModel(provider,modelId){
 function chooseAutomaticConversationModel(){
  const chat=activeChatRecord();if(!chat)return;
  chat.modelSelection=selectAutomaticConversationModel(chat.modelSelection,Date.now());
+ window.prismaAnalytics?.track('prisma_core_model_selected',{selection_mode:'auto'});
  chat.creativeMode='chat';chat.updated=Date.now();activeModelTab='chat';
  persistChatHistory();renderModelPicker();renderComposerMode();
  const picker=$('.core-model-settings');if(picker)picker.open=false;
@@ -2786,6 +2788,9 @@ async function sendMessage(){
   }
   const filesNow=[...attachments];
   const activeChat=activeChatRecord();
+  const analyticsStartedAt=performance.now();
+  const analyticsCreativeMode=activeChat?.creativeMode||'chat';
+  window.prismaAnalytics?.track('prisma_core_turn_started',{creative_mode:analyticsCreativeMode,has_attachments:filesNow.length>0,file_count:filesNow.length});
   if(activeChat)activeChat.modelSelection=beginConversationModelTurn(activeChat.modelSelection,Date.now());
   addMessage('user',text||'Procesa los archivos adjuntos.',{files:filesNow.map(file=>file.name)});
   // Hide the submitted file tray immediately. The processing pipeline keeps
@@ -2817,8 +2822,16 @@ async function sendMessage(){
       await refreshCoreProviderStatus();
       await generateVisualRequest(requestText,credentials(),'image');
     }else await requestPlan(requestText);
+    const completedChat=activeChatRecord()||activeChat;
+    const usedSelection=completedChat?.modelSelection;
+    window.prismaAnalytics?.track('prisma_core_turn_completed',{creative_mode:analyticsCreativeMode,duration_ms:Math.round(performance.now()-analyticsStartedAt),file_count:filesNow.length});
+    if(usedSelection?.provider&&usedSelection?.model){
+      window.prismaAnalytics?.track('prisma_core_model_used',{provider_id:usedSelection.provider,model_id:usedSelection.model,selection_mode:usedSelection.mode||'auto',fallback_used:Boolean(usedSelection.fallbackFrom)});
+      if(usedSelection.fallbackFrom)window.prismaAnalytics?.track('prisma_core_fallback_used',{provider_id:usedSelection.provider,fallback_from:usedSelection.fallbackFrom});
+    }
   }
   catch(error){
+    window.prismaAnalytics?.track('prisma_core_turn_failed',{creative_mode:analyticsCreativeMode,duration_ms:Math.round(performance.now()-analyticsStartedAt),file_count:filesNow.length,outcome:'failed'});
     console.warn('Prisma Core',error?.code||error?.message||error);
     const detail=String(error?.message||'');
     const globalLimit=error?.code==='GLOBAL_LIMIT'||/Prisma alcanzó su límite temporal gratuito global|Se alcanzó el límite de solicitudes de Prisma/i.test(detail);
