@@ -155,6 +155,10 @@ async function initializePostHog() {
 
   clientLoading = (async () => {
     const module = await import('https://esm.sh/posthog-js@1?bundle');
+    if (readConsent() !== 'accepted') {
+      clientLoading = null;
+      return null;
+    }
     const instance = module.default || module.posthog || module;
     if (!instance || typeof instance.init !== 'function') throw new Error('PostHog SDK unavailable');
 
@@ -217,7 +221,7 @@ function showConsentBanner() {
     'p{margin:0;color:#c5c9d7;font-size:12px;line-height:1.55}',
     'a{color:#bcb0ff;text-decoration:underline;text-underline-offset:3px}',
     '.actions{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap;margin-top:13px}',
-    'button{font:600 12px/1.2 inherit;border-radius:10px;padding:10px 13px;cursor:pointer;border:1px solid rgba(173,180,204,.25)}',
+    'button{font-family:inherit;font-size:12px;font-weight:600;line-height:1.2;border-radius:10px;padding:10px 13px;cursor:pointer;border:1px solid rgba(173,180,204,.25)}',
     '.reject{background:rgba(255,255,255,.04);color:#e7e9f1}',
     '.accept{background:linear-gradient(120deg,#7c63e8,#5b9de8);border-color:transparent;color:#fff}',
     'button:focus-visible,a:focus-visible{outline:2px solid #a99aff;outline-offset:3px}',

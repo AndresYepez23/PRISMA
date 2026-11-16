@@ -28,7 +28,7 @@ test('every generated public HTML page loads the shared PostHog bootstrap exactl
 });
 
 test('PostHog capture is consent-gated and excludes sensitive content collection', () => {
-  assert.match(analytics, /getConsent\(\) !== 'accepted'/);
+  assert.match(analytics, /readConsent\(\) !== 'accepted'/);
   assert.match(analytics, /autocapture: false/);
   assert.match(analytics, /capture_pageview: false/);
   assert.match(analytics, /disable_session_recording: true/);

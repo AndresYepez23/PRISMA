@@ -75,8 +75,9 @@ async function installPostHogBootstrap(directory) {
     if (!entry.isFile() || !entry.name.toLowerCase().endsWith('.html')) continue;
     const html = await readFile(target, 'utf8');
     if (html.includes('src="/src/posthog.js"')) continue;
-    const next = html.replace(/<\\/body>/i, '  <script type="module" src="/src/posthog.js"></script>\\n</body>');
-    if (next === html) throw new Error('Cannot install PostHog: HTML page has no closing body tag: ' + target.pathname);
+    const closingBody = html.toLowerCase().lastIndexOf('</body>');
+    if (closingBody < 0) throw new Error('Cannot install PostHog: HTML page has no closing body tag: ' + target.pathname);
+    const next = html.slice(0, closingBody) + '  <script type="module" src="/src/posthog.js"></script>\n' + html.slice(closingBody);
     await writeFile(target, next);
   }
 }
