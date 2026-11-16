@@ -726,7 +726,6 @@ function setupAIAuthorization(tool){
 
 function openTool(t){
   lastFocusedElement=document.activeElement;lastOpenedToolId=t.id;recordRecentTool(t.id);
-  window.prismaAnalytics?.track('prisma_tool_opened',{tool_id:t.id,tool_category:t.category,tool_mode:t.mode,tool_status:t.status});
   currentTool=t;currentWorkflow=null;selectedFiles=[];running=false;
   $('#modal-title').textContent=t.name;$('#modal-kicker').textContent=categories.find(c=>c.id===t.category)?.name.toUpperCase()||'HERRAMIENTA';
   $('#modal-icon').innerHTML=icon(t.icon);
@@ -890,7 +889,6 @@ function setupWorkflowAI(){
 function openWorkflow(workflow){
   if(!workflow)return;
   lastFocusedElement=document.activeElement;lastOpenedToolId=null;
-  window.prismaAnalytics?.track('prisma_workflow_opened',{workflow_id:workflow.id});
   currentTool=null;currentWorkflow=workflow;selectedFiles=[];running=false;
   $('#modal-title').textContent=workflow.name;$('#modal-kicker').textContent='FLUJOS INTELIGENTES';$('#modal-icon').innerHTML=icon(workflow.icon);
   let html='<p class="modal-description">'+escapeHtml(workflow.description)+'</p>';
@@ -1074,8 +1072,6 @@ async function executeCurrentTool(){
   if(!currentTool||running)return;
   if(currentTool.file&&!selectedFiles.length){toast('Selecciona al menos un archivo.','error');return;}
   const operationId=++activeOperation,toolAtStart=currentTool,filesAtStart=[...selectedFiles];
-  const analyticsStartedAt=performance.now();
-  window.prismaAnalytics?.track('prisma_tool_started',{tool_id:toolAtStart.id,tool_category:toolAtStart.category,tool_mode:toolAtStart.mode,file_count:filesAtStart.length});
   const progressForOperation=(progress,message)=>{if(operationId===activeOperation&&currentTool===toolAtStart)updateProgress(progress,message);};
   running=true;$('#modal-body').setAttribute('aria-busy','true');$('#modal-run').disabled=true;$('#modal-run').textContent='Procesando...';$('#tool-output').innerHTML='';
   updateProgress(.02,'Preparando herramienta...');
@@ -1087,14 +1083,12 @@ async function executeCurrentTool(){
       ?readParams():await attachProviderCredentials(readParams());
     const result=await runTool(toolAtStart.id,filesAtStart,params,progressForOperation);
     if(operationId!==activeOperation||currentTool!==toolAtStart||$('#tool-modal').classList.contains('hidden'))return;
-    window.prismaAnalytics?.track('prisma_tool_completed',{tool_id:toolAtStart.id,duration_ms:Math.round(performance.now()-analyticsStartedAt),file_count:filesAtStart.length});
     recordRecentTool(toolAtStart.id);
     if($('#field-hfToken'))$('#field-hfToken').value='';
     if(result?.blob){if(outputUrl)URL.revokeObjectURL(outputUrl);outputUrl=result.previewUrl&&result.previewUrl.startsWith('blob:')?result.previewUrl:URL.createObjectURL(result.blob);if(!result.previewUrl)result.previewUrl=outputUrl;}
     renderOutput(result);updateProgress(1,'Proceso completado');toast('La operación terminó correctamente.','success');
   }catch(error){
     if(operationId!==activeOperation||currentTool!==toolAtStart||$('#tool-modal').classList.contains('hidden'))return;
-    window.prismaAnalytics?.track('prisma_tool_failed',{tool_id:toolAtStart.id,duration_ms:Math.round(performance.now()-analyticsStartedAt),file_count:filesAtStart.length,outcome:'failed'});
     console.error(error);
     const reason=toolAtStart.id.startsWith('video-')?localizedVideoError(error):
       (error?.message||'Error inesperado. Prueba con otro archivo o vuelve a intentarlo.');
@@ -1252,8 +1246,6 @@ function scrollToCurrentView(){
 function showView(view){
   const enteringCore=view==='core'&&activeView!=='core';
   activeView=view;activeCategory='all';searchTerm='';$('#global-search').value='';
-  window.prismaAnalytics?.track('prisma_section_opened',{section_id:view});
-  if(enteringCore)window.prismaAnalytics?.track('prisma_core_opened',{entry_point:'navigation'});
   render();
   // Entering Core from the tools workspace starts a clean draft; old chats
   // remain available only through the conversation history.
@@ -1424,7 +1416,6 @@ $('#open-ai-assistant')?.addEventListener('click',()=>{const tool=tools.find(t=>
 $$('.nav-item').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));
 $$('[data-view-jump]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.viewJump)));
 $('#global-search').addEventListener('input',e=>{const wasEmpty=!searchTerm.trim();searchTerm=e.target.value;activeView='explore';activeCategory='all';render();if((wasEmpty&&searchTerm.trim())||!searchTerm.trim())scrollToCurrentView();});
-for(const selector of ['#global-search','#explore-search'])$(selector)?.addEventListener('change',event=>{const query=String(event.target.value||'').trim();if(query)window.prismaAnalytics?.track('prisma_catalog_search',{query_length:query.length,search_result_count:visibleTools().length});});
 $('#explore-search')?.addEventListener('input',e=>{searchTerm=e.target.value;activeView='explore';activeCategory='all';$('#global-search').value=searchTerm;render();});
 $('#explore-subcategory')?.addEventListener('change',e=>{activeView='explore';activeCategory=e.target.value;expandedToolFamily=familyForCategory(activeCategory)?.id||expandedToolFamily;renderCategories();render();});
 $$('[data-quick-tool]').forEach(button=>button.addEventListener('click',()=>{const t=tools.find(tool=>tool.id===button.dataset.quickTool);if(t)openTool(t);}));

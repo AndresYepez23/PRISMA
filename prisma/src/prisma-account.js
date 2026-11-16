@@ -496,7 +496,6 @@ async function signInProvider(provider){
  }
  info('Conectando con '+(provider==='google'?'Google':'Apple')+'…');
  sessionStorage.setItem(OAUTH_PENDING,provider);
- window.prismaAnalytics?.track('prisma_login_started',{auth_method:provider});
  try{
   const {error}=await api.auth.signInWithOAuth({
    provider,options:{redirectTo:location.origin+location.pathname}
@@ -570,16 +569,11 @@ async function onSignedIn(newUser,{fromInteraction=false,isNewSignup=false}={}){
  const oauth=sessionStorage.getItem(OAUTH_PENDING);
  const signupPending=Number(sessionStorage.getItem(SIGNUP_PENDING)||0);
  const pendingSignupValid=signupPending>0&&Date.now()-signupPending<86400000;
- const authMethod=oauth||sessionStorage.getItem('prisma-auth-method')||((fromInteraction||pendingAuth||pendingSignupValid)?'email':'unknown');
- const shouldTrackLogin=fromInteraction||pendingAuth||Boolean(oauth);
- sessionStorage.removeItem('prisma-auth-method');
  const welcome=fromInteraction||pendingAuth||Boolean(oauth)||pendingSignupValid;
  if(oauth)sessionStorage.removeItem(OAUTH_PENDING);
  if(pendingSignupValid)sessionStorage.removeItem(SIGNUP_PENDING);
  pendingAuth=false;
  if(recovering)return;
- if(isNewSignup||pendingSignupValid)window.prismaAnalytics?.track('prisma_signup_completed',{auth_method:authMethod});
- else if(shouldTrackLogin)window.prismaAnalytics?.track('prisma_login_completed',{auth_method:authMethod});
  // Email delivery is not gated on a redirect query flag: a verified account
  // can arrive via another device or sign in after its confirmation link.
  // The server checks freshness and D1 makes the welcome exactly-once.
@@ -688,7 +682,6 @@ function bindForms(){
    if(!/^\+[1-9]\d{7,14}$/.test(phone)||!/^\d{4,8}$/.test(token)){info('Comprueba el teléfono y el código SMS.','error');return;}
    const {data,error}=await api.auth.verifyOtp({phone,token,type:'sms'});
    if(error)throw error;
-   sessionStorage.setItem('prisma-auth-method','phone');
    pendingAuth=true;
    if(data?.user)await onSignedIn(data.user,{fromInteraction:true});
   });

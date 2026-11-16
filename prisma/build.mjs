@@ -1,4 +1,4 @@
-import { cp, copyFile, mkdir, readdir, rm, readFile, writeFile } from "node:fs/promises";
+import { cp, copyFile, mkdir, rm, readFile, writeFile } from "node:fs/promises";
 import { generateSeoPages } from "./seo/generate.mjs";
 import { generateInternationalPages } from "./seo/generate-international.mjs";
 // Abort publication if Core can no longer discover or safely chain its tools.
@@ -57,35 +57,8 @@ await writeFile(new URL("./dist/sw.js", import.meta.url), sw.replace("__BUILD_VE
 await generateSeoPages(output);
 await generateInternationalPages(output);
 await (await import('./seo/generate-expansion.mjs')).generateExpansionPages(output);
-
-// Publish the existing English privacy notice at the URL already linked by the site.
-const englishPrivacy = new URL('./dist/en/privacy/', import.meta.url);
-await mkdir(englishPrivacy, { recursive: true });
-await copyFile(new URL('./privacy.en.html', import.meta.url), new URL('index.html', englishPrivacy));
-
-// Inject the same consent-gated analytics bootstrap into every public HTML page,
-// including generated Spanish/English SEO pages and future expansion pages.
-async function installPostHogBootstrap(directory) {
-  for (const entry of await readdir(directory, { withFileTypes: true })) {
-    const target = new URL(entry.name + (entry.isDirectory() ? '/' : ''), directory);
-    if (entry.isDirectory()) {
-      if (entry.name === 'src') continue; // Internal fixtures are not public pages.
-      await installPostHogBootstrap(target);
-      continue;
-    }
-    if (!entry.isFile() || !entry.name.toLowerCase().endsWith('.html')) continue;
-    const html = await readFile(target, 'utf8');
-    if (html.includes('src="/src/posthog.js"')) continue;
-    const closingBody = html.toLowerCase().lastIndexOf('</body>');
-    if (closingBody < 0) throw new Error('Cannot install PostHog: HTML page has no closing body tag: ' + target.pathname);
-    const next = html.slice(0, closingBody) + '  <script type="module" src="/src/posthog.js"></script>\n' + html.slice(closingBody);
-    await writeFile(target, next);
-  }
-}
-await installPostHogBootstrap(output);
 // Validate the generated static HTML as part of the Cloudflare deployment gate.
 await import("./tests/seo-build.test.mjs");
-await import("./tests/posthog-analytics.test.mjs");
 await import("./tests/seo-international.test.mjs");
 await import("./tests/seo-capabilities.test.mjs");
 await import("./tests/seo-expansion-engines.test.mjs");
