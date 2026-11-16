@@ -10,8 +10,10 @@ async function collectHtml(directory) {
   const files = [];
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const target = new URL(entry.name + (entry.isDirectory() ? '/' : ''), directory);
-    if (entry.isDirectory()) files.push(...await collectHtml(target));
-    else if (entry.isFile() && entry.name.toLowerCase().endsWith('.html')) files.push(target);
+    if (entry.isDirectory()) {
+      if (entry.name === 'src') continue;
+      files.push(...await collectHtml(target));
+    } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.html')) files.push(target);
   }
   return files;
 }

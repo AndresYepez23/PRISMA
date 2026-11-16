@@ -69,6 +69,7 @@ async function installPostHogBootstrap(directory) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const target = new URL(entry.name + (entry.isDirectory() ? '/' : ''), directory);
     if (entry.isDirectory()) {
+      if (entry.name === 'src') continue; // Internal fixtures are not public pages.
       await installPostHogBootstrap(target);
       continue;
     }
