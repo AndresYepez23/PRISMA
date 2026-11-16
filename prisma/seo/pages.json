@@ -564,25 +564,30 @@
     {
       "slug": "generador-citas-apa-vancouver",
       "tool": "citation-generator",
-      "title": "Generador de citas APA 7, Vancouver y MLA | Prisma Space",
+      "title": "Generador de referencias APA 7, Vancouver y MLA | Prisma Space",
       "h1": "Generar referencias bibliográficas en APA 7, Vancouver y MLA",
-      "description": "Da formato a referencias con autor, año, título, revista o editorial y DOI. Elige APA 7, Vancouver o MLA 9 y revisa los datos de la fuente.",
-      "intro": "Preparar la bibliografía de un trabajo académico exige mantener un formato coherente. Este generador organiza los datos que introduces y crea versiones de la referencia en tres estilos habituales: APA 7, Vancouver y MLA 9.",
-      "details": "Ejemplo con datos sintéticos: autor García, A.; año 2024; título Manual de estudio; fuente Editorial Ejemplo. APA genera García, A. (2024). Manual de estudio. Editorial Ejemplo. Puedes seleccionar también Vancouver o MLA 9. El motor organiza los campos suministrados; no busca publicaciones por DOI.",
+      "description": "Organiza autor, año, título, revista o editorial, DOI y URL en plantillas APA 7, Vancouver y MLA 9. Verifica cada referencia con la publicación original.",
+      "intro": "Al preparar una bibliografía, mantener un estilo consistente ayuda a revisar autores, fechas y datos de publicación. El generador toma los campos que introduces y muestra una referencia base en APA 7, Vancouver y MLA 9.",
+      "details": "Ejemplo con datos ficticios: autor «García, A.», año 2024, título «Manual de estudio» y editorial «Editorial Ejemplo». La herramienta construye una referencia con esos datos y puede incluir DOI o URL. No consulta Crossref, PubMed ni otra base por DOI, no verifica la existencia de la fuente y no identifica automáticamente si es artículo, libro o página web. Comprueba el orden de autores, cursivas, volumen, número, páginas y puntuación según el tipo de fuente.",
       "steps": [
-        "Introduce los autores, el año y el título de la publicación.",
-        "Añade la revista, editorial, DOI o URL si tienes esos datos.",
-        "Selecciona APA 7, Vancouver o MLA 9 y comprueba la referencia generada."
+        "Introduce los autores, el año y el título exacto de la publicación.",
+        "Añade la revista, editorial, DOI o URL cuando corresponda.",
+        "Selecciona APA 7, Vancouver o MLA 9 y genera la referencia.",
+        "Compara la salida con la publicación original y corrige los detalles que exija el manual del estilo."
       ],
-      "tip": "Verifica puntuación, autores y datos contra la publicación original. Las salidas son plantillas básicas y no garantizan conformidad completa con cada norma.",
+      "tip": "Trata la salida como un borrador. Las reglas cambian según sea artículo, libro, capítulo o página web; revisa el manual oficial del estilo.",
       "faqs": [
         [
-          "¿El generador busca un artículo usando su DOI?",
-          "No. Puedes escribir el DOI o su URL como dato de la referencia, pero la herramienta no consulta automáticamente una base bibliográfica."
+          "¿Busca automáticamente los datos a partir del DOI?",
+          "No. Puedes incluir el DOI o su URL, pero el generador no consulta bases bibliográficas ni completa metadatos automáticamente."
         ],
         [
-          "¿Puedo generar referencias Vancouver y APA 7?",
-          "Sí. La herramienta muestra versiones APA 7, Vancouver y MLA 9 a partir de los datos que proporcionas."
+          "¿Qué estilos bibliográficos permite generar?",
+          "Prepara plantillas de APA 7, Vancouver y MLA 9 a partir de los datos que introduces."
+        ],
+        [
+          "¿La referencia queda validada por completo?",
+          "No. Revisa autores, cursivas, volumen, número, páginas, DOI y puntuación con las normas aplicables al tipo de publicación."
         ]
       ]
     },
@@ -1120,25 +1125,30 @@
     {
       "slug": "codificar-decodificar-base64",
       "tool": "base64",
-      "title": "Codificar y decodificar Base64 online",
-      "h1": "Codificar y decodificar Base64",
-      "description": "Transforma texto Unicode a Base64 o recupera una cadena codificada para depurar intercambios de texto entre aplicaciones.",
-      "intro": "Transforma texto Unicode a Base64 o recupera una cadena codificada para depurar intercambios de texto entre aplicaciones.",
-      "details": "Pega el contenido y selecciona Codificar a Base64 o Decodificar Base64; ejecuta y copia el resultado. Base64 es una representación reversible, no cifrado. Esta utilidad trabaja con texto y no convierte archivos binarios.",
+      "title": "Codificar y decodificar Base64 online | Prisma Space",
+      "h1": "Codificar y decodificar texto en Base64",
+      "description": "Convierte texto Unicode a Base64 o recupera el texto original desde una cadena codificada. No cifra información ni procesa archivos binarios.",
+      "intro": "Base64 representa bytes mediante caracteres de texto y suele aparecer en integraciones, registros, APIs y ejemplos técnicos. Esta herramienta convierte texto a una cadena Base64 y permite hacer la operación inversa.",
+      "details": "Ejemplo: «Hola» se convierte en «SG9sYQ==»; al decodificar esa cadena se recupera «Hola». La conversión utiliza texto UTF-8 para admitir tildes y caracteres Unicode. Base64 no es cifrado ni protección de datos: cualquiera que tenga la cadena puede decodificarla. Esta herramienta trabaja con texto y no convierte archivos binarios.",
       "steps": [
-        "Abre codificar y decodificar base64 en Prisma Space.",
-        "Pega el contenido y selecciona Codificar a Base64 o Decodificar Base64; ejecuta y copia el resultado.",
-        "Revisa el resultado antes de copiarlo, descargarlo o utilizarlo."
+        "Pega el texto que quieres convertir o la cadena Base64 que necesitas leer.",
+        "Selecciona Codificar a Base64 o Decodificar Base64.",
+        "Ejecuta la conversión y revisa el resultado antes de copiarlo.",
+        "Si la decodificación falla, comprueba que la entrada sea Base64 estándar y no un archivo o una URL de datos completa."
       ],
-      "tip": "Base64 es una representación reversible, no cifrado. Esta utilidad trabaja con texto y no convierte archivos binarios.",
+      "tip": "No uses Base64 para ocultar contraseñas, tokens o datos privados. Es una codificación reversible y no sustituye el cifrado.",
       "faqs": [
         [
-          "¿Conserva tildes y caracteres especiales?",
-          "Sí, la conversión de texto utiliza codificación compatible con Unicode."
+          "¿Base64 es un método de cifrado?",
+          "No. Solo transforma datos a una representación textual reversible; no utiliza una clave ni protege el contenido."
         ],
         [
-          "¿Qué debo revisar antes de usar el resultado?",
-          "Base64 es una representación reversible, no cifrado. Esta utilidad trabaja con texto y no convierte archivos binarios."
+          "¿Admite tildes y caracteres Unicode?",
+          "Sí. El texto se convierte usando UTF-8, por lo que admite tildes y otros caracteres Unicode."
+        ],
+        [
+          "¿Puedo convertir una imagen o un PDF?",
+          "No en esta herramienta. Está diseñada para texto; los archivos binarios requieren un flujo de conversión distinto."
         ]
       ],
       "keyword": "codificar decodificar base64"
@@ -1640,25 +1650,30 @@
     {
       "slug": "generador-imagenes-ia",
       "tool": "image-gen",
-      "title": "Generar imágenes con inteligencia artificial online",
+      "title": "Generar imágenes con IA online | Prisma Space",
       "h1": "Generar imágenes con inteligencia artificial",
-      "description": "Convierte una descripción de sujeto, ambiente e iluminación en una imagen para explorar conceptos visuales.",
-      "intro": "Convierte una descripción de sujeto, ambiente e iluminación en una imagen para explorar conceptos visuales.",
-      "details": "Describe la composición, elige estilo y proporción y genera la imagen con el motor disponible. La generación depende de cuotas, disponibilidad y conexiones. Una cuenta personal de un proveedor puede requerir saldo; no se promete uso ilimitado ni reproducción exacta.",
+      "description": "Crea imágenes desde una descripción y ajusta estilo y proporción con los motores disponibles. El acceso depende de la conexión y las cuotas del proveedor.",
+      "intro": "Para obtener una imagen más cercana a tu idea, describe primero el sujeto y después el entorno, la composición, la iluminación y el estilo. La herramienta envía esa descripción al motor de imagen disponible y devuelve una propuesta visual que puedes revisar.",
+      "details": "Ejemplo de prompt: «Ilustración editorial de una bicicleta amarilla frente a una cafetería, luz suave de mañana, encuadre horizontal y paleta cálida». Puedes ajustar el estilo y la proporción cuadrada, horizontal, vertical o panorámica. La disponibilidad, los tiempos y las cuotas dependen del proveedor y de la conexión configurada; algunas cuentas personales pueden requerir saldo. Los resultados pueden variar entre generaciones.",
       "steps": [
-        "Abre generar imágenes con inteligencia artificial en Prisma Space.",
-        "Describe la composición, elige estilo y proporción y genera la imagen con el motor disponible.",
-        "Revisa el resultado antes de copiarlo, descargarlo o utilizarlo."
+        "Describe el sujeto principal y el entorno donde debe aparecer.",
+        "Añade detalles de composición, iluminación, estilo y elementos que quieras evitar.",
+        "Selecciona la proporción y el motor disponible para tu conexión.",
+        "Genera la imagen, revisa el resultado y ajusta el prompt si necesitas otra versión."
       ],
-      "tip": "La generación depende de cuotas, disponibilidad y conexiones. Una cuenta personal de un proveedor puede requerir saldo; no se promete uso ilimitado ni reproducción exacta.",
+      "tip": "Describe lo que debe aparecer y lo que debe evitarse. Genera una primera versión y cambia un elemento cada vez; no se garantiza una reproducción exacta de una referencia.",
       "faqs": [
         [
-          "¿Puedo elegir formato vertical u horizontal?",
-          "Sí. El formulario ofrece cuadrado, horizontal, vertical y panorámico."
+          "¿Qué detalles conviene incluir en el prompt?",
+          "Indica sujeto, entorno, encuadre, iluminación, estilo y proporción. Los detalles concretos ayudan a orientar la composición."
         ],
         [
-          "¿Qué debo revisar antes de usar el resultado?",
-          "La generación depende de cuotas, disponibilidad y conexiones. Una cuenta personal de un proveedor puede requerir saldo; no se promete uso ilimitado ni reproducción exacta."
+          "¿Puedo elegir una imagen vertical u horizontal?",
+          "Sí. El formulario ofrece proporciones cuadrada, horizontal, vertical y panorámica."
+        ],
+        [
+          "¿La generación es ilimitada y gratuita?",
+          "No se garantiza. El acceso depende del motor, la conexión, las cuotas y las condiciones del proveedor."
         ]
       ],
       "keyword": "generador imagenes ia",
@@ -2814,25 +2829,30 @@
     {
       "slug": "generador-guia-estudio-ia",
       "tool": "ai-study-notes",
-      "title": "Crear una guía de estudio con IA online",
+      "title": "Guía de estudio con IA: esquemas y preguntas | Prisma Space",
       "h1": "Crear una guía de estudio con IA",
-      "description": "Transforma un tema o apuntes en explicación, esquema, preguntas de autoevaluación y tarjetas de repaso.",
-      "intro": "Transforma un tema o apuntes en explicación, esquema, preguntas de autoevaluación y tarjetas de repaso.",
-      "details": "Pega apuntes o especifica el tema y nivel, genera la guía y contrasta las respuestas con el material docente. La IA puede cometer errores. No consulta automáticamente bibliografía verificada ni sustituye la revisión de las fuentes originales.",
+      "description": "Convierte un tema o tus apuntes en explicaciones, esquemas, preguntas con respuestas separadas y tarjetas de repaso.",
+      "intro": "Una guía útil transforma un tema amplio en objetivos pequeños. Indica la asignatura, el nivel y qué necesitas practicar; la herramienta organiza la respuesta para que puedas repasar por partes en lugar de recibir un bloque de texto.",
+      "details": "Puedes pegar apuntes o describir un tema y pedir una explicación, un esquema, preguntas tipo examen y tarjetas de repaso. Ejemplo: «Sistema nervioso: explica neurona y sinapsis, crea un esquema y 8 preguntas con respuestas al final». La respuesta la genera un modelo de IA; puede omitir matices o equivocarse y no consulta automáticamente bibliografía verificada.",
       "steps": [
-        "Abre crear una guía de estudio con ia en Prisma Space.",
-        "Pega apuntes o especifica el tema y nivel, genera la guía y contrasta las respuestas con el material docente.",
-        "Revisa el resultado antes de copiarlo, descargarlo o utilizarlo."
+        "Define el tema, el nivel académico y el objetivo de estudio.",
+        "Pega tus apuntes o describe los conceptos que necesitas repasar.",
+        "Solicita una estructura concreta: explicación, esquema, preguntas y tarjetas.",
+        "Contrasta definiciones y respuestas con tus apuntes, el material docente y las fuentes originales."
       ],
-      "tip": "La IA puede cometer errores. No consulta automáticamente bibliografía verificada ni sustituye la revisión de las fuentes originales.",
+      "tip": "Úsala como material de repaso, no como fuente definitiva. Comprueba definiciones, fechas, fórmulas y respuestas con tus apuntes y bibliografía.",
       "faqs": [
         [
-          "¿Crea preguntas con respuestas?",
-          "Sí. El tutor está preparado para proponer preguntas y separar sus respuestas."
+          "¿Puede crear preguntas tipo examen?",
+          "Sí. Puedes pedir preguntas de selección múltiple o abiertas y solicitar que las respuestas aparezcan separadas para autoevaluarte."
         ],
         [
-          "¿Qué debo revisar antes de usar el resultado?",
-          "La IA puede cometer errores. No consulta automáticamente bibliografía verificada ni sustituye la revisión de las fuentes originales."
+          "¿Incluye referencias bibliográficas verificadas?",
+          "No automáticamente. No consulta bases bibliográficas para validar cada afirmación; añade y revisa las fuentes por separado."
+        ],
+        [
+          "¿Puedo crear una guía sin pegar apuntes?",
+          "Sí. Describe el tema y el nivel, pero incluye los objetivos o el programa del curso si necesitas que la guía siga un contenido específico."
         ]
       ],
       "keyword": "generador guia estudio ia",
@@ -2947,25 +2967,30 @@
     {
       "slug": "formatear-javascript",
       "tool": "js-format",
-      "title": "Formatear JavaScript online",
-      "h1": "Formatear JavaScript",
-      "description": "Haz legible un fragmento de JavaScript reorganizando su formato antes de revisarlo.",
-      "intro": "Haz legible un fragmento de JavaScript reorganizando su formato antes de revisarlo.",
-      "details": "Pega el código, escoge indentación y ejecuta el formateado local. El código debe poder analizarse con el parser disponible. No se ejecuta y no se corrigen errores lógicos; el límite es de 250000 caracteres.",
+      "title": "Formatear JavaScript online: ordenar código | Prisma Space",
+      "h1": "Formatear y ordenar código JavaScript",
+      "description": "Indenta fragmentos de JavaScript con Prettier en el navegador. Ajusta sangría, comillas y punto y coma sin ejecutar el código ni corregir su lógica.",
+      "intro": "Un fragmento minificado o con saltos inconsistentes cuesta revisar. El formateador reorganiza espacios y sangría para distinguir funciones, objetos, condiciones y arreglos. Una declaración con varias propiedades puede pasar a líneas separadas sin cambiar su propósito.",
+      "details": "Pega código JavaScript de hasta 250 KB. Puedes escoger sangría, comillas simples o dobles y el uso de punto y coma. Prisma utiliza Prettier con el parser Babel; el contenido no se ejecuta. Si hay sintaxis que el parser no entiende, primero tendrás que corregir el fragmento. No depura errores lógicos ni garantiza compatibilidad con TypeScript.",
       "steps": [
-        "Abre formatear javascript en Prisma Space.",
-        "Pega el código, escoge indentación y ejecuta el formateado local.",
-        "Revisa el resultado antes de copiarlo, descargarlo o utilizarlo."
+        "Abre Formatear JavaScript en Prisma Space.",
+        "Pega un fragmento JavaScript válido y selecciona la sangría que prefieras.",
+        "Ajusta comillas y punto y coma si lo necesitas y ejecuta el formateado.",
+        "Compara el resultado con el original y pruébalo en tu entorno antes de reemplazar el archivo."
       ],
-      "tip": "El código debe poder analizarse con el parser disponible. No se ejecuta y no se corrigen errores lógicos; el límite es de 250000 caracteres.",
+      "tip": "Guarda una copia antes de reemplazar el original. Formatear cambia la presentación del código; no verifica su comportamiento.",
       "faqs": [
         [
-          "¿También sirve para TypeScript?",
-          "El parser configurado es Babel para JavaScript; no se promete compatibilidad con sintaxis TypeScript."
+          "¿El formateador corrige errores de JavaScript?",
+          "No. Puede fallar si el código tiene sintaxis inválida y no detecta errores lógicos ni problemas que aparezcan al ejecutarlo."
         ],
         [
-          "¿Qué debo revisar antes de usar el resultado?",
-          "El código debe poder analizarse con el parser disponible. No se ejecuta y no se corrigen errores lógicos; el límite es de 250000 caracteres."
+          "¿Puedo formatear TypeScript?",
+          "No se garantiza. La configuración utiliza el parser Babel para JavaScript, no un parser específico de TypeScript."
+        ],
+        [
+          "¿El código se ejecuta al formatearlo?",
+          "No. Prettier reorganiza el texto en el navegador; debes probar el resultado por separado en tu entorno habitual."
         ]
       ],
       "keyword": "formatear javascript"
