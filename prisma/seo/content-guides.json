@@ -134,47 +134,54 @@
     },
     {
       "slug": "reducir-peso-pdf",
-      "title": "Cómo reducir el peso de un PDF antes de enviarlo | Prisma Space",
-      "h1": "Cómo reducir el peso de un PDF antes de enviarlo",
-      "description": "Revisa opciones para reducir el tamaño de un PDF, entender qué afecta su peso y comprobar que siga siendo legible.",
+      "title": "Cómo reducir el tamaño de un PDF: opciones y límites | Prisma Space",
+      "h1": "Cómo reducir el tamaño de un PDF antes de enviarlo",
+      "description": "Identifica qué hace pesado un PDF, prueba una optimización estructural y comprueba si el resultado conserva el texto y la legibilidad.",
       "primaryQuery": "reducir peso de PDF",
-      "intro": "Un PDF puede ser demasiado pesado para adjuntarlo a un correo o subirlo a un formulario. El tamaño depende de imágenes, fuentes, escaneos y contenido interno. Antes de optimizar, guarda una copia del original y define el límite de tamaño que necesitas alcanzar.",
+      "intro": "Un PDF puede superar el límite de un correo, formulario o plataforma. Antes de reducirlo, identifica si el peso procede de fotografías, páginas escaneadas, fuentes incrustadas o de la propia estructura del documento. Guarda siempre el original y define el tamaño máximo que necesitas alcanzar.",
       "sections": [
         {
-          "heading": "Qué suele aumentar el tamaño de un PDF",
+          "heading": "Identifica qué está ocupando espacio",
           "paragraphs": [
-            "Las fotografías y páginas escaneadas suelen ocupar más que el texto vectorial. También pueden influir fuentes incrustadas, imágenes repetidas y otros recursos del documento.",
-            "Reducir el peso puede implicar una pérdida de calidad. Si el documento contiene sellos, firmas o texto pequeño, comprueba que sigan siendo legibles después de optimizarlo."
+            "Las fotografías y las páginas escaneadas suelen concentrar gran parte del peso porque guardan imágenes dentro del documento. También pueden influir fuentes incrustadas, recursos repetidos y metadatos. Un PDF formado principalmente por texto vectorial puede comportarse de manera muy distinta a un escaneo de alta resolución.",
+            "Revisa el tamaño del archivo y abre algunas páginas con fotografías, sellos, firmas o texto pequeño. Esto te ayudará a decidir si necesitas optimizar la estructura del PDF o reducir el tamaño de las imágenes que contiene."
           ]
         },
         {
-          "heading": "Cómo evaluar el resultado",
+          "heading": "Prueba una optimización estructural",
           "paragraphs": [
-            "No te guíes únicamente por el número de kilobytes. Abre el archivo, amplía las páginas con texto pequeño y compara imágenes y gráficos con el original.",
-            "Si el documento debe cumplir un límite específico, revisa el tamaño final en las propiedades del archivo antes de subirlo."
+            "La herramienta Optimizar PDF de Prisma Space reescribe la estructura interna del documento y conserva las páginas como contenido PDF, sin convertirlas en imágenes. Puede reducir el peso cuando hay oportunidades de optimización estructural, pero no vuelve a comprimir las fotografías incrustadas.",
+            "La herramienta está en beta y no garantiza una reducción. Si el resultado pesa lo mismo o más, puede que el documento ya esté optimizado o que las imágenes sean la parte dominante del archivo."
+          ]
+        },
+        {
+          "heading": "Comprueba el resultado antes de enviarlo",
+          "paragraphs": [
+            "Compara el tamaño del archivo original y el optimizado. Después abre varias páginas y revisa que el texto siga siendo seleccionable y que las imágenes, firmas, sellos y gráficos mantengan la calidad necesaria.",
+            "Si el PDF está compuesto por escaneos o fotografías, considera reducir la resolución o el peso de las imágenes en el proceso que creó el documento y vuelve a generar el PDF. No sustituyas el original hasta confirmar que la copia cumple el límite y sigue siendo legible."
           ]
         }
       ],
       "steps": [
         {
-          "title": "Guarda una copia del PDF",
-          "body": "Conserva el archivo original y trabaja sobre una versión duplicada.",
+          "title": "Conserva el original y revisa el límite",
+          "body": "Duplica el archivo y anota el tamaño máximo que acepta el correo o formulario donde vas a enviarlo.",
           "toolId": "pdf-compress"
         },
         {
-          "title": "Ejecuta la optimización",
-          "body": "Abre la herramienta de optimización y utiliza las opciones disponibles para el documento.",
+          "title": "Prueba Optimizar PDF",
+          "body": "Abre la herramienta, selecciona la copia y ejecuta la optimización estructural disponible.",
           "toolId": "pdf-compress"
         },
         {
-          "title": "Compara tamaño y calidad",
-          "body": "Comprueba el tamaño final y revisa texto, imágenes, firmas y sellos en varias páginas.",
+          "title": "Compara el tamaño y el contenido",
+          "body": "Comprueba los megabytes finales, el texto seleccionable y la legibilidad de imágenes, firmas y sellos.",
           "toolId": "pdf-compress"
         },
         {
-          "title": "Usa el archivo solo si cumple",
-          "body": "Si la calidad o el tamaño no son adecuados, conserva el original y prueba otra configuración o método.",
-          "toolId": "pdf-compress"
+          "title": "Elige otro método si no se reduce",
+          "body": "Si el peso procede de escaneos o fotografías, reduce el tamaño de las imágenes en el origen y vuelve a crear el PDF. Conserva el archivo original.",
+          "toolId": "pdf-to-image"
         }
       ],
       "primaryPageSlug": "comprimir-pdf",
@@ -186,15 +193,23 @@
       "solutionSlugs": [
         "organizar-documentos-pdf"
       ],
-      "note": "La herramienta de optimización figura en beta. No se garantiza un porcentaje fijo de reducción ni que todos los PDF puedan comprimirse sin pérdida.",
+      "note": "Optimizar la estructura no equivale a comprimir las imágenes incrustadas. La herramienta está en beta: no se garantiza un porcentaje de reducción y algunos documentos pueden quedar igual o aumentar de tamaño.",
       "faqs": [
         [
-          "¿La compresión siempre reduce el tamaño?",
-          "No. Algunos PDF ya están optimizados o contienen elementos que no pueden reducirse de forma significativa."
+          "¿Optimizar PDF siempre reduce el tamaño?",
+          "No. La herramienta reescribe la estructura interna, pero el resultado depende del documento. Algunos PDF ya están optimizados y otros están dominados por imágenes."
         ],
         [
-          "¿Puedo comprimir sin perder calidad?",
-          "Depende del contenido y del método. Compara el archivo exportado y no uses una versión degradada para documentos que exijan alta legibilidad."
+          "¿La herramienta convierte las páginas en imágenes?",
+          "No. La optimización estructural no rasteriza las páginas y busca conservar el contenido PDF y el texto seleccionable."
+        ],
+        [
+          "¿Qué hago si el PDF sigue pesando demasiado?",
+          "Si contiene fotografías o escaneos, reduce su resolución o peso en el proceso de origen y vuelve a generar el PDF. Revisa la legibilidad antes de enviarlo."
+        ],
+        [
+          "¿Se garantiza que el documento quede por debajo de un límite?",
+          "No. Compara el archivo final con el límite de la plataforma y no elimines el original hasta confirmar que la copia cumple."
         ]
       ]
     },

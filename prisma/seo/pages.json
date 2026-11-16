@@ -79,29 +79,34 @@
     {
       "slug": "dividir-pdf",
       "tool": "pdf-split",
-      "title": "Dividir PDF: páginas, rangos, partes y bloques",
-      "h1": "Dividir PDF por páginas, rangos o bloques",
-      "description": "Divide PDF por páginas, selección, rangos, partes o bloques. Descarga un PDF para un grupo o un ZIP con varios documentos.",
-      "intro": "Selecciona páginas con 2, 4-6; usa rangos como 1-3;4-6 para obtener dos documentos. También puedes separar todas las páginas, excluir una selección, distribuir el PDF en 2 a 20 partes o crear bloques de 1 a 200 páginas.",
-      "details": "En un PDF de 8 páginas, los rangos 1-3;4-8 producen dos PDF dentro de un ZIP. Un único rango 2-4 produce un PDF descargable. La selección 2,4-6 genera un PDF por cada página seleccionada, no un documento combinado.",
+      "title": "Dividir PDF online por páginas, rangos o bloques | Prisma Space",
+      "h1": "Dividir un PDF por páginas, rangos, partes o bloques",
+      "description": "Separa un PDF en archivos independientes: cada página, páginas elegidas, rangos, entre 2 y 20 partes o bloques de hasta 200 páginas.",
+      "intro": "Dividir un PDF sirve cuando necesitas entregar capítulos por separado, repartir un documento extenso o crear archivos más pequeños para compartir. Prisma Space permite elegir cómo se forman los grupos y muestra una vista previa del número de páginas antes de procesar el archivo.",
+      "details": "Puedes separar cada página individualmente, seleccionar páginas concretas, crear un PDF por cada rango, distribuir el documento en 2 a 20 partes o agrupar páginas consecutivas en bloques de 1 a 200. Por ejemplo, en un PDF de 12 páginas, los rangos 1-4; 5-8; 9-12 producen tres documentos. Un único grupo se descarga como PDF; cuando se generan varios documentos, se reúnen en un ZIP. El proceso se realiza en el navegador y conserva el archivo original.",
       "steps": [
-        "Abre la herramienta y selecciona un PDF.",
-        "Elige el modo y configura páginas, rangos, cantidad de partes o tamaño del bloque.",
-        "Revisa la selección y descarga el PDF o ZIP; abre los documentos resultantes."
+        "Carga el PDF y espera a que Prisma lea cuántas páginas contiene.",
+        "Selecciona el modo: cada página, páginas concretas, rangos, partes o bloques.",
+        "Completa los campos del modo elegido y revisa la vista previa de páginas y archivos.",
+        "Ejecuta la división y descarga el PDF o el ZIP con los documentos generados."
       ],
-      "tip": "No se permiten rangos solapados. Las partes se distribuyen por cantidad de páginas, no por peso. El último bloque puede ser más corto.",
+      "tip": "Los rangos deben ser válidos y no solaparse. La división en partes reparte páginas, no megabytes: no garantiza que todos los archivos tengan el mismo peso.",
       "faqs": [
         [
-          "¿Cuándo recibo PDF y cuándo ZIP?",
-          "Un único grupo se descarga como PDF; varios grupos se entregan juntos en un ZIP."
+          "¿Cuándo recibo un PDF y cuándo un ZIP?",
+          "Si la selección produce un solo grupo, se descarga un PDF. Si genera varios documentos, se entregan juntos en un archivo ZIP."
         ],
         [
-          "¿Puedo seleccionar la última página?",
-          "Sí: last selecciona la última y last:2 las dos últimas. También puedes usar números y rangos."
+          "¿Puedo dividir un documento en partes iguales?",
+          "Sí. El modo Partes permite elegir entre 2 y 20 grupos, siempre que el PDF tenga suficientes páginas."
         ],
         [
-          "¿Se divide por megabytes?",
-          "No. Los modos trabajan con páginas; no garantizan un peso máximo por archivo."
+          "¿Puedo crear bloques de un número fijo de páginas?",
+          "Sí. El modo Bloques agrupa páginas consecutivas; puedes indicar entre 1 y 200 páginas por bloque."
+        ],
+        [
+          "¿Puedo elegir páginas no consecutivas?",
+          "Sí. En el modo de páginas concretas puedes indicar números y rangos, como 2, 4-6. Cada página seleccionada genera su propio PDF."
         ]
       ]
     },
@@ -238,25 +243,30 @@
     {
       "slug": "extraer-paginas-pdf",
       "tool": "pdf-extract",
-      "title": "Extraer páginas PDF gratis: guarda solo las que necesitas",
-      "h1": "Extraer páginas de un PDF",
-      "description": "Selecciona páginas concretas de un PDF y crea otro documento con ellas sin alterar el archivo original.",
-      "intro": "Es habitual recibir un documento largo cuando solo necesitas presentar dos o tres páginas. Con la herramienta de extracción puedes escribir una selección como 1, 3, 5-8 y crear un PDF reducido que incluya esas hojas.",
-      "details": "A diferencia de dividir un PDF completo, aquí produces un solo documento con las páginas que has elegido. El resto de páginas no aparecerá en la copia descargada.",
+      "title": "Extraer páginas de un PDF online y crear otro archivo | Prisma Space",
+      "h1": "Extraer páginas específicas de un PDF",
+      "description": "Elige páginas sueltas o rangos como 1, 3, 5-8 y crea un único PDF con esa selección. El original permanece intacto.",
+      "intro": "Si un documento contiene muchas páginas y solo necesitas algunas, puedes extraerlas en una copia independiente. Por ejemplo, la selección 1, 3, 5-8 reúne la portada, una página concreta y un rango en un solo PDF.",
+      "details": "La herramienta interpreta números de página y rangos, comprueba que estén dentro del documento y crea un PDF nuevo con las páginas seleccionadas en orden ascendente. El procesamiento se realiza en el navegador y el archivo original no se modifica. A diferencia de Dividir PDF, aquí obtienes un único documento con toda la selección, no un archivo separado por cada página.",
       "steps": [
-        "Sube el PDF a Extraer páginas.",
-        "Indica las páginas que quieres conservar, por ejemplo 1, 3, 5-8.",
-        "Ejecuta la operación y descarga el nuevo PDF."
+        "Carga el documento PDF en Extraer páginas.",
+        "Escribe las páginas que quieres conservar, por ejemplo 1, 3, 5-8.",
+        "Ejecuta la extracción; la herramienta valida que los números existan en el documento.",
+        "Descarga y revisa el nuevo PDF para confirmar que contiene las páginas necesarias."
       ],
-      "tip": "La numeración comienza en la página 1 del archivo, no en los números impresos dentro del documento.",
+      "tip": "Usa comas para páginas individuales y guiones para rangos. Si necesitas un PDF independiente por página o varios archivos por rangos, utiliza Dividir PDF.",
       "faqs": [
         [
-          "¿Puedo elegir páginas no consecutivas?",
-          "Sí, admite páginas individuales y rangos, como 2, 4-6."
+          "¿Puedo combinar páginas que no son consecutivas?",
+          "Sí. Escribe números y rangos separados por comas, por ejemplo 1, 3, 5-8. Se genera un único PDF con la selección."
         ],
         [
-          "¿Se modifica el documento original?",
-          "No. Obtienes una copia PDF independiente con las páginas elegidas."
+          "¿Se altera el PDF original?",
+          "No. La extracción crea una copia nueva y conserva el archivo que cargaste."
+        ],
+        [
+          "¿Cuál es la diferencia con Dividir PDF?",
+          "Extraer páginas reúne la selección en un solo PDF. Dividir PDF permite crear varios documentos independientes según páginas, rangos, partes o bloques."
         ]
       ]
     },
@@ -388,25 +398,30 @@
     {
       "slug": "png-a-jpg",
       "tool": "image-convert",
-      "title": "PNG a JPG gratis: convierte imágenes en JPEG",
-      "h1": "Convertir PNG a JPG",
-      "description": "Cambia una imagen PNG a formato JPG desde el navegador. La herramienta seleccionará JPG como destino.",
-      "intro": "El formato JPG es útil para fotografías y para plataformas que no admiten archivos PNG. Prisma Space convierte la imagen a un archivo JPEG descargable mediante procesamiento en el navegador.",
-      "details": "JPG no admite transparencia y utiliza compresión con pérdida. Las zonas transparentes y los bordes finos pueden verse distintos; revisa el resultado antes de borrar el PNG original.",
+      "title": "Convertir PNG a JPG online: formato JPEG | Prisma Space",
+      "h1": "Convertir una imagen PNG a JPG",
+      "description": "Convierte una imagen PNG a JPG en el navegador. Conserva sus dimensiones y descarga una copia JPEG; la transparencia no se mantiene.",
+      "intro": "PNG es útil para capturas, gráficos y logotipos porque admite transparencia. JPG suele ser más práctico para fotografías y plataformas que esperan imágenes JPEG. Esta herramienta cambia el formato sin redimensionar la imagen.",
+      "details": "Selecciona JPG como formato de salida y Prisma Space reexporta la imagen en tu navegador. El archivo resultante mantiene el ancho y el alto originales, pero JPG utiliza compresión con pérdida y no conserva el canal transparente de PNG. Si el original tiene zonas transparentes, revisa el fondo del JPEG antes de utilizarlo. Conserva el PNG si necesitas transparencia o una copia sin pérdida.",
       "steps": [
-        "Abre el conversor de imagen con JPG seleccionado.",
-        "Carga tu archivo PNG y confirma el formato de salida.",
-        "Ejecuta la conversión y descarga la imagen JPG."
+        "Abre Convertir formato y carga tu archivo PNG.",
+        "En Formato de salida, selecciona JPG.",
+        "Ejecuta la conversión y espera a que se genere el archivo JPEG.",
+        "Abre la copia descargada y comprueba el fondo, los bordes y la calidad antes de sustituir el original."
       ],
-      "tip": "Si tu PNG contiene un logotipo con fondo transparente, quizá sea mejor conservarlo en PNG o usar WebP.",
+      "tip": "Para fotografías, JPG puede ser una opción práctica. Para logotipos, iconos o gráficos con transparencia, conserva PNG o considera WebP si el destino lo admite.",
       "faqs": [
         [
-          "¿Qué pasa con el fondo transparente del PNG?",
-          "JPG no admite transparencia; el resultado se representa con un fondo sin canal alfa."
+          "¿El JPG conserva el fondo transparente del PNG?",
+          "No. JPG no admite transparencia. Revisa el fondo de la copia convertida, especialmente si el PNG tenía zonas transparentes."
         ],
         [
-          "¿La conversión cambia las dimensiones?",
-          "El objetivo de la operación es convertir el formato, no redimensionar la imagen."
+          "¿La conversión cambia el tamaño en píxeles?",
+          "No es una herramienta de redimensionado: mantiene el ancho y el alto de la imagen original."
+        ],
+        [
+          "¿Cuándo conviene conservar el PNG?",
+          "Cuando necesitas transparencia, bordes nítidos en gráficos o una copia original sin la compresión con pérdida propia de JPG."
         ]
       ],
       "format": "image/jpeg"
@@ -539,25 +554,30 @@
     {
       "slug": "marca-de-agua-pdf",
       "tool": "pdf-watermark",
-      "title": "Marca de agua en PDF gratis | Prisma Space",
-      "h1": "Añadir una marca de agua a un PDF",
-      "description": "Inserta un texto diagonal y semitransparente en las páginas de un PDF desde tu navegador, sin reemplazar el documento original.",
-      "intro": "Cuando compartes un borrador, una muestra o un documento de trabajo, una marca de agua ayuda a identificar visualmente su estado o procedencia. Prisma Space permite escribir un texto y aplicarlo sobre las páginas de una copia del PDF.",
-      "details": "La marca se representa en diagonal y con transparencia para que el contenido del documento siga siendo legible. Puedes usar un nombre, una indicación como BORRADOR o una referencia de tu organización. El resultado es un nuevo PDF descargable.",
+      "title": "Añadir marca de agua a un PDF online | Prisma Space",
+      "h1": "Añadir una marca de agua de texto a un PDF",
+      "description": "Escribe una etiqueta y aplícala en diagonal a todas las páginas de una copia PDF. El proceso se realiza en tu navegador.",
+      "intro": "Una marca de agua permite identificar visualmente un borrador, una muestra o una copia de trabajo. Prisma Space añade el texto que elijas sobre las páginas del PDF y genera un archivo nuevo para que puedas revisarlo antes de compartirlo.",
+      "details": "Carga un PDF, escribe el texto de la marca y ejecuta la operación. La etiqueta se coloca en diagonal, con un estilo semitransparente, en todas las páginas del documento. El procesamiento es local en el navegador y el archivo original permanece intacto. La herramienta aplica un estilo predefinido: no ofrece controles independientes de color, tamaño, posición u opacidad. Una marca visual no cifra el documento ni impide copiar su contenido.",
       "steps": [
-        "Selecciona el archivo PDF al que quieres añadir la marca.",
-        "Escribe el texto que aparecerá como marca de agua.",
-        "Ejecuta el proceso y revisa el PDF resultante antes de compartirlo."
+        "Selecciona el PDF al que quieres añadir una marca.",
+        "Escribe el texto, por ejemplo BORRADOR, MUESTRA o el nombre del proyecto.",
+        "Ejecuta el proceso para aplicar la etiqueta a todas las páginas.",
+        "Descarga el nuevo PDF y revisa páginas con texto, imágenes y fondos oscuros antes de distribuirlo."
       ],
-      "tip": "Una marca de agua visual no cifra el documento ni impide que alguien copie su contenido. Para información confidencial, utiliza controles de acceso adecuados.",
+      "tip": "Utiliza una etiqueta breve y comprueba que no tape información importante. Para proteger información confidencial, usa controles de acceso o cifrado; una marca de agua solo identifica visualmente el documento.",
       "faqs": [
         [
-          "¿La marca aparece en todas las páginas?",
-          "La herramienta aplica el texto sobre las páginas del documento procesado."
+          "¿La marca de agua se aplica a todas las páginas?",
+          "Sí. El texto se coloca en todas las páginas del PDF procesado."
         ],
         [
-          "¿La marca de agua protege el PDF con contraseña?",
-          "No. Añade una identificación visual, pero no sustituye el cifrado ni la protección mediante contraseña."
+          "¿Puedo cambiar el color, la posición o la transparencia?",
+          "Actualmente puedes definir el texto. La posición diagonal y el estilo semitransparente son predefinidos."
+        ],
+        [
+          "¿La marca de agua impide copiar o editar el PDF?",
+          "No. Es una identificación visual y no sustituye una contraseña, el cifrado ni los permisos del documento."
         ]
       ]
     },
