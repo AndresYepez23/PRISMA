@@ -19,6 +19,11 @@ const hubs=JSON.parse(await readSource('seo/content-hubs.en.json'));
 const sitemap=await readOutput('sitemap.xml');
 const urls=[...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map(match=>match[1]);
 const decode=value=>value.replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+const sitemapRecords=new Map([...sitemap.matchAll(/<url>([\s\S]*?)<\/url>/g)].map(match=>{
+ const loc=decode(match[1].match(/<loc>(.*?)<\/loc>/)?.[1]||'');
+ const lastmod=match[1].match(/<lastmod>(.*?)<\/lastmod>/)?.[1]||null;
+ return [loc,lastmod];
+}));
 const alt=(html,language)=>html.includes('hreflang="'+language+'"');
 const attributes=tag=>Object.fromEntries([...tag.matchAll(/([\w:-]+)="([^"]*)"/g)].map(([,key,value])=>[key,decode(value)]));
 const documentPath=url=>{
@@ -27,6 +32,26 @@ const documentPath=url=>{
 };
 const documents=new Map(await Promise.all(urls.map(async url=>[url,await readOutput(documentPath(url))])));
 const assetPaths=new Set((await readdir(dist,{recursive:true})).map(path=>'/'+path));
+
+test('sitemap preserves verified per-language lastmod dates without stamping unchanged pages',()=>{
+ const expected=[
+  ['/herramientas/dividir-pdf/','2026-11-16'],
+  ['/herramientas/extraer-paginas-pdf/','2026-11-16'],
+  ['/herramientas/pdf-a-word/','2026-11-19'],
+  ['/herramientas/word-a-pdf/','2026-11-19'],
+  ['/herramientas/numerar-paginas-pdf/','2026-11-19'],
+  ['/herramientas/convertir-archivos-csv-excel-json/','2026-11-19'],
+  ['/en/tools/free-pdf-to-word-converter/','2026-11-19'],
+  ['/en/tools/convert-word-to-pdf-from-your-browser/','2026-11-19'],
+  ['/en/tools/split-pdf-into-separate-files/','2026-11-19'],
+  ['/en/tools/extract-pdf-pages/','2026-11-19'],
+  ['/en/tools/add-page-numbers-to-a-pdf/','2026-11-19'],
+  ['/en/tools/convert-csv-excel-and-json-files/','2026-11-19']
+ ];
+ for(const [path,date] of expected)assert.equal(sitemapRecords.get(SEO_BASE+path),date,'lastmod mismatch: '+path);
+ assert.equal(sitemapRecords.get(SEO_BASE+'/herramientas/pdf-a-jpg/'),null,'unchanged pages must not receive a fabricated lastmod');
+ assert.ok([...sitemapRecords.values()].filter(Boolean).every(date=>/^\d{4}-\d{2}-\d{2}$/.test(date)),'lastmod must use a calendar date');
+});
 
 test('English catalogue has a one-to-one mapping to every Spanish tool page',()=>{
  assert.equal(pages.length,sourcePages.length);

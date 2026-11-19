@@ -4,52 +4,64 @@
     {
       "slug": "pdf-a-word",
       "tool": "pdf-to-word",
-      "title": "PDF a Word gratis: convierte documentos a DOCX editable",
-      "h1": "Convertir PDF a Word gratis",
-      "description": "Transforma el texto de un PDF digital en un archivo Word DOCX editable desde el navegador. Gratis, sin registro y con límites claros.",
-      "intro": "Si recibiste un contrato, un informe o unos apuntes en PDF y necesitas cambiar su redacción, el primer paso es comprobar que puedes seleccionar el texto. Prisma Space extrae ese contenido y prepara un DOCX para seguir editándolo en Word u otro procesador compatible.",
-      "details": "El documento convertido prioriza el texto editable. Los diseños de columnas, tablas complejas, tipografías especiales o elementos posicionados pueden necesitar ajustes después de la conversión.",
+      "title": "PDF a Word online: convertir a DOCX editable | Prisma Space",
+      "h1": "Convertir PDF a Word editable",
+      "description": "Convierte el texto seleccionable de un PDF digital en un DOCX editable desde el navegador. Revisa el orden y el formato después de exportar.",
+      "intro": "Si necesitas corregir un contrato, informe o apunte que recibiste en PDF, comprueba primero si puedes seleccionar una frase con el cursor. Prisma Space recupera el texto digital y lo organiza en un documento Word para que puedas editarlo.",
+      "details": "El conversor lee el contenido de cada página, agrupa los fragmentos que aparecen a una altura similar y los ordena de izquierda a derecha. Después crea párrafos en un archivo DOCX e inserta un salto de página entre las páginas originales. Por ejemplo, un PDF digital de tres páginas produce un Word con el texto recuperado y la separación entre esas páginas. No reconstruye la página como una imagen ni reproduce fielmente el diseño original: tablas complejas, columnas, encabezados, pies de página, imágenes, tipografías y elementos posicionados pueden perderse o cambiar. Los documentos con varias columnas pueden necesitar correcciones en el orden de lectura.",
       "steps": [
-        "Abre PDF a Word en Prisma Space y elige tu PDF digital.",
-        "Ejecuta la conversión para extraer el texto de sus páginas.",
-        "Descarga el DOCX y revisa el formato antes de utilizarlo."
+        "Abre PDF a Word en Prisma Space y selecciona un PDF digital.",
+        "Comprueba que el texto del archivo original sea seleccionable; los escaneos necesitan OCR.",
+        "Ejecuta la conversión y espera a que se procese cada página.",
+        "Descarga el DOCX y revisa párrafos, orden de lectura y saltos de página antes de editarlo."
       ],
-      "tip": "Un PDF digital contiene texto seleccionable. Un escaneo puede contener solo imágenes y requiere OCR previo; esta conversión no garantiza recuperar texto, tablas ni diseño de un escaneo. Revisa siempre el DOCX.",
+      "tip": "Prueba copiar una oración del PDF antes de convertirlo. Si no puedes seleccionar texto, realiza OCR primero. Revisa especialmente tablas, columnas y documentos con diseños complejos.",
       "faqs": [
         [
           "¿Puedo convertir un PDF escaneado?",
-          "Esta función trabaja con PDF que tienen texto seleccionable; para páginas escaneadas primero necesitas OCR."
+          "No directamente. La herramienta necesita texto seleccionable; primero debes aplicar OCR a las páginas escaneadas."
         ],
         [
-          "¿Quedará exactamente igual que el PDF?",
-          "El objetivo es recuperar contenido editable. La composición visual puede variar y requerir revisión."
+          "¿El Word conserva exactamente el diseño del PDF?",
+          "No. Recupera texto y separa las páginas, pero no reconstruye imágenes, tablas complejas, columnas ni la maquetación original."
+        ],
+        [
+          "¿El archivo se envía a un servicio de IA?",
+          "No. La extracción y la creación del DOCX se ejecutan en el navegador; la herramienta no envía el PDF a un proveedor de IA."
         ]
-      ]
+      ],
+      "lastmod": "2026-11-19"
     },
     {
       "slug": "word-a-pdf",
       "tool": "docx-pdf",
-      "title": "Word a PDF gratis: guarda un DOCX como PDF",
-      "h1": "Pasar Word a PDF desde el navegador",
-      "description": "Prepara tu archivo DOCX para guardarlo como PDF con la opción de impresión del navegador. Gratis y sin registro.",
-      "intro": "Cuando necesitas entregar un documento que otras personas puedan abrir sin editarlo fácilmente, el formato PDF suele ser práctico. Prisma Space extrae el contenido del DOCX y abre una vista de impresión desde la que puedes elegir Guardar como PDF.",
-      "details": "Este flujo no convierte directamente un DOCX complejo conservando todo su diseño original. Tablas, saltos y fuentes pueden verse distintos; comprueba la vista previa antes de guardar.",
+      "title": "Word a PDF online: guardar DOCX como PDF | Prisma Space",
+      "h1": "Convertir un documento Word a PDF",
+      "description": "Prepara un DOCX como vista imprimible y guárdalo en PDF desde el navegador. Comprueba la paginación y el diseño antes de guardar.",
+      "intro": "Cuando necesitas compartir un documento Word en un formato más fácil de abrir sin editarlo, puedes preparar una versión PDF desde la vista de impresión. Prisma Space lee el DOCX, crea una página HTML imprimible y abre el diálogo de impresión del navegador.",
+      "details": "El flujo utiliza una conversión de DOCX a HTML; no es un motor de Microsoft Word ni genera automáticamente un archivo PDF. En la ventana de impresión, selecciona Guardar como PDF y elige el destino. El contenido compatible se lleva a la vista imprimible, pero el diseño puede variar: tablas, imágenes, encabezados, pies, saltos de página, columnas y fuentes pueden reubicarse. Revisa la vista previa y la paginación antes de guardar.",
       "steps": [
         "Selecciona tu archivo Word DOCX en la herramienta.",
-        "Abre la vista de impresión preparada por Prisma Space.",
-        "Elige Guardar como PDF en el diálogo del navegador y verifica el resultado."
+        "Abre la vista imprimible que prepara Prisma Space.",
+        "En el diálogo de impresión del navegador, selecciona Guardar como PDF y ajusta el tamaño de papel o los márgenes si hace falta.",
+        "Guarda el archivo y revisa páginas, tablas e imágenes antes de compartirlo."
       ],
-      "tip": "Para diseños con fidelidad exacta, compara el resultado con la exportación PDF del editor original.",
+      "tip": "Esta herramienta prepara una vista HTML para imprimir, no una reproducción exacta de Word. Si el diseño debe conservarse con precisión, compara el resultado con la exportación PDF del editor original.",
       "faqs": [
         [
-          "¿Se descarga automáticamente un PDF?",
-          "No. Prisma prepara una vista de impresión y tú eliges Guardar como PDF en el navegador."
+          "¿El PDF se descarga automáticamente?",
+          "No. Prisma prepara la vista de impresión y tú eliges Guardar como PDF en el diálogo del navegador."
         ],
         [
-          "¿Se respetan todas las tipografías?",
-          "No necesariamente. El contenido se adapta a una vista HTML imprimible y la maquetación puede cambiar."
+          "¿Se conserva exactamente el formato de Word?",
+          "No siempre. La conversión pasa por HTML y la posición de tablas, imágenes, saltos y fuentes puede cambiar."
+        ],
+        [
+          "¿Puedo elegir el destino del PDF?",
+          "Sí. El destino y el nombre se eligen en el diálogo de impresión del navegador."
         ]
-      ]
+      ],
+      "lastmod": "2026-11-19"
     },
     {
       "slug": "unir-pdf",
@@ -108,7 +120,8 @@
           "¿Puedo elegir páginas no consecutivas?",
           "Sí. En el modo de páginas concretas puedes indicar números y rangos, como 2, 4-6. Cada página seleccionada genera su propio PDF."
         ]
-      ]
+      ],
+      "lastmod": "2026-11-16"
     },
     {
       "slug": "comprimir-pdf",
@@ -268,7 +281,8 @@
           "¿Cuál es la diferencia con Dividir PDF?",
           "Extraer páginas reúne la selección en un solo PDF. Dividir PDF permite crear varios documentos independientes según páginas, rangos, partes o bloques."
         ]
-      ]
+      ],
+      "lastmod": "2026-11-16"
     },
     {
       "slug": "eliminar-paginas-pdf",
@@ -323,27 +337,37 @@
     {
       "slug": "numerar-paginas-pdf",
       "tool": "pdf-page-numbers",
-      "title": "Numerar páginas de PDF gratis: añade números",
-      "h1": "Añadir números de página a un PDF",
-      "description": "Coloca numeración consecutiva en la parte superior o inferior de un PDF desde tu navegador.",
-      "intro": "Los informes, trabajos académicos y expedientes son más fáciles de consultar cuando sus hojas están numeradas. Prisma Space añade números a las páginas del documento y genera una copia descargable.",
-      "details": "Puedes elegir entre una ubicación superior o inferior. La numeración es consecutiva según el orden real de páginas del archivo, independientemente de los números que ya estén impresos.",
+      "title": "Numerar páginas de un PDF online: añade 1 / total | Prisma Space",
+      "h1": "Añadir numeración a las páginas de un PDF",
+      "description": "Coloca en cada página el número consecutivo y el total del documento, arriba o abajo. El procesamiento se realiza en el navegador.",
+      "intro": "Al imprimir o compartir un informe largo, mostrar el número y el total de páginas facilita localizar una hoja. Prisma Space añade una etiqueta como «1 / 12» en cada página del PDF.",
+      "details": "La herramienta calcula la posición real de cada página en el archivo y escribe la secuencia 1 / total, 2 / total y así sucesivamente, centrada en la zona superior o inferior. Aplica la numeración a todas las páginas y crea una copia nueva; no modifica el original. El estilo es fijo: no permite cambiar fuente, tamaño, color, formato, número inicial ni excluir la portada. Si el PDF ya tiene numeración impresa en el mismo lugar, puede superponerse.",
       "steps": [
-        "Sube tu documento a Numerar páginas PDF.",
-        "Elige dónde quieres colocar la numeración.",
-        "Ejecuta y comprueba la posición de los números en el PDF final."
+        "Carga el PDF en Numerar páginas.",
+        "Selecciona si quieres colocar la numeración en la parte superior o inferior.",
+        "Ejecuta el proceso para añadir la secuencia a todas las páginas.",
+        "Descarga la copia y comprueba la portada, una página intermedia y la última hoja."
       ],
-      "tip": "Si tu archivo ya tiene números en el mismo lugar, pueden superponerse; revisa el resultado.",
+      "tip": "La numeración se aplica a todas las páginas con el formato número / total. Si el documento ya tiene números impresos, revisa que no se superpongan.",
       "faqs": [
         [
-          "¿Se numera desde la primera hoja?",
-          "La herramienta aplica numeración consecutiva sobre las páginas del documento."
+          "¿Qué formato tienen los números?",
+          "La herramienta muestra el número de cada página junto al total, por ejemplo 1 / 12, 2 / 12 y 3 / 12."
         ],
         [
-          "¿Puedo elegir entre arriba y abajo?",
-          "Sí, permite numeración superior o inferior."
+          "¿Puedo elegir arriba o abajo?",
+          "Sí. Puedes colocar la numeración en la zona superior o inferior de las páginas."
+        ],
+        [
+          "¿Puedo omitir la portada o empezar en otro número?",
+          "No en la versión actual. Numera todas las páginas desde 1 según el orden del archivo."
+        ],
+        [
+          "¿Se modifica el PDF original?",
+          "No. Prisma genera una copia numerada y conserva el archivo que seleccionaste."
         ]
-      ]
+      ],
+      "lastmod": "2026-11-19"
     },
     {
       "slug": "comprimir-imagen",
@@ -1858,28 +1882,38 @@
     {
       "slug": "convertir-archivos-csv-excel-json",
       "tool": "table-file-convert",
-      "title": "Convertir archivos CSV, Excel y JSON online",
+      "title": "Convertir CSV, Excel y JSON online | Prisma Space",
       "h1": "Convertir archivos CSV, Excel y JSON",
-      "description": "Cambia el formato de datos tabulares para importar información en una hoja de cálculo o una aplicación.",
-      "intro": "Cambia el formato de datos tabulares para importar información en una hoja de cálculo o una aplicación.",
-      "details": "Matriz de conversión: CSV → JSON o XLSX; JSON → CSV o XLSX; XLS/XLSX → CSV o JSON. No convierte al mismo formato. Ejemplo CSV: codigo,nombre seguido de 00123,Ana. La primera fila define los nombres de columna. El delimitador automático cuenta comas, punto y coma o tabulaciones en esa fila; confirma la separación en el resultado.",
+      "description": "Convierte CSV, XLS/XLSX y JSON entre formatos compatibles desde el navegador. Los archivos se procesan localmente.",
+      "intro": "Cuando necesitas mover datos entre una hoja de cálculo y una aplicación, puede ser útil cambiar el formato sin reconstruir la tabla a mano. Prisma Space convierte archivos CSV, JSON y Excel entre destinos compatibles y procesa el contenido en el navegador.",
+      "details": "Las conversiones disponibles son CSV a JSON o XLSX, JSON a CSV o XLSX y XLS/XLSX a CSV o JSON. No se admite convertir un archivo al mismo tipo de formato. En CSV, la primera fila se utiliza como encabezado y la detección automática busca comas, punto y coma o tabulaciones en esa fila. El JSON debe ser una lista de objetos o un objeto que contenga una única lista. En Excel puedes trabajar con la primera hoja o exportar todas las hojas a JSON; la opción de todas las hojas no genera CSV. El conversor extrae valores tabulares, no conserva fórmulas, estilos, gráficos ni la maquetación del libro. Por ejemplo, un CSV con las columnas codigo,nombre puede convertirse en una lista JSON con esos campos.",
       "steps": [
-        "Abre convertir archivos csv, excel y json en Prisma Space.",
-        "Carga CSV, JSON, XLS o XLSX, selecciona manualmente el destino y descarga el archivo.",
-        "Revisa el resultado antes de copiarlo, descargarlo o utilizarlo."
+        "Selecciona un archivo CSV, JSON, XLS o XLSX.",
+        "Elige el formato de destino: CSV, JSON o XLSX, según las opciones compatibles con el archivo.",
+        "Si el origen es Excel, selecciona la primera hoja o todas las hojas cuando el destino sea JSON.",
+        "Ejecuta la conversión y revisa encabezados, columnas y valores antes de usar el archivo."
       ],
-      "tip": "CSV: menos de 10 MB de texto y hasta 50.000 registros. JSON debe ser una lista de objetos, o un objeto con una única lista. Columnas con nombres repetidos pueden perder datos; Excel usa la primera hoja salvo que selecciones todas para JSON. No conserva diseños ni fórmulas como un libro original.",
+      "tip": "El CSV debe tener menos de 10 MB de texto y el CSV o JSON admite hasta 50.000 registros. Los nombres de columna repetidos pueden sobrescribir valores; conserva una copia del original y revisa el resultado.",
       "faqs": [
         [
-          "¿Convierte un archivo XLS a XLSX?",
-          "El motor rechaza Excel a Excel por ser el mismo tipo de origen; los destinos para Excel son CSV o JSON."
+          "¿Puedo convertir un archivo XLS a XLSX?",
+          "No. Excel a Excel se considera el mismo tipo de origen; los destinos disponibles para XLS/XLSX son CSV o JSON."
         ],
         [
-          "¿Qué debo revisar antes de usar el resultado?",
-          "La primera fila de CSV se usa como encabezado. Para Excel se conserva la primera hoja, salvo la opción de todas las hojas destinada a JSON; no conserva estilos ni fórmulas como un libro original."
+          "¿Se conservan fórmulas y estilos de Excel?",
+          "No. La herramienta convierte los valores de las celdas y no reproduce el diseño, los estilos, los gráficos ni las fórmulas del libro original."
+        ],
+        [
+          "¿Puedo convertir todas las hojas de un libro?",
+          "Sí, cuando el destino es JSON. Para CSV se utiliza la primera hoja del libro."
+        ],
+        [
+          "¿El archivo se sube a un servidor?",
+          "No. La lectura y conversión se realizan en el navegador."
         ]
       ],
-      "keyword": "convertir archivos csv excel json"
+      "keyword": "convertir archivos csv excel json",
+      "lastmod": "2026-11-19"
     },
     {
       "slug": "auditar-archivo-csv",
