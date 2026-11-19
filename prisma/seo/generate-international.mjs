@@ -427,5 +427,5 @@ export async function generateInternationalPages(output) {
     '\n</urlset>\n';
   await writeFile(sitemapPath,sitemap,'utf8');
   console.log('PRISMA i18n: generated '+englishPages.length+' English tool pages, '+hubs.categories.length+' categories, '+hubs.solutions.length+' solutions, '+hubs.guides.length+' guides; '+urls.length+' bilingual sitemap URLs.');
-  return {spanishUrls:spanishUrls.length,totalUrls:urls.length,englishToolPages:englishPages.length};
+  return {spanishUrls:spanishEntries.length,totalUrls:urls.length,englishToolPages:englishPages.length};
 }
