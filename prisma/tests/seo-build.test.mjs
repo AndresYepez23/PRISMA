@@ -87,8 +87,20 @@ test('directory categories and sitemap expose exactly the current URLs',async()=
  const sitemap=await readFile(new URL('sitemap.xml',dist),'utf8');
  const robots=await readFile(new URL('robots.txt',dist),'utf8');
  const urls=[...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map(m=>decode(m[1]));
+ const sitemapEntries=new Map([...sitemap.matchAll(/<url>([\s\S]*?)<\/url>/g)].map(match=>{
+  const loc=decode(match[1].match(/<loc>(.*?)<\/loc>/)?.[1]||'');
+  const lastmod=match[1].match(/<lastmod>(.*?)<\/lastmod>/)?.[1]||null;
+  return [loc,lastmod];
+ }));
  const spanishUrlCount=pages.length+4+categories.length+solutions.length+guides.length+3;
   assert.equal(urls.length,spanishUrlCount*2+expansionPages.length,'the sitemap must contain Spanish and English URLs');assert.equal(new Set(urls).size,urls.length);
+ assert.ok(urls.every(url=>url.startsWith(SEO_BASE+'/')),'sitemap contains a non-canonical host or protocol');
+ assert.ok(urls.every(url=>!/[?#]/.test(url)&&!/\.html$/i.test(new URL(url).pathname)),'sitemap contains a parameter or extension URL');
+ for(const page of pages){
+  const url=SEO_BASE+'/herramientas/'+page.slug+'/';
+  assert.equal(sitemapEntries.get(url),page.lastmod||null,'sitemap lastmod mismatch for '+page.slug);
+  if(page.lastmod)assert.match(page.lastmod,/^\d{4}-\d{2}-\d{2}$/,'invalid source lastmod for '+page.slug);
+ }
  for(const p of pages){
   assert.ok(listing.includes('href="/herramientas/'+p.slug+'/"'));assert.ok(urls.includes(SEO_BASE+'/herramientas/'+p.slug+'/'));
   const category=tools.find(t=>t.id===p.tool).category;

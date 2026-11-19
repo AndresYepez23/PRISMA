@@ -137,6 +137,7 @@ export function validatePages(pages) {
     if(!Array.isArray(page.steps)||page.steps.length<3||page.steps.some(s=>typeof s!=='string'||!s.trim())) throw Error('SEO: pasos incompletos');
     if(!Array.isArray(page.faqs)||page.faqs.length<2||page.faqs.some(p=>!Array.isArray(p)||p.length!==2||p.some(s=>typeof s!=='string'||!s.trim()))) throw Error('SEO: FAQ incompleta');
     if(page.format&&!FORMAT_PRESETS[page.tool]?.includes(page.format)) throw Error('SEO: formato de apertura no admitido');
+    if(page.lastmod && (!/^\d{4}-\d{2}-\d{2}$/.test(page.lastmod) || new Date(page.lastmod+'T00:00:00.000Z').toISOString().slice(0,10)!==page.lastmod)) throw Error('SEO: fecha lastmod inválida: '+page.slug);
     if(page.params) throw Error('SEO: parámetros de apertura no admitidos');
   }
   return toolMap;
@@ -158,8 +159,14 @@ export async function generateSeoPages(output) {
   await mkdir(listing,{recursive:true});
   await writeFile(new URL('index.html',listing),directory(pages,toolMap),'utf8');
   const contentUrls=await generateContentHubs(output,{base:BASE,pages});
-  const urls=[BASE+'/', BASE+'/herramientas/', ...pages.map(page=>urlFor(page.slug)), BASE+'/privacy', BASE+'/acerca', ...contentUrls];
-  const sitemap='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+urls.map(url=>'  <url><loc>'+esc(url)+'</loc></url>').join('\n')+'\n</urlset>\n';
+  const urls=[
+    {loc:BASE+'/'}, {loc:BASE+'/herramientas/'},
+    ...pages.map(page=>({loc:urlFor(page.slug),lastmod:page.lastmod})),
+    {loc:BASE+'/privacy'}, {loc:BASE+'/acerca'},
+    ...contentUrls.map(loc=>({loc}))
+  ];
+  const sitemap='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+
+    urls.map(item=>'  <url><loc>'+esc(item.loc)+'</loc>'+(item.lastmod?'<lastmod>'+esc(item.lastmod)+'</lastmod>':'')+'</url>').join('\n')+'\n</urlset>\n';
   await writeFile(new URL('sitemap.xml',output),sitemap,'utf8');
   await writeFile(new URL('robots.txt',output),'User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /functions/\nSitemap: '+BASE+'/sitemap.xml\n','utf8');
   console.log('PRISMA SEO: '+pages.length+' herramientas, '+contentUrls.length+' páginas de categorías, soluciones y guías; sitemap.xml y robots.txt generados.');

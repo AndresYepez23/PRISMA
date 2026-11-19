@@ -389,15 +389,33 @@ export async function generateInternationalPages(output) {
 
   const sitemapPath=new URL('sitemap.xml',output);
   const oldSitemap=await readFile(sitemapPath,'utf8');
-  const spanishUrls=[...oldSitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map(match=>match[1]);
-  if(!spanishUrls.length) throw new Error('i18n: original sitemap is empty.');
-  const missing=spanishUrls.filter(url=>!englishUrlBySpanish.has(url));
+  const decodeXml=value=>value.replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+  const spanishEntries=[...oldSitemap.matchAll(/<url>([\s\S]*?)<\/url>/g)].map(match=>{
+    const loc=match[1].match(/<loc>([\s\S]*?)<\/loc>/)?.[1];
+    const lastmod=match[1].match(/<lastmod>([\s\S]*?)<\/lastmod>/)?.[1];
+    if(!loc) throw new Error('i18n: sitemap URL entry has no loc.');
+    const entry={loc:decodeXml(loc)};
+    if(lastmod){
+      const date=decodeXml(lastmod);
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||new Date(date+'T00:00:00.000Z').toISOString().slice(0,10)!==date) throw new Error('i18n: invalid Spanish lastmod for '+entry.loc);
+      entry.lastmod=date;
+    }
+    return entry;
+  });
+  if(!spanishEntries.length) throw new Error('i18n: original sitemap is empty.');
+  const missing=spanishEntries.map(entry=>entry.loc).filter(url=>!englishUrlBySpanish.has(url));
   if(missing.length) throw new Error('i18n: English counterpart missing for '+missing.slice(0,8).join(', '));
+  const englishLastmodByUrl=new Map();
+  for(const page of englishPages) if(page.lastmod){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(page.lastmod)||new Date(page.lastmod+'T00:00:00.000Z').toISOString().slice(0,10)!==page.lastmod) throw new Error('i18n: invalid English lastmod for '+page.englishSlug);
+    englishLastmodByUrl.set(BASE+'/en/tools/'+page.englishSlug+'/',page.lastmod);
+  }
   const urls=[];
-  for(const esUrl of spanishUrls) {
+  for(const entry of spanishEntries) {
+    const esUrl=entry.loc;
     const enUrl=englishUrlBySpanish.get(esUrl);
-    urls.push({loc:esUrl,es:esUrl,en:enUrl});
-    urls.push({loc:enUrl,es:esUrl,en:enUrl});
+    urls.push({loc:esUrl,es:esUrl,en:enUrl,lastmod:entry.lastmod});
+    urls.push({loc:enUrl,es:esUrl,en:enUrl,lastmod:englishLastmodByUrl.get(enUrl)});
     const esFile=localFile(esUrl,output);
     let html=await readFile(esFile,'utf8');
     html=injectAlternates(html,esUrl,enUrl);
@@ -405,7 +423,7 @@ export async function generateInternationalPages(output) {
   }
   const xhtml='xmlns:xhtml="http://www.w3.org/1999/xhtml"';
   const sitemap='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '+xhtml+'>\n'+
-    urls.map(item=>'  <url><loc>'+esc(item.loc)+'</loc><xhtml:link rel="alternate" hreflang="es" href="'+esc(item.es)+'"/><xhtml:link rel="alternate" hreflang="en" href="'+esc(item.en)+'"/><xhtml:link rel="alternate" hreflang="x-default" href="'+esc(item.es)+'"/></url>').join('\n')+
+    urls.map(item=>'  <url><loc>'+esc(item.loc)+'</loc>'+(item.lastmod?'<lastmod>'+esc(item.lastmod)+'</lastmod>':'')+'<xhtml:link rel="alternate" hreflang="es" href="'+esc(item.es)+'"/><xhtml:link rel="alternate" hreflang="en" href="'+esc(item.en)+'"/><xhtml:link rel="alternate" hreflang="x-default" href="'+esc(item.es)+'"/></url>').join('\n')+
     '\n</urlset>\n';
   await writeFile(sitemapPath,sitemap,'utf8');
   console.log('PRISMA i18n: generated '+englishPages.length+' English tool pages, '+hubs.categories.length+' categories, '+hubs.solutions.length+' solutions, '+hubs.guides.length+' guides; '+urls.length+' bilingual sitemap URLs.');
