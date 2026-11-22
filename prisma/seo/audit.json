@@ -1,7 +1,7 @@
 {
-  "date": "2026-11-10",
+  "date": "2026-11-22",
   "baselinePages": 40,
-  "pages": 140,
+  "pages": 146,
   "tools": 150,
   "inventory": [
     {
@@ -405,9 +405,11 @@
       "status": "ready",
       "mode": "local",
       "category": "text",
-      "decision": "deferred",
-      "pages": [],
-      "reason": "El motor pasa la indentación como segundo argumento de JSON.stringify en lugar del tercero. Valida, pero no realiza el formateado anunciado; no se cambia el motor en esta misión.",
+      "decision": "covered",
+      "pages": [
+        "formatear-json"
+      ],
+      "reason": "Página ES/EN publicada y conectada al directorio; motor y formulario verificados en las pruebas de expansión.",
       "evidence": [
         "src/registry.js",
         "src/main.js#buildFields",
@@ -1678,9 +1680,11 @@
       "status": "ready",
       "mode": "local",
       "category": "text",
-      "decision": "deferred",
-      "pages": [],
-      "reason": "La expresión de separación de líneas está sobreescapada: una entrada multilínea normal se trata como un bloque. No se promociona comparación por líneas hasta corregirla.",
+      "decision": "covered",
+      "pages": [
+        "comparar-textos"
+      ],
+      "reason": "Página ES/EN publicada y conectada al directorio; motor y formulario verificados en las pruebas de expansión.",
       "evidence": [
         "src/registry.js",
         "src/main.js#buildFields",
@@ -2095,9 +2099,11 @@
       "status": "ready",
       "mode": "local",
       "category": "study",
-      "decision": "deferred",
-      "pages": [],
-      "reason": "Separación de líneas sobreescapada en el motor: varias tarjetas pegadas pueden convertirse en una sola. Se difiere la landing hasta reparar el flujo.",
+      "decision": "covered",
+      "pages": [
+        "crear-tarjetas-anki"
+      ],
+      "reason": "Página ES/EN publicada y conectada al directorio; motor y formulario verificados en las pruebas de expansión.",
       "evidence": [
         "src/registry.js",
         "src/main.js#buildFields",
@@ -2261,9 +2267,11 @@
       "status": "ready",
       "mode": "local",
       "category": "text",
-      "decision": "deferred",
-      "pages": [],
-      "reason": "Motor presente, pero apertura directa sin campos en buildFields para introducir el texto requerido. No se anuncia una operación que el CTA no permite completar.",
+      "decision": "covered",
+      "pages": [
+        "tiempo-de-lectura"
+      ],
+      "reason": "Página ES/EN publicada y conectada al directorio; motor y formulario verificados en las pruebas de expansión.",
       "evidence": [
         "src/registry.js",
         "src/main.js#buildFields",
@@ -2291,9 +2299,11 @@
       "status": "ready",
       "mode": "local",
       "category": "data",
-      "decision": "deferred",
-      "pages": [],
-      "reason": "Motor presente, pero apertura directa sin campos en buildFields para introducir el texto requerido. No se anuncia una operación que el CTA no permite completar.",
+      "decision": "covered",
+      "pages": [
+        "convertir-csv-tsv"
+      ],
+      "reason": "Página ES/EN publicada y conectada al directorio; motor y formulario verificados en las pruebas de expansión.",
       "evidence": [
         "src/registry.js",
         "src/main.js#buildFields",
@@ -2351,9 +2361,11 @@
       "status": "beta",
       "mode": "local",
       "category": "dev",
-      "decision": "deferred",
-      "pages": [],
-      "reason": "Motor presente, pero apertura directa sin campos en buildFields para introducir el texto requerido. No se anuncia una operación que el CTA no permite completar.",
+      "decision": "covered",
+      "pages": [
+        "html-a-markdown"
+      ],
+      "reason": "Página ES/EN publicada y conectada al directorio; motor y formulario verificados en las pruebas de expansión.",
       "evidence": [
         "src/registry.js",
         "src/main.js#buildFields",

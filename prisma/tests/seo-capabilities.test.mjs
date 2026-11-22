@@ -7,6 +7,7 @@ import {tools} from '../src/registry.js';
 const read=p=>readFileSync(new URL(p,import.meta.url),'utf8');
 const {pages}=JSON.parse(read('../seo/pages.json'));
 const audit=JSON.parse(read('../seo/audit.json'));
+const expansion=JSON.parse(read('../seo/expansion-pages.json')).filter(page=>page.path.startsWith('/herramientas/'));
 const main=read('../src/main.js');
 const build=t=>renderToolFields(t,{
  field:(label,name)=>'<input name="'+name+'">',textareaField:(label,name)=>'<textarea name="'+name+'"></textarea>',
@@ -15,7 +16,13 @@ const build=t=>renderToolFields(t,{
 });
 test('the entire registry is accounted for with no undocumented omissions',()=>{
  assert.deepEqual(audit.inventory.map(t=>t.tool),tools.map(t=>t.id));
- for(const t of audit.inventory){assert.ok(t.reason);assert.deepEqual(t.pages,pages.filter(p=>p.tool===t.tool).map(p=>p.slug));}
+ for(const t of audit.inventory){
+  const tool=tools.find(item=>item.id===t.tool);
+  const published=[...pages.filter(p=>p.tool===t.tool).map(p=>p.slug),...expansion.filter(p=>p.tool===t.tool).map(p=>p.path.split('/')[2])];
+  assert.ok(t.reason);assert.deepEqual(t.pages,published);
+  assert.equal(t.decision,published.length?'covered':'deferred',t.tool);
+  assert.equal(t.status,tool.status,t.tool);assert.equal(t.mode,tool.mode,t.tool);assert.equal(t.category,tool.category,t.tool);
+ }
 });
 test('new landing tools expose actual input fields and format selectors',()=>{
  for(const p of pages.slice(40)){

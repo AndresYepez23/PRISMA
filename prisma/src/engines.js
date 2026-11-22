@@ -12,6 +12,7 @@ import {convertSeparatedValues,htmlToMarkdown} from './local-text-conversion.js'
 import { LOCAL_CREATOR_TOOL_IDS, runLocalCreatorTool } from './local-creator-tools.js';
 import {inspectArchiveFormat,validateFileToolInputs} from './file-inspection.js';
 import {tools as executionTools} from './registry.js';
+import {sanitizeDocumentHtml,escapeDocumentTitle} from './html-safety.js';
 const PDF_LIB='https://esm.sh/pdf-lib@1.17.1';
 const QR='https://esm.sh/qrcode@1.5.4';
 const MAMMOTH='https://esm.sh/mammoth@1.9.1';
@@ -551,7 +552,7 @@ async function runQr(p,cb){
 async function runDocx(id,files,cb){
  const mammoth=await load(MAMMOTH);const result=await mammoth.convertToHtml({arrayBuffer:await bytes(files[0])});
  if(!result.value.trim())throw Error('No se encontró contenido de texto.');
- const html='<!doctype html><html lang="es"><head><meta charset="utf-8"><title>'+fileName(files[0])+'</title><style>body{font:12pt/1.55 Arial,sans-serif;color:#222;max-width:850px;margin:35px auto;padding:0 24px}img{max-width:100%}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bbb;padding:6px}@page{size:A4;margin:20mm}@media print{body{margin:0;max-width:none;padding:0}}</style></head><body>'+result.value+'</body></html>';
+ const html='<!doctype html><html lang="es"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src data:; style-src \'unsafe-inline\'; base-uri \'none\'; form-action \'none\'"><title>'+escapeDocumentTitle(fileName(files[0]))+'</title><style>body{font:12pt/1.55 Arial,sans-serif;color:#222;max-width:850px;margin:35px auto;padding:0 24px}img{max-width:100%}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bbb;padding:6px}@page{size:A4;margin:20mm}@media print{body{margin:0;max-width:none;padding:0}}</style></head><body>'+sanitizeDocumentHtml(result.value)+'</body></html>';
  if(id==='docx-pdf')return {printHtml:html,summary:'Vista de impresión preparada. En la ventana nueva elige “Guardar como PDF”. La conversión conserva el contenido, pero la maquetación puede variar respecto a Word.'};
  return download(new Blob([html],{type:'text/html'}),fileName(files[0])+'.html');
 }

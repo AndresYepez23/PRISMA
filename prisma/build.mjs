@@ -27,7 +27,7 @@ const output = new URL("./dist/", import.meta.url);
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 
-for (const file of ["index.html", "styles.css", "aurora-system.css", "_headers", "privacy.html", "manifest.webmanifest", "ads.txt"]) {
+for (const file of ["index.html", "404.html", "styles.css", "aurora-system.css", "_headers", "privacy.html", "manifest.webmanifest", "ads.txt"]) {
   await copyFile(new URL("./" + file, import.meta.url), new URL("./dist/" + file, import.meta.url));
 }
 

@@ -18,6 +18,31 @@ const {guides}=JSON.parse(await read('seo/content-guides.json'));
 const main=await read('src/main.js');
 const decode=s=>s.replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>');
 
+test('homepages, titles and missing-route document avoid duplicate search signals',async()=>{
+ for(const path of ['index.html','en/index.html']){
+  const html=await readOutput(path);
+  assert.equal((html.match(/<h1\b/g)||[]).length,1,path);
+ }
+ for(const path of ['herramientas/pdf-a-word/','herramientas/word-a-pdf/','herramientas/dividir-pdf/']){
+  const html=await readOutput(path+'index.html');
+  assert.doesNotMatch(html,/<title>[^<]*\| Prisma Space \| Prisma Space<\/title>/);
+ }
+ const missing=await readOutput('404.html');
+ assert.match(missing,/name="robots" content="noindex,follow"/);
+ assert.doesNotMatch(missing,/rel="canonical"/);
+});
+
+test('priority text tools execute on their bilingual SEO pages through the shared engine',async()=>{
+ const pairs=[['formatear-html','format-html-code','html-format'],['formatear-javascript','format-javascript','js-format'],['generador-citas-apa-vancouver','generate-bibliographic-references-in-apa-7-vancouver-and-mla','citation-generator']];
+ for(const [es,en,id] of pairs){
+  for(const path of ['herramientas/'+es+'/index.html','en/tools/'+en+'/index.html']){
+   const html=await readOutput(path);
+   assert.ok(html.includes('data-seo-inline-tool="'+id+'"'),path);
+   assert.ok(html.includes('src="/src/seo-inline-tools.js"'),path);
+  }
+ }
+});
+
 test('catalogue scales without a fixed batch size and preserves original pages',()=>{
  assert.doesNotThrow(()=>validatePages(pages));
  assert.doesNotThrow(()=>validatePages(pages.slice(0,1)));
