@@ -2069,7 +2069,7 @@
       "category": "creator",
       "decision": "deferred",
       "pages": [],
-      "reason": "runTool despacha image-* a imageTool antes de llegar a socialImageKit. La apertura directa no ejecuta el ZIP de cuatro formatos anunciado.",
+      "reason": "El motor ZIP ya es alcanzable desde runTool y el formulario admite imagen. La intención de tamaños para redes es distinta, pero no hay demanda observada que justifique dos URLs SEO nuevas en esta fase.",
       "evidence": [
         "src/registry.js",
         "src/main.js#buildFields",
@@ -2254,7 +2254,7 @@
       "category": "text",
       "decision": "deferred",
       "pages": [],
-      "reason": "Motor presente, pero apertura directa sin campos en buildFields para introducir el texto requerido. No se anuncia una operación que el CTA no permite completar.",
+      "reason": "Motor extractivo presente, pero el formulario directo no ofrece la entrada de texto. Sin ficha individual hasta validar el acceso y la demanda.",
       "evidence": [
         "src/registry.js",
         "src/main.js#buildFields",
@@ -2318,7 +2318,7 @@
       "category": "data",
       "decision": "deferred",
       "pages": [],
-      "reason": "Motor presente, pero apertura directa sin campos en buildFields para introducir el texto requerido. No se anuncia una operación que el CTA no permite completar.",
+      "reason": "La página CSV ↔ TSV existente cubre ambos sentidos y el formulario permite elegir TSV a CSV. No crear otra URL para la misma intención.",
       "evidence": [
         "src/registry.js",
         "src/main.js#buildFields",

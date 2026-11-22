@@ -169,7 +169,7 @@
     "sections": [
       [
         "Ejemplo y diagnóstico",
-        "Un archivo con nombre;ciudad y Ana;Bogotá usa punto y coma. Si Excel espera comas, puede mostrar cada fila en una sola columna. No reemplaces todos los signos a ciegas: un campo entre comillas puede contener el mismo separador."
+        "Un archivo con nombre;ciudad y Ana;Bogotá usa punto y coma. Si Excel espera comas, puede mostrar cada fila en una sola columna. Otro caso válido es Ana;\"Bogotá; norte\": el punto y coma dentro de comillas pertenece a la celda. No reemplaces todos los signos a ciegas."
       ],
       [
         "Importar con control",
@@ -177,7 +177,7 @@
       ],
       [
         "Alternativa con Prisma",
-        "Abre el conversor CSV, Excel y JSON y elige XLSX como salida. El modo automático cuenta comas, punto y coma y tabulaciones en la primera fila; es una heurística, no una garantía. Comprueba las columnas resultantes y corrige el delimitador cuando sea necesario."
+        "Abre el conversor CSV, Excel y JSON y elige XLSX como salida. El modo automático cuenta comas, punto y coma y tabulaciones en la primera fila; es una heurística, no una garantía. Comprueba las columnas resultantes. Si detecta mal el separador, importa el CSV en Excel eligiéndolo explícitamente: este conversor no ofrece selección manual del delimitador."
       ],
       [
         "Evitar pérdidas",
@@ -198,6 +198,10 @@
       [
         "/herramientas/convertir-archivos-csv-excel-json/",
         "Convertir CSV, Excel y JSON"
+      ],
+      [
+        "/herramientas/auditar-archivo-csv/",
+        "Revisar columnas y filas del CSV"
       ]
     ],
     "pair": null,
@@ -240,8 +244,8 @@
     ],
     "related": [
       [
-        "/en/tools/",
-        "Open the tool directory"
+        "/en/tools/convert-csv-excel-and-json-files/",
+        "Convert CSV to an Excel workbook"
       ]
     ],
     "pair": "/guias/conservar-ceros-csv-excel/",
@@ -261,7 +265,7 @@
       ],
       [
         "Preparar un soporte",
-        "Ejemplo: un certificado de dos páginas y su reverso pertenecen al mismo soporte. Si el campo permite un único PDF, comprueba el orden y une únicamente esas páginas. No combines soportes distintos si deben cargarse por separado."
+        "Ejemplo: certificado.pdf tiene dos páginas y reverso.pdf una. Si el campo permite un único soporte, une esos tres folios en ese orden y comprueba que el resultado siga siendo legible. Si el certificado llega en un PDF con otros anexos, separa primero solo las páginas pertinentes. No combines soportes que SIMO solicita por separado."
       ],
       [
         "Revisar antes de cargar",
@@ -290,6 +294,10 @@
       [
         "/herramientas/comprimir-pdf/",
         "Optimizar PDF"
+      ],
+      [
+        "/herramientas/dividir-pdf/",
+        "Dividir PDF por páginas"
       ]
     ],
     "pair": null,
