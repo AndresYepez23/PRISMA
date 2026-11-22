@@ -10,6 +10,8 @@ const read=p=>readFile(new URL(p,root),'utf8');
 const {pages}=JSON.parse(await read('seo/pages.json'));
 const baseline=JSON.parse(await read('seo/baseline.json'));
 const {categories}=JSON.parse(await read('seo/content-categories.json'));
+const englishPages=JSON.parse(await read('seo/pages.en.json')).pages;
+const englishCategories=JSON.parse(await read('seo/content-hubs.en.json')).categories;
 const {solutions}=JSON.parse(await read('seo/content-solutions.json'));
 const {guides}=JSON.parse(await read('seo/content-guides.json'));
 const main=await read('src/main.js');
@@ -165,4 +167,61 @@ test('SEO category, solution and guide hubs are useful, canonical and internally
  assert.ok(firstTool.includes('class="seo-discovery"'));
  assert.ok(firstTool.includes('/categorias/pdf-documentos/'));
  assert.ok(firstTool.includes('/soluciones/organizar-documentos-pdf/'));
+});
+
+
+test('expansion tool pages are grouped into their localized directory and category hubs',async()=>{
+ const expandedTools=expansionPages.filter(page=>page.path.startsWith('/herramientas/')||page.path.startsWith('/en/tools/'));
+ assert.equal(expandedTools.filter(page=>page.language==='es').length,6);
+ assert.equal(expandedTools.filter(page=>page.language==='en').length,6);
+ const groups=new Map();
+ for(const page of expandedTools){
+  const en=page.language==='en';
+  const tool=tools.find(item=>item.id===page.tool);
+  assert.ok(tool,'missing registry tool for '+page.path);
+  const sourceCategory=categories.find(item=>item.toolCategories.includes(tool.category));
+  const category=en?englishCategories.find(item=>item.sourceSlug===sourceCategory?.slug):sourceCategory;
+  assert.ok(category,'missing category mapping for '+page.path);
+  const categorySlug=en?category.englishSlug:category.slug;
+  const categoryHref=en?'/en/categories/'+categorySlug+'/':'/categorias/'+categorySlug+'/';
+  const categoryFile=en?'en/categories/'+categorySlug+'/index.html':'categorias/'+categorySlug+'/index.html';
+  const directoryFile=en?'en/tools/index.html':'herramientas/index.html';
+  const landingFile=page.path.slice(1)+'index.html';
+  const [categoryHtml,directoryHtml,landingHtml]=await Promise.all([
+   readOutput(categoryFile),readOutput(directoryFile),readOutput(landingFile)
+  ]);
+  assert.ok(categoryHtml.includes('href="'+page.path+'"'),'category does not link to '+page.path);
+  assert.ok(landingHtml.includes('href="'+categoryHref+'"'),'tool landing does not link back to '+categoryHref);
+  const sectionStart=directoryHtml.indexOf('<section class="seo-category" id="'+tool.category+'">');
+  const sectionEnd=sectionStart<0?-1:directoryHtml.indexOf('</section>',sectionStart);
+  assert.ok(sectionStart>=0&&sectionEnd>sectionStart,'directory category missing for '+page.path);
+  assert.ok(directoryHtml.slice(sectionStart,sectionEnd).includes('href="'+page.path+'"'),'tool page is not grouped under its directory category: '+page.path);
+  const key=page.language+'|'+categorySlug;
+  if(!groups.has(key))groups.set(key,{page,category,categoryFile,categoryHref,count:0});
+  groups.get(key).count++;
+ }
+ for(const group of groups.values()){
+  const en=group.page.language==='en';
+  const basePages=en?englishPages:pages;
+  const tool=tools.find(item=>item.id===group.page.tool);
+  const baseCount=basePages.filter(item=>{
+   const itemTool=tools.find(candidate=>candidate.id===item.tool);
+   return group.category.toolCategories.includes(itemTool?.category);
+  }).length;
+  const total=baseCount+group.count;
+  const categoryHtml=await readOutput(group.categoryFile);
+  assert.ok(categoryHtml.includes(en?'Explore '+total+' tools and operations':'Explora '+total+' herramientas y operaciones'));
+  const schema=JSON.parse(categoryHtml.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
+  assert.equal(schema.mainEntity.numberOfItems,total);
+  for(const page of expandedTools.filter(item=>{
+   const pageTool=tools.find(candidate=>candidate.id===item.tool);
+   return item.language===group.page.language&&group.category.toolCategories.includes(pageTool?.category);
+  }))assert.ok(schema.mainEntity.itemListElement.some(item=>item.url===SEO_BASE+page.path),'category ItemList misses '+page.path);
+  const indexHtml=await readOutput(en?'en/categories/index.html':'categorias/index.html');
+  const cardStart=indexHtml.indexOf('<a class="seo-hub-card" href="'+group.categoryHref+'">');
+  const cardEnd=cardStart<0?-1:indexHtml.indexOf('</a>',cardStart);
+  assert.ok(cardStart>=0&&cardEnd>cardStart,'category index misses '+group.categoryHref);
+  const card=indexHtml.slice(cardStart,cardEnd);
+  assert.ok(en?card.includes(group.count+' additional tool page'+(group.count===1?'':'s')):card.includes(total+' fichas de herramienta'));
+ }
 });
