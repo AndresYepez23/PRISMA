@@ -7,6 +7,7 @@ import { tools } from '../src/registry.js';
 import { expansionPages } from '../seo/generate-expansion.mjs';
 const root=new URL('../',import.meta.url),dist=new URL('../dist/',import.meta.url);
 const read=p=>readFile(new URL(p,root),'utf8');
+const readOutput=p=>readFile(new URL(p,dist),'utf8');
 const {pages}=JSON.parse(await read('seo/pages.json'));
 const baseline=JSON.parse(await read('seo/baseline.json'));
 const {categories}=JSON.parse(await read('seo/content-categories.json'));
