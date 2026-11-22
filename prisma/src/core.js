@@ -2594,6 +2594,7 @@ function createExecutionResults(executed,partial){
       button.addEventListener('click',()=>{
         const win=window.open('','_blank');
         if(!win){status('El navegador bloqueó la ventana de impresión. Permite las ventanas emergentes e inténtalo otra vez.','warning');return;}
+        win.opener=null;
         win.document.open();win.document.write(String(result.printHtml));win.document.close();
         win.addEventListener('load',()=>win.print(),{once:true});
       });

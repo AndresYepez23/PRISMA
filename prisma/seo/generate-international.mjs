@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tools, categories as registryCategories } from '../src/registry.js';
 import translations from '../src/locales/en.js';
 import { SEO_BASE as BASE } from './config.mjs';
+import { inlineToolForm } from './inline-tool.mjs';
 
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[char]);
 const safeJson = value => JSON.stringify(value).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
@@ -150,6 +151,7 @@ function toolLanding(page,pages,toolMap) {
     '<section class="seo-panel"><div class="seo-section-label">WHAT YOU CAN DO</div><h2>'+esc(page.h1)+': what you need to know</h2><p>'+esc(page.intro)+'</p><p>'+esc(page.details)+'</p></section>',
     '<section class="seo-panel"><div class="seo-section-label">STEP BY STEP</div><h2>How to use this tool</h2><ol class="seo-steps">'+steps+'</ol><a class="seo-inline-link" href="'+esc(toolUrl(page))+'">Open '+esc(t(tool.name))+' ↗</a></section>',
     '</div>',
+    inlineToolForm(page.tool,'en'),
     '<aside class="seo-note"><span class="seo-note-icon">i</span><div><strong>Before you start</strong><p>'+esc(page.tip)+'</p>'+(tool.status==='beta'?'<small>This feature is marked as beta in the Prisma Space catalog.</small>':'')+'</div></aside>',
     faqHtml(page.faqs),
     '<section class="seo-related" aria-labelledby="related-title"><div class="seo-related-heading"><div><div class="seo-section-label">YOU MAY ALSO NEED</div><h2 id="related-title">Related tools</h2></div><a href="/en/tools/">Browse all ↗</a></div><div class="seo-related-grid">'+relatedHtml+'</div></section>',

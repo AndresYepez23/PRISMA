@@ -47,6 +47,7 @@ jobs:
           export PRISMA_FUNCTIONAL_OUTPUT="$RUNNER_TEMP/prisma-document-conversion"
           node prisma/tests/functional/document-conversion.cjs
           node prisma/tests/functional/public-i18n.cjs
+          node prisma/tests/functional/seo-inline-security.cjs
       - name: Preserve real document conversion evidence
         if: always()
         uses: actions/upload-artifact@v4
