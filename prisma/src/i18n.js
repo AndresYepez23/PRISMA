@@ -26,8 +26,8 @@ const initialLanguage = routeLanguage || explicitLanguage || savedLanguage ||
 
 const manualTranslations = {
   'Prisma Space — Crea, convierte y experimenta': 'Prisma Space — Create, Convert, and Experiment',
-  'Prisma Space reúne herramientas digitales, procesamiento local e inteligencia artificial para crear, convertir, optimizar y experimentar en un solo lugar.': 'Prisma Space brings together digital tools, local processing, and artificial intelligence to create, convert, optimize, and explore in one place.',
-  'Crea, convierte, optimiza y experimenta con IA en un solo lugar.': 'Create, convert, optimize, and explore with AI in one place.',
+  'Convierte PDF, imágenes y datos en tu navegador. Prisma Core te ayuda a elegir pasos y distingue herramientas locales de motores de IA conectados.': 'Convert and review PDFs, images and data with browser tools. Prisma Core helps choose steps and distinguishes local features from connected AI engines.',
+  'Herramientas prácticas para PDF, imágenes y datos, con procesamiento local y un asistente para tareas que necesitan IA.': 'Practical tools for PDFs, images and data, with local processing and an assistant for tasks that need AI.',
   'Restaurando tu espacio de trabajo…': 'Restoring your workspace…',
   'TÚ': 'YOU',
   'PRISMA CORE': 'PRISMA CORE',
@@ -153,6 +153,11 @@ const ATTRIBUTES = ['placeholder', 'title', 'aria-label', 'alt', 'content'];
 // Links inside the application must follow the selected language as well.
 // These are public index/legal routes; explicit SEO landing URLs keep their own locale.
 const localizedPaths = new Map([
+  ['/herramientas/pdf-a-word/', '/en/tools/free-pdf-to-word-converter/'],
+  ['/herramientas/dividir-pdf/', '/en/tools/split-pdf-into-separate-files/'],
+  ['/herramientas/imagen-a-texto/', '/en/tools/convert-image-to-text-with-ocr/'],
+  ['/herramientas/eliminar-metadatos-imagen/', '/en/tools/remove-exif-metadata-from-an-image/'],
+  ['/herramientas/collage-de-fotos/', '/en/tools/create-a-photo-collage-online/'],
   ['/herramientas/', '/en/tools/'],
   ['/categorias/', '/en/categories/'],
   ['/soluciones/', '/en/solutions/'],
@@ -190,13 +195,13 @@ function translateInternalLinks(container) {
 const appMetadata = {
   es: {
     title: 'Prisma Space — Crea, convierte y experimenta',
-    description: 'Prisma Space reúne herramientas digitales, procesamiento local e inteligencia artificial para crear, convertir, optimizar y experimentar en un solo lugar.',
-    socialDescription: 'Crea, convierte, optimiza y experimenta con IA en un solo lugar.'
+    description: 'Convierte PDF, imágenes y datos en tu navegador. Prisma Core te ayuda a elegir pasos y distingue herramientas locales de motores de IA conectados.',
+    socialDescription: 'Herramientas prácticas para PDF, imágenes y datos, con procesamiento local y un asistente para tareas que necesitan IA.'
   },
   en: {
     title: 'Prisma Space — Create, convert and explore',
-    description: 'Prisma Space brings together digital tools, local processing, and artificial intelligence to create, convert, optimize, and explore in one place.',
-    socialDescription: 'Create, convert, optimize, and explore with AI in one place.'
+    description: 'Convert and review PDFs, images and data with browser tools. Prisma Core helps choose steps and distinguishes local features from connected AI engines.',
+    socialDescription: 'Practical tools for PDFs, images and data, with local processing and an assistant for tasks that need AI.'
   }
 };
 function syncAppMetadata() {

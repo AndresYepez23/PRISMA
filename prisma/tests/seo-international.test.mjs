@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, stat, readdir } from 'node:fs/promises';
+import { priorityExamples, priorityUpdated } from '../seo/priority-examples.mjs';
 import { expansionPages, validateExpansion } from '../seo/generate-expansion.mjs';
 import { SEO_BASE } from '../seo/config.mjs';
 
@@ -35,20 +36,26 @@ const assetPaths=new Set((await readdir(dist,{recursive:true})).map(path=>'/'+pa
 
 test('sitemap preserves verified per-language lastmod dates without stamping unchanged pages',()=>{
  const expected=[
-  ['/herramientas/dividir-pdf/','2026-11-16'],
+  ['/',priorityUpdated],
+  ['/en/',priorityUpdated],
+  ['/herramientas/dividir-pdf/',priorityUpdated],
   ['/herramientas/extraer-paginas-pdf/','2026-11-16'],
-  ['/herramientas/pdf-a-word/','2026-11-19'],
-  ['/herramientas/word-a-pdf/','2026-11-19'],
+  ['/herramientas/pdf-a-word/',priorityUpdated],
+  ['/herramientas/word-a-pdf/',priorityUpdated],
   ['/herramientas/numerar-paginas-pdf/','2026-11-19'],
-  ['/herramientas/convertir-archivos-csv-excel-json/','2026-11-19'],
-  ['/en/tools/free-pdf-to-word-converter/','2026-11-19'],
-  ['/en/tools/convert-word-to-pdf-from-your-browser/','2026-11-19'],
-  ['/en/tools/split-pdf-into-separate-files/','2026-11-19'],
+  ['/herramientas/convertir-archivos-csv-excel-json/',priorityUpdated],
+  ['/en/tools/free-pdf-to-word-converter/',priorityUpdated],
+  ['/en/tools/convert-word-to-pdf-from-your-browser/',priorityUpdated],
+  ['/en/tools/split-pdf-into-separate-files/',priorityUpdated],
   ['/en/tools/extract-pdf-pages/','2026-11-19'],
   ['/en/tools/add-page-numbers-to-a-pdf/','2026-11-19'],
-  ['/en/tools/convert-csv-excel-and-json-files/','2026-11-19']
+  ['/en/tools/convert-csv-excel-and-json-files/',priorityUpdated]
  ];
  for(const [path,date] of expected)assert.equal(sitemapRecords.get(SEO_BASE+path),date,'lastmod mismatch: '+path);
+ for(const page of pages.filter(item=>priorityExamples[item.sourceSlug])){
+  assert.equal(sitemapRecords.get(SEO_BASE+'/herramientas/'+page.sourceSlug+'/'),priorityUpdated);
+  assert.equal(sitemapRecords.get(SEO_BASE+'/en/tools/'+page.englishSlug+'/'),priorityUpdated);
+ }
  assert.equal(sitemapRecords.get(SEO_BASE+'/herramientas/pdf-a-jpg/'),null,'unchanged pages must not receive a fabricated lastmod');
  assert.ok([...sitemapRecords.values()].filter(Boolean).every(date=>/^\d{4}-\d{2}-\d{2}$/.test(date)),'lastmod must use a calendar date');
 });

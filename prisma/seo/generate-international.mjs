@@ -2,7 +2,8 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tools, categories as registryCategories } from '../src/registry.js';
 import translations from '../src/locales/en.js';
 import { SEO_BASE as BASE } from './config.mjs';
-import { inlineToolForm } from './inline-tool.mjs';
+import { inlineToolForm, inlineToolIds } from './inline-tool.mjs';
+import { priorityExamples, priorityUpdated, priorityExampleHero, priorityExampleReview } from './priority-examples.mjs';
 
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[char]);
 const safeJson = value => JSON.stringify(value).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
@@ -114,7 +115,10 @@ function relatedCards(items,lookup,prefix,label) {
 }
 function toolLanding(page,pages,toolMap) {
   const tool=toolMap.get(page.tool);
-  const actionUrl=['pdf-split','image-strip-metadata'].includes(page.tool)?'#inline-tool-title':toolUrl(page);
+  const actionUrl=inlineToolIds.has(page.tool)?'#inline-tool-title':toolUrl(page);
+  const priority=priorityExamples[page.sourceSlug];
+  const next=priority?.next && pages.find(item=>item.sourceSlug===priority.next);
+  if(priority?.next&&!next)throw Error('English SEO: missing practical next step '+priority.next);
   if(!tool) throw new Error('English SEO: missing tool '+page.tool);
   const esUrl=BASE+'/herramientas/'+page.sourceSlug+'/';
   const url=BASE+'/en/tools/'+page.englishSlug+'/';
@@ -137,22 +141,26 @@ function toolLanding(page,pages,toolMap) {
     const peerTool=toolMap.get(item.tool);
     return '<a class="seo-related-card" href="/en/tools/'+esc(item.englishSlug)+'/"><strong>'+esc(item.h1)+'</strong><small>'+esc(categoryFor(peerTool).name)+'</small><span aria-hidden="true">↗</span></a>';
   }).join('\n');
+  const preview=priority?priorityExampleHero(page.sourceSlug,'en'):[
+    '<div class="seo-preview" aria-hidden="true"><div class="seo-preview-orb"></div><div class="seo-preview-label">PRISMA SPACE / '+esc(page.englishSlug.toUpperCase().replaceAll('-',' '))+'</div>',
+    '<div class="seo-preview-content"><div class="seo-preview-symbol"><img src="/assets/prisma-mark.svg" width="46" height="46" alt=""></div><strong>'+esc(t(tool.name))+'</strong><span>'+(tool.status==='beta'?'Beta feature':'Ready to use')+'</span></div>',
+    '<div class="seo-preview-foot"><span>One task, one solution</span><span>' + (['local','browser'].includes(tool.mode) ? 'LOCAL PROCESSING' : 'CONNECTED SERVICE') + '</span></div></div>'
+  ].join('');
   const body=[
     '<main class="seo-main">',
     breadcrumb([{name:'Home',href:'/en/'},{name:'Tools',href:'/en/tools/'},{name:category,href:'/en/categories/'},{name:page.h1}]),
     '<section class="seo-hero"><div class="seo-hero-copy">',
     '<div class="seo-eyebrow"><i></i>'+esc(category)+' · '+esc(modeLabel(tool))+' · '+esc(statusLabel(tool))+'</div>',
     '<h1>'+esc(page.h1)+'</h1><p class="seo-lead">'+esc(page.description)+'</p>',
-    '<div class="seo-actions"><a class="seo-cta" href="'+esc(actionUrl)+'">Open tool <span aria-hidden="true">↗</span></a><a class="seo-subtle" href="#how-it-works">How it works ↓</a></div>',
+    '<div class="seo-actions"><a class="seo-cta" href="'+esc(actionUrl)+'">'+(inlineToolIds.has(page.tool)?'Use here':'Open tool')+' <span aria-hidden="true">→</span></a><a class="seo-subtle" href="#how-it-works">How it works ↓</a></div>',
     '<p class="seo-privacy"><span aria-hidden="true">◇</span> '+esc(page.privacyNote || (['local','browser'].includes(tool.mode)?'Processed in your browser · No registration required':'Review the tool usage conditions'))+'</p></div>',
-    '<div class="seo-preview" aria-hidden="true"><div class="seo-preview-orb"></div><div class="seo-preview-label">PRISMA SPACE / '+esc(page.englishSlug.toUpperCase().replaceAll('-',' '))+'</div>',
-    '<div class="seo-preview-content"><div class="seo-preview-symbol"><img src="/assets/prisma-mark.svg" width="46" height="46" alt=""></div><strong>'+esc(t(tool.name))+'</strong><span>'+(tool.status==='beta'?'Beta feature':'Ready to use')+'</span></div>',
-    '<div class="seo-preview-foot"><span>One task, one solution</span><span>' + (['local','browser'].includes(tool.mode) ? 'LOCAL PROCESSING' : 'CONNECTED SERVICE') + '</span></div></div></section>',
+    preview+'</section>',
     '<div class="seo-content-grid" id="how-it-works">',
     '<section class="seo-panel"><div class="seo-section-label">WHAT YOU CAN DO</div><h2>'+esc(page.h1)+': what you need to know</h2><p>'+esc(page.intro)+'</p><p>'+esc(page.details)+'</p></section>',
     '<section class="seo-panel"><div class="seo-section-label">STEP BY STEP</div><h2>How to use this tool</h2><ol class="seo-steps">'+steps+'</ol><a class="seo-inline-link" href="'+esc(actionUrl)+'">Open '+esc(t(tool.name))+' ↗</a></section>',
     '</div>',
     inlineToolForm(page.tool,'en'),
+    priorityExampleReview(page.sourceSlug,'en',next&&{href:'/en/tools/'+next.englishSlug+'/',h1:next.h1}),
     '<aside class="seo-note"><span class="seo-note-icon">i</span><div><strong>Before you start</strong><p>'+esc(page.tip)+'</p>'+(tool.status==='beta'?'<small>This feature is marked as beta in the Prisma Space catalog.</small>':'')+'</div></aside>',
     faqHtml(page.faqs),
     '<section class="seo-related" aria-labelledby="related-title"><div class="seo-related-heading"><div><div class="seo-section-label">YOU MAY ALSO NEED</div><h2 id="related-title">Related tools</h2></div><a href="/en/tools/">Browse all ↗</a></div><div class="seo-related-grid">'+relatedHtml+'</div></section>',
@@ -265,8 +273,8 @@ function appEnglishHtml(html) {
     .replace('content="es_ES"','content="en_US"')
     .replace('<title>Prisma Space — Crea, convierte y experimenta</title>','<title>Prisma Space — Create, Convert, and Experiment</title>')
     .replace('content="Prisma Space — Crea, convierte y experimenta"','content="Prisma Space — Create, Convert, and Experiment"')
-    .replace('content="Prisma Space reúne herramientas digitales, procesamiento local e inteligencia artificial para crear, convertir, optimizar y experimentar en un solo lugar."','content="Prisma Space brings together digital tools, local processing, and artificial intelligence to create, convert, optimize, and explore in one place."')
-    .replace('content="Crea, convierte, optimiza y experimenta con IA en un solo lugar."','content="Create, convert, optimize, and explore with AI in one place."')
+    .replace('content="Convierte PDF, imágenes y datos en tu navegador. Prisma Core te ayuda a elegir pasos y distingue herramientas locales de motores de IA conectados."','content="Convert and review PDFs, images and data with browser tools. Prisma Core helps choose steps and distinguishes local features from connected AI engines."')
+    .replace('content="Herramientas prácticas para PDF, imágenes y datos, con procesamiento local y un asistente para tareas que necesitan IA."','content="Practical tools for PDFs, images and data, with local processing and an assistant for tasks that need AI."')
     .replace(/<link rel="canonical" href="[^"]*">/,'<link rel="canonical" href="'+BASE+'/en/">')
     .replace(/<meta property="og:url" content="[^"]*">/,'<meta property="og:url" content="'+BASE+'/en/">');
   if (!html.includes('name="prisma-default-language"')) html=html.replace('<head>','<head><meta name="prisma-default-language" content="en">');
@@ -276,7 +284,8 @@ function appEnglishHtml(html) {
   // replacements over scripts, styles, code, URLs or user-provided content.
   const decode=value=>value.replace(/&(?:amp|quot|#39|lt|gt);/g, entity=>({'&amp;':'&','&quot;':'"','&#39;':"'",'&lt;':'<','&gt;':'>'})[entity]);
   const translate=value=>value.replace(/\S[\s\S]*\S|\S/, text=>esc(t(decode(text))));
-  const paths=new Map([['/','/en/'],['/herramientas/','/en/tools/'],['/categorias/','/en/categories/'],['/soluciones/','/en/solutions/'],['/guias/','/en/guides/'],['/privacy','/en/privacy'],['/acerca','/en/about']]);
+  const paths=new Map([['/','/en/'],['/herramientas/','/en/tools/'],['/categorias/','/en/categories/'],['/soluciones/','/en/solutions/'],['/guias/','/en/guides/'],['/privacy','/en/privacy'],['/acerca','/en/about'],
+    ...[['pdf-a-word','free-pdf-to-word-converter'],['dividir-pdf','split-pdf-into-separate-files'],['imagen-a-texto','convert-image-to-text-with-ocr'],['eliminar-metadatos-imagen','remove-exif-metadata-from-an-image'],['collage-de-fotos','create-a-photo-collage-online']].map(([es,en])=>['/herramientas/'+es+'/','/en/tools/'+en+'/'])]);
   html=html.replace(/<!--[\s\S]*?-->|<(script|style|code|pre)\b[^>]*>[\s\S]*?<\/\1\s*>|<[^>]+>|[^<]+/gi,token=>{
     if (/^<!--|^<(?:script|style|code|pre)\b/i.test(token)) return token;
     if (!token.startsWith('<')) return translate(token);
@@ -408,10 +417,11 @@ export async function generateInternationalPages(output) {
   if(!spanishEntries.length) throw new Error('i18n: original sitemap is empty.');
   const missing=spanishEntries.map(entry=>entry.loc).filter(url=>!englishUrlBySpanish.has(url));
   if(missing.length) throw new Error('i18n: English counterpart missing for '+missing.slice(0,8).join(', '));
-  const englishLastmodByUrl=new Map();
-  for(const page of englishPages) if(page.lastmod){
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(page.lastmod)||new Date(page.lastmod+'T00:00:00.000Z').toISOString().slice(0,10)!==page.lastmod) throw new Error('i18n: invalid English lastmod for '+page.englishSlug);
-    englishLastmodByUrl.set(BASE+'/en/tools/'+page.englishSlug+'/',page.lastmod);
+  const englishLastmodByUrl=new Map([[BASE+'/en/',priorityUpdated]]);
+  for(const page of englishPages) if(page.lastmod||priorityExamples[page.sourceSlug]){
+    const date=priorityExamples[page.sourceSlug]?priorityUpdated:page.lastmod;
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||new Date(date+'T00:00:00.000Z').toISOString().slice(0,10)!==date) throw new Error('i18n: invalid English lastmod for '+page.englishSlug);
+    englishLastmodByUrl.set(BASE+'/en/tools/'+page.englishSlug+'/',date);
   }
   const urls=[];
   for(const entry of spanishEntries) {

@@ -5,6 +5,8 @@ import { validatePages, toolUrl } from '../seo/generate.mjs';
 import { SEO_BASE, FORMAT_PRESETS } from '../seo/config.mjs';
 import { tools } from '../src/registry.js';
 import { expansionPages } from '../seo/generate-expansion.mjs';
+import { inlineToolIds } from '../seo/inline-tool.mjs';
+import { priorityExamples, priorityUpdated } from '../seo/priority-examples.mjs';
 const root=new URL('../',import.meta.url),dist=new URL('../dist/',import.meta.url);
 const read=p=>readFile(new URL(p,root),'utf8');
 const readOutput=p=>readFile(new URL(p,dist),'utf8');
@@ -30,6 +32,41 @@ test('homepages, titles and missing-route document avoid duplicate search signal
  const missing=await readOutput('404.html');
  assert.match(missing,/name="robots" content="noindex,follow"/);
  assert.doesNotMatch(missing,/rel="canonical"/);
+});
+
+test('both homepages show real task paths, clear Core limits and institutional links',async()=>{
+ for(const [path,language] of [['index.html','es'],['en/index.html','en']]){
+  const html=await readOutput(path);
+  assert.ok(html.includes('class="core-start-links"'),path);
+  assert.ok(html.includes(language==='es'?'Las funciones de IA necesitan un motor disponible':'AI features need an available engine'),path);
+  assert.ok(html.includes('href="'+(language==='es'?'/herramientas/dividir-pdf/':'/en/tools/split-pdf-into-separate-files/')+'"'),path);
+  assert.ok(html.includes('mailto:proyectosmetas25@gmail.com'),path);
+  assert.ok(html.includes('href="'+(language==='es'?'/acerca':'/en/about')+'"'),path);
+ }
+});
+
+test('19 curated bilingual pairs replace decorative previews with operation-specific checks',async()=>{
+ const selected=Object.entries(priorityExamples);
+ assert.equal(selected.length,19);
+ const englishBySource=new Map(englishPages.map(page=>[page.sourceSlug,page]));
+ for(const [slug,item] of selected){
+  const esPage=pages.find(page=>page.slug===slug),enPage=englishBySource.get(slug);
+  assert.ok(esPage&&enPage,slug);
+  for(const [language,path] of [['es','herramientas/'+slug+'/index.html'],['en','en/tools/'+enPage.englishSlug+'/index.html']]){
+   const html=await readOutput(path),example=item[language];
+   assert.ok(example&&example.title.length>10&&['input','result','verify','fallback'].every(key=>typeof example[key]==='string'&&example[key].length>25),path);
+   assert.ok(html.includes('class="seo-example"'),path);
+   assert.ok(html.includes('class="seo-example-review"'),path);
+   assert.ok(!html.includes('class="seo-preview"'),path);
+   assert.ok(html.includes(example.title),path+' scenario');
+   assert.ok(html.includes(example.verify.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')),path+' verification');
+   if(item.next){
+    const next=language==='es'?pages.find(page=>page.slug===item.next):englishBySource.get(item.next);
+    assert.ok(next,path+' next page missing');
+    assert.ok(html.includes('href="'+(language==='es'?'/herramientas/'+next.slug+'/':'/en/tools/'+next.englishSlug+'/')+'"'),path+' next link');
+   }
+  }
+ }
 });
 
 test('priority text tools execute on their bilingual SEO pages through the shared engine',async()=>{
@@ -109,7 +146,7 @@ test('rendered pages have one H1, unique metadata, valid JSON-LD and real CTA',a
   assert.ok((html.match(/<details>/g)||[]).length>=2);
   assert.ok(!/\b(?:undefined|NaN)\b/.test(html),p.slug);
   const tool=tools.find(item=>item.id===p.tool);
-  if(['local','browser'].includes(tool.mode)) assert.ok(html.includes('PROCESAMIENTO LOCAL'),p.slug);
+  if(['local','browser'].includes(tool.mode)) assert.ok(html.includes('PROCESAMIENTO LOCAL')||html.includes('Procesamiento local'),p.slug);
   else { assert.ok(html.includes('SERVICIO CONECTADO'),p.slug); assert.ok(!html.includes('GRATIS'),p.slug+' must not be advertised as universally free'); }
   const title=html.match(/<title>(.*?)<\/title>/)[1],description=html.match(/<meta name="description" content="(.*?)">/)[1];
   assert.ok(!titles.has(title));titles.add(title);assert.ok(!descriptions.has(description));descriptions.add(description);
@@ -119,8 +156,8 @@ test('rendered pages have one H1, unique metadata, valid JSON-LD and real CTA',a
   const schemas=JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)[1]);
   assert.equal(schemas[0]['@type'],'WebApplication');assert.equal(schemas[0].url,canonical);
   assert.equal(schemas[1]['@type'],'BreadcrumbList');assert.equal(schemas[1].itemListElement.at(-1).item,canonical);
-  const cta=decode(html.match(/class="seo-cta" href="([^"]+)"/)[1]);assert.equal(cta,['pdf-split','image-strip-metadata'].includes(p.tool)?'#inline-tool-title':toolUrl(p));
-  if(cta==='#inline-tool-title')assert.ok(html.includes('href="'+toolUrl(p).replaceAll('&','&amp;')+'"'),p.slug+' lost Prisma Core fallback');
+  const cta=decode(html.match(/class="seo-cta" href="([^"]+)"/)[1]);assert.equal(cta,inlineToolIds.has(p.tool)?'#inline-tool-title':toolUrl(p));
+  if(['pdf-split','image-strip-metadata','pdf-merge','image-compress'].includes(p.tool))assert.ok(html.includes('href="'+toolUrl(p).replaceAll('&','&amp;')+'"'),p.slug+' lost Prisma Core fallback');
   for(const match of html.matchAll(/class="seo-related-card" href="\/herramientas\/([^/]+)\/"/g)){
    assert.ok(incoming.has(match[1]),'broken related link');assert.notEqual(match[1],p.slug);incoming.set(match[1],incoming.get(match[1])+1);
   }
@@ -152,7 +189,7 @@ test('directory categories and sitemap expose exactly the current URLs',async()=
  assert.ok(urls.every(url=>!/[?#]/.test(url)&&!/\.html$/i.test(new URL(url).pathname)),'sitemap contains a parameter or extension URL');
  for(const page of pages){
   const url=SEO_BASE+'/herramientas/'+page.slug+'/';
-  assert.equal(sitemapEntries.get(url),page.lastmod||null,'sitemap lastmod mismatch for '+page.slug);
+  assert.equal(sitemapEntries.get(url),priorityExamples[page.slug]?priorityUpdated:page.lastmod||null,'sitemap lastmod mismatch for '+page.slug);
   if(page.lastmod)assert.match(page.lastmod,/^\d{4}-\d{2}-\d{2}$/,'invalid source lastmod for '+page.slug);
  }
  for(const p of pages){

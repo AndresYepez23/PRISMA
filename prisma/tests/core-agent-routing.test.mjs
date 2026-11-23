@@ -225,7 +225,7 @@ assert.ok(chatHtmlSource.indexOf('id="core-guest-register-card"')>chatHtmlSource
 
 // The animated matrix covers the complete Core content viewport beneath the top app bar.
 const welcomeGridSource=readFileSync(new URL('../src/core-welcome-grid.js',import.meta.url),'utf8');
-assert.match(coreSource,/Cuéntame qué necesitas o adjunta un archivo\. Prisma organiza el resto\./,'Welcome helper copy must stay concise and explain the assistant flow');
+assert.match(coreSource,/Abre una herramienta para empezar ahora o describe tu objetivo a Prisma Core\. Las funciones de IA necesitan un motor disponible y pueden utilizar servicios externos\./,'Welcome helper copy must explain both tool access and AI requirements');
 assert.match(stylesSource,/max-width:680px;\s*margin:0 auto 17px;\s*color:color-mix\(in srgb,var\(--text\) 76%,var\(--accent\) 24%\);\s*font-weight:500;\s*line-height:1\.5/,'Welcome helper copy must be more readable without increasing its footprint');
 assert.match(stylesSource,/body\.is-core-view \.core-welcome p\{\s*margin-bottom:14px;\s*line-height:1\.45;/,'Mobile welcome helper copy must remain compact');
 assert.match(coreSource,/const shouldMount=coreViewActive&&messages\.length===0/,'The reactive dot matrix must run only for an empty, active Core view');
@@ -262,7 +262,7 @@ assert.match(auroraSource,/:root\[data-theme="light"\] body\.is-core-view #core-
 
 assert.match(stylesSource,/@media \(min-width:851px\) and \(pointer:fine\)\{\s*body\.is-core-view \.core-prism-scene\{\s*height:clamp\(132px,18vh,154px\);\s*margin:4px auto 24px;\s*display:flex;\s*align-items:flex-start;\s*justify-content:center;\s*flex:0 0 auto;/,'Desktop welcome prism must be compact and separated from the title');
 assert.match(stylesSource,/body\.is-core-view \.core-prism-svg\{\s*display:block;\s*width:min\(100%,232px\);\s*height:100%;\s*flex:0 0 auto;/,'Desktop prism artwork must be smaller without distortion');
-assert.match(stylesSource,/body\.is-core-view #core-messages\.is-empty \.core-welcome h2\{\s*margin:0 auto 12px;/,'Desktop welcome heading must begin below the compact prism');
+assert.match(stylesSource,/body\.is-core-view #core-messages\.is-empty \.core-welcome h1\{\s*margin:0 auto 12px;/,'Desktop welcome heading must begin below the compact prism');
 assert.match(readFileSync(new URL('../functions/_lib/limits.js',import.meta.url),'utf8'),/OPENROUTER_VISITOR_LIMITS=Object\.freeze\(\{perMinute:5,perDay:20\}\)/,'OpenRouter user ceilings must remain 5/min and 20/day');
 assert.match(readFileSync(new URL('../functions/_lib/limits.js',import.meta.url),'utf8'),/"cloudflare-audio":3/,'Cloudflare audio must have a separate daily quota');
 assert.match(readFileSync(new URL('../functions/api/ai/transcribe.js',import.meta.url),'utf8'),/provider==="cloudflare"\?"cloudflare-audio"/,'Whisper must use dedicated D1 limits');
