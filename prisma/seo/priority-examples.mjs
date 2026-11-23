@@ -153,6 +153,11 @@ export function priorityActionLabel(slug, language) {
   return priorityVisuals[slug]?.[language]?.[3];
 }
 
+export function priorityPanelHeading(slug, language) {
+  const visual = priorityVisuals[slug]?.[language];
+  return visual && visual[0] + ' → ' + visual[2];
+}
+
 export function priorityExampleHero(slug, language) {
   const item = priorityExamples[slug]?.[language];
   if (!item) return '';

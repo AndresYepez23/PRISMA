@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tools, categories } from '../src/registry.js';
 import { generateContentHubs } from './content-hubs.mjs';
 import { inlineToolForm, inlineToolIds } from './inline-tool.mjs';
-import { priorityExamples, priorityUpdated, priorityActionLabel, priorityExampleHero, priorityExampleReview } from './priority-examples.mjs';
+import { priorityExamples, priorityUpdated, priorityActionLabel, priorityPanelHeading, priorityExampleHero, priorityExampleReview } from './priority-examples.mjs';
 
 import { SEO_BASE as BASE, FORMAT_PRESETS } from './config.mjs';
 const GROUPS = Object.fromEntries(categories.filter(c => c.id !== 'all').map((c,i) => [c.id, {name:c.name, order:i}]));
@@ -102,7 +102,7 @@ function landing(page, pages, toolMap) {
     '<p class="seo-privacy"><span aria-hidden="true">◇</span> ' + esc(page.privacyNote || (['local','browser'].includes(tool.mode) ? 'Procesamiento en el navegador · Sin registro' : 'Consulta las condiciones de uso de la herramienta')) + '</p></div>',
     preview+'</section>',
     '<div class="seo-content-grid" id="como-funciona">',
-    '<section class="seo-panel"><div class="seo-section-label">QUÉ PUEDES HACER</div><h2>' + esc(page.h1) + ': lo que necesitas saber</h2><p>' + esc(page.intro) + '</p><p>' + esc(page.details) + '</p></section>',
+    '<section class="seo-panel"><div class="seo-section-label">' + (priority?'OPERACIÓN Y LÍMITES':'QUÉ PUEDES HACER') + '</div><h2>' + esc(priorityPanelHeading(page.slug,'es') || page.h1 + ': lo que necesitas saber') + '</h2><p>' + esc(page.intro) + '</p><p>' + esc(page.details) + '</p></section>',
     '<section class="seo-panel"><div class="seo-section-label">PASO A PASO</div><h2>Cómo utilizar esta herramienta</h2><ol class="seo-steps">' + steps + '</ol><a class="seo-inline-link" href="' + esc(actionUrl) + '">Abrir ' + esc(tool.name) + ' ↗</a></section>',
     '</div>',
     inlineToolForm(page.tool,'es'),

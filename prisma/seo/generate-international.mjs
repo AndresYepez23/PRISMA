@@ -3,7 +3,7 @@ import { tools, categories as registryCategories } from '../src/registry.js';
 import translations from '../src/locales/en.js';
 import { SEO_BASE as BASE } from './config.mjs';
 import { inlineToolForm, inlineToolIds } from './inline-tool.mjs';
-import { priorityExamples, priorityUpdated, priorityActionLabel, priorityExampleHero, priorityExampleReview } from './priority-examples.mjs';
+import { priorityExamples, priorityUpdated, priorityActionLabel, priorityPanelHeading, priorityExampleHero, priorityExampleReview } from './priority-examples.mjs';
 
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[char]);
 const safeJson = value => JSON.stringify(value).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
@@ -156,7 +156,7 @@ function toolLanding(page,pages,toolMap) {
     '<p class="seo-privacy"><span aria-hidden="true">◇</span> '+esc(page.privacyNote || (['local','browser'].includes(tool.mode)?'Processed in your browser · No registration required':'Review the tool usage conditions'))+'</p></div>',
     preview+'</section>',
     '<div class="seo-content-grid" id="how-it-works">',
-    '<section class="seo-panel"><div class="seo-section-label">WHAT YOU CAN DO</div><h2>'+esc(page.h1)+': what you need to know</h2><p>'+esc(page.intro)+'</p><p>'+esc(page.details)+'</p></section>',
+    '<section class="seo-panel"><div class="seo-section-label">'+(priority?'OPERATION AND LIMITS':'WHAT YOU CAN DO')+'</div><h2>'+esc(priorityPanelHeading(page.sourceSlug,'en') || page.h1+': what you need to know')+'</h2><p>'+esc(page.intro)+'</p><p>'+esc(page.details)+'</p></section>',
     '<section class="seo-panel"><div class="seo-section-label">STEP BY STEP</div><h2>How to use this tool</h2><ol class="seo-steps">'+steps+'</ol><a class="seo-inline-link" href="'+esc(actionUrl)+'">Open '+esc(t(tool.name))+' ↗</a></section>',
     '</div>',
     inlineToolForm(page.tool,'en'),

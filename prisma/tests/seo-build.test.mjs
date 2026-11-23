@@ -60,6 +60,7 @@ test('24 curated bilingual pairs show truthful input, operation and output',asyn
    assert.ok(html.includes('class="seo-example" data-family="'+visual.family+'"'),path);
    for(const label of visual[language].slice(0,3))assert.ok(html.includes(label.replaceAll('&','&amp;')),path+' visual brief '+label);
    assert.ok(html.includes('class="seo-cta" href="')&&html.includes(visual[language][3]),path+' specific action');
+   assert.ok(html.includes('<h2>'+visual[language][0]+' → '+visual[language][2]+'</h2>'),path+' operation heading');
    assert.ok(html.includes('class="seo-example-review"'),path);
    assert.ok(!html.includes('class="seo-preview"'),path);
    assert.ok(html.includes(example.title),path+' scenario');
