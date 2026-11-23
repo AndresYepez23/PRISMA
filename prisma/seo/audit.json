@@ -58,7 +58,7 @@
     {
       "tool": "pdf-to-word",
       "name": "PDF a Word",
-      "status": "beta",
+      "status": "ready",
       "mode": "browser",
       "category": "pdf",
       "decision": "covered",
@@ -303,7 +303,7 @@
     {
       "tool": "image-ocr",
       "name": "Extraer texto (OCR)",
-      "status": "beta",
+      "status": "ready",
       "mode": "browser",
       "category": "image",
       "decision": "covered",
@@ -320,7 +320,7 @@
     {
       "tool": "pdf-to-image",
       "name": "PDF a imágenes",
-      "status": "beta",
+      "status": "ready",
       "mode": "browser",
       "category": "pdf",
       "decision": "covered",
@@ -844,7 +844,7 @@
     {
       "tool": "pdf-text",
       "name": "PDF a texto",
-      "status": "beta",
+      "status": "ready",
       "mode": "browser",
       "category": "pdf",
       "decision": "covered",
@@ -1422,7 +1422,7 @@
     {
       "tool": "docx-pdf",
       "name": "Word a PDF",
-      "status": "beta",
+      "status": "ready",
       "mode": "browser",
       "category": "pdf",
       "decision": "covered",
@@ -1507,7 +1507,7 @@
     {
       "tool": "image-metadata",
       "name": "Ver metadatos de imagen",
-      "status": "beta",
+      "status": "ready",
       "mode": "local",
       "category": "image",
       "decision": "covered",
@@ -1828,7 +1828,7 @@
     {
       "tool": "html-format",
       "name": "Formatear HTML",
-      "status": "beta",
+      "status": "ready",
       "mode": "browser",
       "category": "web",
       "decision": "covered",
@@ -1862,7 +1862,7 @@
     {
       "tool": "js-format",
       "name": "Formatear JavaScript",
-      "status": "beta",
+      "status": "ready",
       "mode": "browser",
       "category": "web",
       "decision": "covered",

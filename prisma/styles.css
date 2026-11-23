@@ -1820,31 +1820,6 @@ body.is-core-view #core-workspace > .core-history{display:none!important}
 .core-sidebar-loading{margin:0;padding:8px 10px;color:var(--subtle);font-size:10px;line-height:1.5}
 
 
-/* Coordinated first paint: never expose the pre-hydrated shell. */
-body.app-booting{overflow:hidden!important;background:var(--bg)}
-body.app-booting .app-shell{visibility:hidden!important}
-.app-startup{
- position:fixed;inset:0;z-index:10000;display:grid;place-items:center;
- padding:24px;background:var(--bg);color:var(--text);
-}
-.app-startup.hidden{display:none!important}
-.app-startup-card{
- display:grid;justify-items:center;gap:12px;width:min(320px,100%);
- padding:28px 24px;border:1px solid var(--line);border-radius:20px;
- background:var(--panel);box-shadow:var(--shadow);text-align:center;
-}
-.app-startup-mark{width:48px;height:48px;display:grid;place-items:center;color:var(--accent)}
-.app-startup-mark svg{width:44px;height:44px}
-.app-startup-card>strong{font:800 18px/1.2 Manrope,system-ui,sans-serif;letter-spacing:-.035em}
-.app-startup-status{min-height:18px;color:var(--muted);font-size:11px;line-height:1.5}
-.app-startup-spinner{
- width:20px;height:20px;border:2px solid var(--line-strong);
- border-top-color:var(--accent);border-radius:50%;
- animation:prismaBootSpin .8s linear infinite;
-}
-@keyframes prismaBootSpin{to{transform:rotate(360deg)}}
-@media(prefers-reduced-motion:reduce){.app-startup-spinner{animation:none;border-color:var(--accent)}}
-
 /* Account modal: guest mode stays compact; unavailable sign-in methods are hidden. */
 .auth-panel{
  width:min(440px,calc(100vw - 32px));
@@ -2989,8 +2964,8 @@ body:not(.is-core-view) .hero-section{
 body:not(.is-core-view) .hero-section::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.38;background-image:radial-gradient(circle,rgba(144,207,227,.38) 1px,transparent 1.7px);background-size:24px 24px;mask-image:radial-gradient(ellipse at 76% 48%,#000,transparent 70%)}
 body:not(.is-core-view) .hero-copy{position:relative;z-index:2;min-width:0}
 body:not(.is-core-view) .hero-copy .eyebrow{color:#98ded7;font-size:clamp(9px,1vw,11px);letter-spacing:.15em}
-body:not(.is-core-view) .hero-copy h2{font-size:clamp(35px,4.5vw,65px);line-height:1.12;letter-spacing:-.06em;margin:20px 0 18px;color:#f4f5fa;text-wrap:balance}
-body:not(.is-core-view) .hero-copy h2 em{font-weight:750;background:linear-gradient(100deg,#8ce0d3,#83bce9 52%,#b8a3f0);background-clip:text;-webkit-background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+body:not(.is-core-view) .hero-copy h2{font-size:clamp(35px,4.2vw,58px);line-height:1.15;letter-spacing:-.055em;margin:20px 0 18px;color:#f4f5fa;text-wrap:balance}
+body:not(.is-core-view) .hero-copy .hero-highlight{display:inline-block;padding:.02em .045em .11em;margin:0 -.045em -.11em;font-style:normal;font-weight:750;line-height:1.2;background:linear-gradient(100deg,#8ce0d3,#83bce9 52%,#b8a3f0);background-clip:text;-webkit-background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
 body:not(.is-core-view) .hero-description{color:#c0cadb;font-size:clamp(12px,1.25vw,15px);line-height:1.7;max-width:480px}
 body:not(.is-core-view) .hero-actions{gap:10px}
 body:not(.is-core-view) .hero-actions .button{border-radius:13px;min-height:45px;padding:10px 17px;font-size:12px}

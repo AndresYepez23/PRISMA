@@ -50,10 +50,20 @@ const server=createServer((request,response)=>{
    }
    for(const route of ['/','/en/']){
     await page.goto(origin+route);
-    await page.waitForFunction(()=>!document.body.classList.contains('app-booting'),null,{timeout:15000});
+    await page.waitForFunction(()=>document.body.classList.contains('app-ready'),null,{timeout:15000});
+    assert.equal(await page.locator('#app-startup').count(),0,route+' blocking startup returned');
     assert.equal(await page.locator('h1').count(),1,route);
     assert.equal(await page.locator('.core-start-links a').count(),5,route);
     assert.ok(await page.locator('.core-start-links').isVisible(),route+' task paths hidden');
+    assert.match(await page.locator('.core-welcome h1').textContent(),route==='/'?/resuelve tareas/:/complete tasks/);
+    if(width===390)await page.locator('#mobile-menu').click();
+    await page.locator('[data-view="explore"]').first().click();
+    assert.ok(await page.locator('.hero-highlight').isVisible(),route+' Explore highlight hidden');
+    assert.match(await page.locator('.hero-highlight').textContent(),route==='/'?/Comprueba el resultado/:/Check the result/);
+    assert.ok(await page.locator('.hero-highlight').evaluate(element=>{
+     const text=element.getBoundingClientRect(),hero=element.closest('.hero-section').getBoundingClientRect();
+     return text.left>=hero.left&&text.right<=hero.right&&text.bottom<=hero.bottom;
+    }),route+' Explore headline clipped');
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),route+' horizontal overflow at '+width);
    }
    assert.deepEqual(errors,[],width+' browser errors');

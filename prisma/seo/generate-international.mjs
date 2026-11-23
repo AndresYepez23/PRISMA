@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tools, categories as registryCategories } from '../src/registry.js';
 import translations from '../src/locales/en.js';
 import { SEO_BASE as BASE } from './config.mjs';
-import { inlineToolForm, inlineToolIds } from './inline-tool.mjs';
+import { inlineToolForm, hasInlineTool } from './inline-tool.mjs';
 import { priorityExamples, priorityUpdated, priorityActionLabel, priorityPanelHeading, priorityExampleHero, priorityExampleReview } from './priority-examples.mjs';
 
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[char]);
@@ -115,7 +115,7 @@ function relatedCards(items,lookup,prefix,label) {
 }
 function toolLanding(page,pages,toolMap) {
   const tool=toolMap.get(page.tool);
-  const actionUrl=inlineToolIds.has(page.tool)?'#inline-tool-title':toolUrl(page);
+  const actionUrl=hasInlineTool(page)?'#inline-tool-title':toolUrl(page);
   const priority=priorityExamples[page.sourceSlug];
   const next=priority?.next && pages.find(item=>item.sourceSlug===priority.next);
   if(priority?.next&&!next)throw Error('English SEO: missing practical next step '+priority.next);
@@ -152,16 +152,16 @@ function toolLanding(page,pages,toolMap) {
     '<section class="seo-hero"><div class="seo-hero-copy">',
     '<div class="seo-eyebrow"><i></i>'+esc(category)+' · '+esc(modeLabel(tool))+' · '+esc(statusLabel(tool))+'</div>',
     '<h1>'+esc(page.h1)+'</h1><p class="seo-lead">'+esc(page.description)+'</p>',
-    '<div class="seo-actions"><a class="seo-cta" href="'+esc(actionUrl)+'">'+esc(priorityActionLabel(page.sourceSlug,'en') || (inlineToolIds.has(page.tool)?'Use here':'Open tool'))+' <span aria-hidden="true">→</span></a><a class="seo-subtle" href="#how-it-works">How it works ↓</a></div>',
+    '<div class="seo-actions"><a class="seo-cta" href="'+esc(actionUrl)+'">'+esc(priorityActionLabel(page.sourceSlug,'en') || (hasInlineTool(page)?'Use here':'Open tool'))+' <span aria-hidden="true">→</span></a><a class="seo-subtle" href="#how-it-works">How it works ↓</a></div>',
     '<p class="seo-privacy"><span aria-hidden="true">◇</span> '+esc(page.privacyNote || (['local','browser'].includes(tool.mode)?'Processed in your browser · No registration required':'Review the tool usage conditions'))+'</p></div>',
     preview+'</section>',
     '<div class="seo-content-grid" id="how-it-works">',
     '<section class="seo-panel"><div class="seo-section-label">'+(priority?'OPERATION AND LIMITS':'WHAT YOU CAN DO')+'</div><h2>'+esc(priorityPanelHeading(page.sourceSlug,'en') || page.h1+': what you need to know')+'</h2><p>'+esc(page.intro)+'</p><p>'+esc(page.details)+'</p></section>',
     '<section class="seo-panel"><div class="seo-section-label">STEP BY STEP</div><h2>How to use this tool</h2><ol class="seo-steps">'+steps+'</ol><a class="seo-inline-link" href="'+esc(actionUrl)+'">Open '+esc(t(tool.name))+' ↗</a></section>',
     '</div>',
-    inlineToolForm(page.tool,'en'),
+    inlineToolForm(page.tool,'en',page),
     priorityExampleReview(page.sourceSlug,'en',next&&{href:'/en/tools/'+next.englishSlug+'/',h1:next.h1}),
-    '<aside class="seo-note"><span class="seo-note-icon">i</span><div><strong>Before you start</strong><p>'+esc(page.tip)+'</p>'+(tool.status==='beta'?'<small>This feature is marked as beta in the Prisma Space catalog.</small>':'')+'</div></aside>',
+    '<aside class="seo-note"><span class="seo-note-icon">i</span><div><strong>Before you start</strong><p>'+esc(page.tip)+'</p>'+(tool.status==='beta'&&!priority?'<small>This feature is marked as beta in the Prisma Space catalog.</small>':'')+'</div></aside>',
     faqHtml(page.faqs),
     '<section class="seo-related" aria-labelledby="related-title"><div class="seo-related-heading"><div><div class="seo-section-label">YOU MAY ALSO NEED</div><h2 id="related-title">Related tools</h2></div><a href="/en/tools/">Browse all ↗</a></div><div class="seo-related-grid">'+relatedHtml+'</div></section>',
     '</main>'

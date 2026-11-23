@@ -5,7 +5,7 @@ import { validatePages, toolUrl } from '../seo/generate.mjs';
 import { SEO_BASE, FORMAT_PRESETS } from '../seo/config.mjs';
 import { tools } from '../src/registry.js';
 import { expansionPages } from '../seo/generate-expansion.mjs';
-import { inlineToolIds } from '../seo/inline-tool.mjs';
+import { hasInlineTool } from '../seo/inline-tool.mjs';
 import { priorityExamples, priorityVisuals, priorityUpdated } from '../seo/priority-examples.mjs';
 const root=new URL('../',import.meta.url),dist=new URL('../dist/',import.meta.url);
 const read=p=>readFile(new URL(p,root),'utf8');
@@ -161,8 +161,8 @@ test('rendered pages have one H1, unique metadata, valid JSON-LD and real CTA',a
   const schemas=JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)[1]);
   assert.equal(schemas[0]['@type'],'WebApplication');assert.equal(schemas[0].url,canonical);
   assert.equal(schemas[1]['@type'],'BreadcrumbList');assert.equal(schemas[1].itemListElement.at(-1).item,canonical);
-  const cta=decode(html.match(/class="seo-cta" href="([^"]+)"/)[1]);assert.equal(cta,inlineToolIds.has(p.tool)?'#inline-tool-title':toolUrl(p));
-  if(['pdf-split','image-strip-metadata','pdf-merge','image-compress'].includes(p.tool))assert.ok(html.includes('href="'+toolUrl(p).replaceAll('&','&amp;')+'"'),p.slug+' lost Prisma Core fallback');
+  const cta=decode(html.match(/class="seo-cta" href="([^"]+)"/)[1]);assert.equal(cta,hasInlineTool(p)?'#inline-tool-title':toolUrl(p));
+  if(hasInlineTool(p)&&p.tool!=='html-format'&&p.tool!=='js-format'&&p.tool!=='citation-generator')assert.ok(html.includes('href="'+toolUrl(p).replaceAll('&','&amp;')+'"'),p.slug+' lost Prisma Core fallback');
   for(const match of html.matchAll(/class="seo-related-card" href="\/herramientas\/([^/]+)\/"/g)){
    assert.ok(incoming.has(match[1]),'broken related link');assert.notEqual(match[1],p.slug);incoming.set(match[1],incoming.get(match[1])+1);
   }

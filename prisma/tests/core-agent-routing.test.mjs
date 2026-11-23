@@ -720,7 +720,7 @@ assert.ok(topbarIndex >= 0 && profileIndex > topbarIndex && profileIndex < topba
 
 // First-paint contract: static HTML must already match the default Core route.
 // This prevents the old tools dashboard from flashing before the module executes.
-assert.match(sidebarHtml, /<body class="is-core-view app-booting">/);
+assert.match(sidebarHtml, /<body class="is-core-view">/);
 assert.match(sidebarHtml, /class="nav-item active core-nav-item" data-view="core"/);
 assert.match(sidebarHtml, /id="breadcrumb-current">Prisma Core</);
 assert.match(sidebarHtml, /<section class="core-section" id="core-section">/);
@@ -740,9 +740,9 @@ assert.match(sidebarMain, /activeView='core'/);
 const themeBootstrapIndex = sidebarHtml.indexOf("localStorage.getItem('prisma-theme')");
 const stylesheetIndex = sidebarHtml.indexOf('rel="stylesheet" href="./styles.css"');
 assert.ok(themeBootstrapIndex >= 0 && themeBootstrapIndex < stylesheetIndex);
-assert.match(sidebarHtml, /id="app-startup"/);
+assert.doesNotMatch(sidebarHtml, /id="app-startup"/);
 assert.match(sidebarHtml, /core-connect-banner hidden/);
-assert.ok(sidebarMain.indexOf("safeStartup('Prisma Core',initPrismaCore)") < sidebarMain.indexOf("document.body.classList.remove('app-booting')"));
+assert.ok(sidebarMain.indexOf("safeStartup('Prisma Core',initPrismaCore)") < sidebarMain.indexOf("document.body.classList.add('app-ready')"));
 assert.match(sidebarMain, /syncThemeChrome/);
 const authSource = readFileSync(new URL('../src/prisma-account.js', import.meta.url), 'utf8');
 assert.match(sidebarHtml, /auth-provider-grid/);

@@ -12,7 +12,7 @@ const mobileWelcomeFix = styles.slice(styles.indexOf('/* Prisma Core · mobile w
 test('welcome SVG stays in normal flow above the heading in both markup and runtime', () => {
   for (const source of [html, core]) {
     const scene = source.indexOf('class="core-prism-scene"');
-    const heading = source.indexOf('<h1>Convierte archivos y resuelve tareas', scene);
+    const heading = source.indexOf('<h1>Convierte archivos y <span class="core-welcome-gradient">resuelve tareas.', scene);
     assert.ok(scene >= 0, 'welcome scene must exist');
     assert.ok(heading > scene, 'heading must follow the scene');
   }

@@ -97,9 +97,10 @@ const server=http.createServer((req,res)=>{
    if(route===esPdf||route===enPdf){
     assert.match(await page.locator('h1').textContent(),language==='es'?/Convertir PDF a Word/:/Free PDF to Word/);
     await page.locator('a.seo-cta').first().click();
-    await page.waitForFunction(()=>Boolean(window.prismaI18n));
+    assert.equal(new URL(page.url()).pathname,route);
+    assert.equal(new URL(page.url()).hash,'#inline-tool-title');
     assert.equal(await page.locator('html').getAttribute('lang'),language,'Tool launch lost the landing language');
-    assert.equal(new URL(page.url()).searchParams.get('tool'),'pdf-to-word');
+    assert.equal(await page.locator('[data-seo-inline-tool="pdf-to-word"]').count(),1);
     await page.goto(origin+route);
     await page.locator('a.seo-language-switch').click();
     assert.equal(new URL(page.url()).pathname,language==='es'?enPdf:esPdf);
