@@ -47,6 +47,7 @@ test('runtime update reload is available only through an explicit user action', 
     'duplicate update notices must be suppressed');
 });
 
-test('the HTML shell contains exactly one startup overlay', () => {
-  assert.equal((html.match(/id="app-startup"/g) || []).length, 1);
+test('the first paint exposes the Core shell without a blocking startup overlay', () => {
+  assert.match(html, /<body class="is-core-view">/);
+  assert.doesNotMatch(html, /id="app-startup"|app-booting/);
 });

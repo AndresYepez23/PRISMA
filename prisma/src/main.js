@@ -1451,11 +1451,7 @@ $('#about-button').addEventListener('click',()=>toast('Prisma Space 1.0 · Herra
 $$('[data-layout]').forEach(b=>b.addEventListener('click',()=>{layout=b.dataset.layout;$$('[data-layout]').forEach(x=>x.classList.toggle('active',x===b));safeStartup('cambio de vista',render);}));
 safeStartup('Prisma Core',initPrismaCore);
 safeStartup('experiencia y PWA',initPrismaExperience);
-// Reveal the app only after the selected theme, Core history, sidebar slots and
-// initial conversation have been synchronously hydrated from this device.
-clearTimeout(window.__prismaBootFailsafe);
-$('#app-startup')?.classList.add('hidden');
-document.body.classList.remove('app-booting');
+// The static Core shell remains visible while local state is hydrated.
 document.body.classList.add('app-ready');
 document.dispatchEvent(new Event('prisma:app-ready'));
 // SEO pages launch the real tool. Nothing is executed until the user acts.

@@ -1,5 +1,7 @@
 const esc=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 export const inlineToolIds=new Set(['pdf-split','image-strip-metadata','pdf-merge','image-compress','html-format','js-format','citation-generator']);
+const directFilePages=new Set(['pdf-a-word','pdf-a-jpg','jpg-a-pdf','png-a-pdf','imagen-a-texto','collage-de-fotos','ver-metadatos-exif','comprimir-pdf','extraer-texto-pdf','redimensionar-imagen','recortar-imagen']);
+export const hasInlineTool=page=>inlineToolIds.has(page.tool)||directFilePages.has(page.sourceSlug||page.slug);
 
 function fileToolForm(id,language){
  const en=language==='en',pdf=id==='pdf-split',merge=id==='pdf-merge',compress=id==='image-compress';
@@ -24,7 +26,37 @@ function fileToolForm(id,language){
  return '<section class="seo-panel seo-inline-tool" aria-labelledby="inline-tool-title"><h2 id="inline-tool-title">'+label('Usar esta herramienta aquí','Use this tool here')+'</h2><p>'+description+'</p><form data-seo-inline-tool="'+id+'" class="seo-inline-form"><label>'+fileLabel+'<input name="file" type="file" accept="'+(pdf||merge?'.pdf,application/pdf':'image/jpeg,image/png,image/webp')+'"'+(merge?' multiple':'')+' required></label>'+options+'<button type="submit" class="seo-cta">'+submit+'</button><p class="seo-inline-status" role="status" aria-live="polite"></p><a class="seo-cta seo-inline-download" hidden download>'+label('Descargar resultado','Download result')+'</a>'+(pdf||merge?'':'<img class="seo-inline-image" alt="'+label(compress?'Vista previa de la imagen comprimida':'Vista previa de la imagen sin metadatos',compress?'Preview of the compressed image':'Preview of the image without metadata')+'" hidden>')+'</form><p><a href="'+fallback+'">'+label('Abrir en Prisma Core','Open in Prisma Core')+' ↗</a></p></section><script type="module" src="/src/seo-inline-tools.js"></script>';
 }
 
-export function inlineToolForm(id,language){
+function directFileForm(id,language,page){
+ const en=language==='en',slug=page.sourceSlug||page.slug,label=(es,english)=>en?english:es;
+ const multi=['image-pdf','image-collage'].includes(id);
+ const accept=slug==='jpg-a-pdf'?'image/jpeg,.jpg,.jpeg':slug==='png-a-pdf'?'image/png,.png':
+  ['pdf-to-word','pdf-to-image','pdf-compress','pdf-text'].includes(id)?'.pdf,application/pdf':'image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp';
+ const notes={
+  'pdf-to-word':label('Selecciona un PDF digital con texto seleccionable. El DOCX puede necesitar ajustes de diseño.','Choose a digital PDF with selectable text. The DOCX may need layout corrections.'),
+  'pdf-to-image':label('Obtendrás un ZIP con un JPG por página seleccionada.','You will get a ZIP with one JPG per selected page.'),
+  'image-pdf':label('Cada imagen ocupa una página; revisa el orden antes de convertir.','Each image gets one page; check the selection order before converting.'),
+  'image-ocr':label('El OCR entrega texto, no una copia del diseño. Revisa cifras y nombres.','OCR returns text, not a copy of the layout. Check numbers and names.'),
+  'image-collage':label('Selecciona entre 2 y 12 fotos. La cuadrícula recorta cada celda automáticamente.','Select 2 to 12 photos. The grid crops each cell automatically.'),
+  'image-metadata':label('Consulta los datos EXIF presentes sin modificar la imagen.','Read existing EXIF details without changing the image.'),
+  'pdf-compress':label('Se reescribe la estructura del PDF; el archivo resultante no siempre es más pequeño.','The PDF structure is rewritten; the result is not always smaller.'),
+  'pdf-text':label('Extrae la capa de texto de un PDF digital. Un escaneo necesita OCR.','Extract the text layer from a digital PDF. A scan needs OCR.'),
+  'image-resize':label('Ajusta las dimensiones en píxeles y revisa la imagen descargada.','Set pixel dimensions and review the downloaded image.'),
+  'image-crop':label('El recorte es centrado; no permite mover el foco.','The crop is centered; its focus cannot be moved.')
+ };
+ const options=id==='pdf-to-image'?'<input type="hidden" name="format" value="jpeg"><label>'+label('Páginas (opcional)','Pages (optional)')+'<input name="pages" placeholder="1-3, 5" maxlength="80"></label><label>'+label('Resolución','Resolution')+'<select name="scale"><option value="1">'+label('Estándar','Standard')+'</option><option value="1.5" selected>'+label('Alta','High')+'</option><option value="2">'+label('Muy alta','Very high')+'</option></select></label>':
+  id==='image-pdf'?'<label>'+label('Tamaño de página','Page size')+'<select name="pageSize"><option value="a4">A4</option><option value="letter">'+label('Carta','Letter')+'</option><option value="fit">'+label('Ajustar a la imagen','Fit to image')+'</option></select></label>':
+  id==='image-ocr'?'<label>'+label('Idioma del texto','Text language')+'<select name="language"><option value="spa"'+(en?'':' selected')+'>'+label('Español','Spanish')+'</option><option value="eng"'+(en?' selected':'')+'>'+label('Inglés','English')+'</option><option value="spa+eng">'+label('Español e inglés','Spanish and English')+'</option></select></label>':
+  id==='image-collage'?'<label>'+label('Fondo','Background')+'<select name="background"><option value="#ffffff">'+label('Blanco','White')+'</option><option value="#101218">'+label('Oscuro','Dark')+'</option><option value="#9adbd2">'+label('Turquesa','Turquoise')+'</option></select></label>':
+  id==='image-resize'?'<label>'+label('Ancho (px)','Width (px)')+'<input type="number" name="width" value="1200" min="1" max="12000" required></label><label>'+label('Alto (px)','Height (px)')+'<input type="number" name="height" value="800" min="1" max="12000" required></label><label class="seo-inline-wide seo-inline-check"><input type="checkbox" name="keep" checked> '+label('Mantener proporción','Keep aspect ratio')+'</label>':
+  id==='image-crop'?'<label>'+label('Ancho del recorte (%)','Crop width (%)')+'<input type="number" name="widthPct" value="80" min="10" max="100" required></label><label>'+label('Alto del recorte (%)','Crop height (%)')+'<input type="number" name="heightPct" value="80" min="10" max="100" required></label>':'';
+ const query=new URLSearchParams({tool:id,...(language==='es'?{lang:'es'}:{}),...(page.format?{format:page.format}:{})});
+ const fallback=(en?'/en/':'/')+'?'+query.toString().replaceAll('&','&amp;');
+ const resultText=['image-ocr','image-metadata','pdf-text'].includes(id);
+ return '<section class="seo-panel seo-inline-tool" aria-labelledby="inline-tool-title"><div class="seo-section-label">'+label('HERRAMIENTA','TOOL')+'</div><h2 id="inline-tool-title">'+label('Usar aquí: ','Use here: ')+esc(page.h1)+'</h2><p>'+notes[id]+'</p><form data-seo-inline-tool="'+id+'" data-max-files="'+(id==='image-collage'?12:multi?20:1)+'" class="seo-inline-form"><label class="seo-inline-wide">'+label(multi?'Archivos en orden de selección':'Archivo',multi?'Files in selection order':'File')+'<input name="file" type="file" accept="'+accept+'"'+(multi?' multiple':'')+' required></label>'+options+'<button type="submit" class="seo-cta">'+label('Procesar archivo','Process file')+'</button><p class="seo-inline-status" role="status" aria-live="polite"></p>'+(multi?'<p class="seo-inline-selected seo-inline-wide" aria-live="polite"></p>':'')+'<a class="seo-cta seo-inline-download" hidden download>'+label('Descargar resultado','Download result')+'</a>'+(resultText?'<pre class="seo-inline-result" tabindex="0" hidden></pre>':'<img class="seo-inline-image" alt="'+label('Vista previa del resultado','Result preview')+'" hidden>')+'</form><p><a href="'+fallback+'">'+label('Abrir en Prisma Core','Open in Prisma Core')+' ↗</a></p></section><script type="module" src="/src/seo-inline-tools.js"></script>';
+}
+
+export function inlineToolForm(id,language,page){
+ if(page&&directFilePages.has(page.sourceSlug||page.slug))return directFileForm(id,language,page);
  if(['pdf-split','image-strip-metadata','pdf-merge','image-compress'].includes(id))return fileToolForm(id,language);
  if(!['html-format','js-format','citation-generator'].includes(id))return '';
  const en=language==='en',citation=id==='citation-generator';

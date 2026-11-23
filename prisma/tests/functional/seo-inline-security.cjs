@@ -51,12 +51,13 @@ const server=createServer((req,res)=>{
    const pdf=await PDFDocument.create();for(let i=1;i<=4;i++)pdf.addPage([240,240]).drawText('Page '+i);
    const canvas=document.createElement('canvas');canvas.width=24;canvas.height=24;canvas.getContext('2d').fillRect(0,0,24,24);
    const jpeg=new Uint8Array(await(await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg'))).arrayBuffer());
+   const png=new Uint8Array(await(await new Promise(resolve=>canvas.toBlob(resolve,'image/png'))).arrayBuffer());
    const exif=new TextEncoder().encode('Exif\0\0GPSLatitude=10.5');const length=exif.length+2;
    const withExif=new Uint8Array(jpeg.length+exif.length+4);
    withExif.set(jpeg.slice(0,2));withExif.set([255,225,length>>8,length&255],2);withExif.set(exif,6);withExif.set(jpeg.slice(2),6+exif.length);
    const first=await PDFDocument.create(),second=await PDFDocument.create();
    first.addPage([200,250]).drawText('First document');second.addPage([300,250]).drawText('Second document');
-   return {pdf:Array.from(await pdf.save()),photo:Array.from(withExif),first:Array.from(await first.save()),second:Array.from(await second.save())};
+   return {pdf:Array.from(await pdf.save()),photo:Array.from(withExif),png:Array.from(png),first:Array.from(await first.save()),second:Array.from(await second.save())};
   });
   for(const [language,path] of [['es','/herramientas/dividir-pdf/'],['en','/en/tools/split-pdf-into-separate-files/']]){
    await page.goto(origin+path);
@@ -110,6 +111,52 @@ const server=createServer((req,res)=>{
    assert.match(await page.locator('.seo-inline-download').getAttribute('download'),/\.webp$/);
    assert.match(await page.locator('.seo-inline-status').textContent(),/Original:.*KB.*KB/);
    assert.equal(await page.locator('.seo-inline-image').isVisible(),true);
+  }
+  for(const [path,id,files,signature,extension] of [
+   ['/herramientas/pdf-a-word/','pdf-to-word',[{name:'digital.pdf',mimeType:'application/pdf',buffer:Buffer.from(fixture.pdf)}],[80,75],/\.docx$/],
+   ['/en/tools/convert-pdf-to-jpg/','pdf-to-image',[{name:'digital.pdf',mimeType:'application/pdf',buffer:Buffer.from(fixture.pdf)}],[80,75],/\.zip$/],
+   ['/herramientas/jpg-a-pdf/','image-pdf',[{name:'uno.jpg',mimeType:'image/jpeg',buffer:Buffer.from(fixture.photo)},{name:'dos.jpg',mimeType:'image/jpeg',buffer:Buffer.from(fixture.photo)}],[37,80,68,70],/\.pdf$/],
+   ['/en/tools/convert-png-to-pdf/','image-pdf',[{name:'shot.png',mimeType:'image/png',buffer:Buffer.from(fixture.png)}],[37,80,68,70],/\.pdf$/],
+   ['/herramientas/collage-de-fotos/','image-collage',[{name:'uno.jpg',mimeType:'image/jpeg',buffer:Buffer.from(fixture.photo)},{name:'dos.jpg',mimeType:'image/jpeg',buffer:Buffer.from(fixture.photo)}],[255,216],/\.jpg$/],
+   ['/herramientas/redimensionar-imagen/','image-resize',[{name:'foto.jpg',mimeType:'image/jpeg',buffer:Buffer.from(fixture.photo)}],[137,80,78,71],/\.png$/],
+   ['/en/tools/crop-an-image-online/','image-crop',[{name:'photo.png',mimeType:'image/png',buffer:Buffer.from(fixture.png)}],[137,80,78,71],/\.png$/]
+  ]){
+   await page.goto(origin+path);
+   assert.equal(await page.locator('.seo-actions .seo-cta').getAttribute('href'),'#inline-tool-title',path);
+   assert.equal(await page.locator('[data-seo-inline-tool]').getAttribute('data-seo-inline-tool'),id,path);
+   await page.locator('[data-seo-inline-tool] [name=file]').setInputFiles(files);
+   await page.locator('[data-seo-inline-tool] button[type=submit]').click();
+   await page.locator('.seo-inline-download:not([hidden])').waitFor({timeout:30000}).catch(async error=>{throw Error(path+': '+await page.locator('.seo-inline-status').textContent(),{cause:error});});
+   const bytes=await page.evaluate(async()=>Array.from(new Uint8Array(await(await fetch(document.querySelector('.seo-inline-download').href)).arrayBuffer())));
+   assert.deepEqual(bytes.slice(0,signature.length),signature,path+' output signature');
+   assert.match(await page.locator('.seo-inline-download').getAttribute('download'),extension,path+' extension');
+  }
+  for(const [path,id,file,expected] of [
+   ['/herramientas/extraer-texto-pdf/','pdf-text',{name:'digital.pdf',mimeType:'application/pdf',buffer:Buffer.from(fixture.pdf)},'Page 1'],
+   ['/en/tools/view-exif-metadata-of-an-image/','image-metadata',{name:'photo.jpg',mimeType:'image/jpeg',buffer:Buffer.from(fixture.photo)},'24 × 24']
+  ]){
+   await page.goto(origin+path);
+   assert.equal(await page.locator('[data-seo-inline-tool]').getAttribute('data-seo-inline-tool'),id,path);
+   await page.locator('[data-seo-inline-tool] [name=file]').setInputFiles(file);
+   await page.locator('[data-seo-inline-tool] button[type=submit]').click();
+   await page.locator('.seo-inline-result:not([hidden])').waitFor({timeout:20000}).catch(async error=>{throw Error(path+': '+await page.locator('.seo-inline-status').textContent(),{cause:error});});
+   assert.ok((await page.locator('.seo-inline-result').textContent()).includes(expected),path+' text result');
+  }
+  await page.goto(origin+'/en/tools/convert-image-to-text-with-ocr/');
+  assert.equal(await page.locator('[data-seo-inline-tool="image-ocr"] [name=language]').inputValue(),'eng');
+  await page.goto(origin+'/herramientas/jpg-a-pdf/');
+  await page.locator('[data-seo-inline-tool] [name=file]').setInputFiles({name:'wrong.txt',mimeType:'text/plain',buffer:Buffer.from('wrong')});
+  await page.locator('[data-seo-inline-tool] button[type=submit]').click();
+  assert.match(await page.locator('.seo-inline-status').textContent(),/formato admitido/);
+  assert.equal(await page.locator('.seo-inline-download').isVisible(),false);
+  for(const [path,language] of [['/herramientas/word-a-pdf/','es'],['/en/tools/convert-word-to-pdf-from-your-browser/','en']]){
+   await page.goto(origin+path);
+   const target=await page.locator('.seo-actions .seo-cta').getAttribute('href');
+   assert.equal(new URL(target,origin).searchParams.get('tool'),'docx-pdf',path);
+   await page.locator('.seo-actions .seo-cta').click();
+   await page.locator('#tool-modal:not(.hidden)').waitFor({timeout:15000});
+   assert.match(await page.locator('#modal-title').textContent(),language==='es'?/Word a PDF/:/Word to PDF/);
+   assert.match(await page.locator('#file-input').getAttribute('accept'),/\.docx/);
   }
   const imagePdf=await page.evaluate(async()=>{
    const {runTool}=await import('/src/engines.js'),{PDFDocument}=await import('https://esm.sh/pdf-lib@1.17.1');

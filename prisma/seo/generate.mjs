@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tools, categories } from '../src/registry.js';
 import { generateContentHubs } from './content-hubs.mjs';
-import { inlineToolForm, inlineToolIds } from './inline-tool.mjs';
+import { inlineToolForm, hasInlineTool } from './inline-tool.mjs';
 import { priorityExamples, priorityUpdated, priorityActionLabel, priorityPanelHeading, priorityExampleHero, priorityExampleReview } from './priority-examples.mjs';
 
 import { SEO_BASE as BASE, FORMAT_PRESETS } from './config.mjs';
@@ -70,7 +70,7 @@ function relatedCards(page, pages, toolMap) {
 }
 function landing(page, pages, toolMap) {
   const tool = toolMap.get(page.tool);
-  const actionUrl=inlineToolIds.has(page.tool)?'#inline-tool-title':toolUrl(page);
+  const actionUrl=hasInlineTool(page)?'#inline-tool-title':toolUrl(page);
   const priority=priorityExamples[page.slug];
   const next=priority?.next && pages.find(item=>item.slug===priority.next);
   if(priority?.next&&!next)throw Error('SEO: missing practical next step '+priority.next);
@@ -98,16 +98,16 @@ function landing(page, pages, toolMap) {
     '<div class="seo-eyebrow"><i></i>' + esc(categoryFor(tool).name) + ' · ' + (['local','browser'].includes(tool.mode)?'Procesamiento local':'Servicio conectado') + ' · ' + (beta ? 'Beta' : 'Disponible') + '</div>',
     '<h1>' + esc(page.h1) + '</h1>',
     '<p class="seo-lead">' + esc(page.description) + '</p>',
-    '<div class="seo-actions"><a class="seo-cta" href="' + esc(actionUrl) + '">' + esc(priorityActionLabel(page.slug,'es') || (inlineToolIds.has(page.tool)?'Usar aquí':'Abrir herramienta')) + ' <span aria-hidden="true">→</span></a><a class="seo-subtle" href="#como-funciona">Cómo funciona ↓</a></div>',
+    '<div class="seo-actions"><a class="seo-cta" href="' + esc(actionUrl) + '">' + esc(priorityActionLabel(page.slug,'es') || (hasInlineTool(page)?'Usar aquí':'Abrir herramienta')) + ' <span aria-hidden="true">→</span></a><a class="seo-subtle" href="#como-funciona">Cómo funciona ↓</a></div>',
     '<p class="seo-privacy"><span aria-hidden="true">◇</span> ' + esc(page.privacyNote || (['local','browser'].includes(tool.mode) ? 'Procesamiento en el navegador · Sin registro' : 'Consulta las condiciones de uso de la herramienta')) + '</p></div>',
     preview+'</section>',
     '<div class="seo-content-grid" id="como-funciona">',
     '<section class="seo-panel"><div class="seo-section-label">' + (priority?'OPERACIÓN Y LÍMITES':'QUÉ PUEDES HACER') + '</div><h2>' + esc(priorityPanelHeading(page.slug,'es') || page.h1 + ': lo que necesitas saber') + '</h2><p>' + esc(page.intro) + '</p><p>' + esc(page.details) + '</p></section>',
     '<section class="seo-panel"><div class="seo-section-label">PASO A PASO</div><h2>Cómo utilizar esta herramienta</h2><ol class="seo-steps">' + steps + '</ol><a class="seo-inline-link" href="' + esc(actionUrl) + '">Abrir ' + esc(tool.name) + ' ↗</a></section>',
     '</div>',
-    inlineToolForm(page.tool,'es'),
+    inlineToolForm(page.tool,'es',page),
     priorityExampleReview(page.slug,'es',next&&{href:'/herramientas/'+next.slug+'/',h1:next.h1}),
-    '<aside class="seo-note"><span class="seo-note-icon">i</span><div><strong>Antes de empezar</strong><p>' + esc(page.tip) + '</p>' + (beta ? '<small>Esta función figura como beta en el catálogo de Prisma Space.</small>' : '') + '</div></aside>',
+    '<aside class="seo-note"><span class="seo-note-icon">i</span><div><strong>Antes de empezar</strong><p>' + esc(page.tip) + '</p>' + (beta&&!priority ? '<small>Esta función figura como beta en el catálogo de Prisma Space.</small>' : '') + '</div></aside>',
     '<section class="seo-faq" aria-labelledby="faq-title"><div class="seo-section-label">PREGUNTAS FRECUENTES</div><h2 id="faq-title">Dudas habituales</h2>' + faqs + '</section>',
     '<section class="seo-related" aria-labelledby="related-title"><div class="seo-related-heading"><div><div class="seo-section-label">TAMBIÉN TE PUEDE SERVIR</div><h2 id="related-title">Herramientas relacionadas</h2></div><a href="/herramientas/">Ver todas ↗</a></div><div class="seo-related-grid">' + relatedCards(page,pages,toolMap) + '</div></section>',
     '</main>'
