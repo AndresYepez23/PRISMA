@@ -43,6 +43,31 @@ test('priority text tools execute on their bilingual SEO pages through the share
  }
 });
 
+test('PDF splitting and EXIF removal run from both existing landings',async()=>{
+ const pairs=[['dividir-pdf','split-pdf-into-separate-files','pdf-split'],['eliminar-metadatos-imagen','remove-exif-metadata-from-an-image','image-strip-metadata']];
+ for(const [es,en,id] of pairs){
+  for(const [path,locale] of [['herramientas/'+es+'/index.html','es'],['en/tools/'+en+'/index.html','en']]){
+   const html=await readOutput(path);
+   assert.ok(html.includes('data-seo-inline-tool="'+id+'"'),path);
+   assert.ok(html.includes('class="seo-cta" href="#inline-tool-title"'),path);
+   assert.ok(html.includes('name="file" type="file"'),path);
+   assert.ok(html.includes('href="'+(locale==='en'?'/en/?tool='+id:'/?tool='+id+'&amp;lang=es')+'"'),path);
+  }
+ }
+ const xml=await readOutput('sitemap.xml');
+ assert.equal([...xml.matchAll(/<loc>/g)].length,388);
+});
+
+test('regional SIMO and CSV guides link directly to the relevant operations',async()=>{
+ const simo=await readOutput('guias/preparar-documentos-simo/index.html');
+ const csv=await readOutput('guias/csv-una-sola-columna-excel/index.html');
+ const zeros=await readOutput('en/guides/keep-leading-zeros-csv-excel/index.html');
+ assert.ok(simo.includes('href="/herramientas/dividir-pdf/"'));
+ assert.ok(csv.includes('href="/herramientas/auditar-archivo-csv/"'));
+ assert.ok(zeros.includes('href="/en/tools/convert-csv-excel-and-json-files/"'));
+ assert.match(csv,/no ofrece selección manual del delimitador/);
+});
+
 test('catalogue scales without a fixed batch size and preserves original pages',()=>{
  assert.doesNotThrow(()=>validatePages(pages));
  assert.doesNotThrow(()=>validatePages(pages.slice(0,1)));
@@ -94,7 +119,8 @@ test('rendered pages have one H1, unique metadata, valid JSON-LD and real CTA',a
   const schemas=JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)[1]);
   assert.equal(schemas[0]['@type'],'WebApplication');assert.equal(schemas[0].url,canonical);
   assert.equal(schemas[1]['@type'],'BreadcrumbList');assert.equal(schemas[1].itemListElement.at(-1).item,canonical);
-  const cta=decode(html.match(/class="seo-cta" href="([^"]+)"/)[1]);assert.equal(cta,toolUrl(p));
+  const cta=decode(html.match(/class="seo-cta" href="([^"]+)"/)[1]);assert.equal(cta,['pdf-split','image-strip-metadata'].includes(p.tool)?'#inline-tool-title':toolUrl(p));
+  if(cta==='#inline-tool-title')assert.ok(html.includes('href="'+toolUrl(p).replaceAll('&','&amp;')+'"'),p.slug+' lost Prisma Core fallback');
   for(const match of html.matchAll(/class="seo-related-card" href="\/herramientas\/([^/]+)\/"/g)){
    assert.ok(incoming.has(match[1]),'broken related link');assert.notEqual(match[1],p.slug);incoming.set(match[1],incoming.get(match[1])+1);
   }
