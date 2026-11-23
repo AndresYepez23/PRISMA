@@ -90,18 +90,88 @@ export const priorityExamples = {
     next: 'redimensionar-imagen',
     es: { title: 'Recortar el centro de una foto', input: 'Una imagen de 1600 × 1200; conservas 75 % del ancho y 80 % del alto.', result: 'Un recorte centrado de 1200 × 960 píxeles descargado como imagen nueva.', verify: 'Comprueba que el sujeto permanezca dentro de los bordes antes de compartir.', fallback: 'Esta versión no mueve el foco de recorte: si el sujeto está a un lado, prepara otra foto o usa un editor manual.' },
     en: { title: 'Crop the center of a photo', input: 'A 1600 × 1200 image; keep 75% of the width and 80% of the height.', result: 'A centered 1200 × 960 crop downloaded as a new image.', verify: 'Make sure the subject remains inside the edges before sharing.', fallback: 'This version cannot move the crop focus; use another source photo or a manual editor for off-center subjects.' }
+  },
+  'png-a-pdf': {
+    es: { title: 'Compartir capturas en un documento', input: 'Dos capturas PNG en el orden en que deben aparecer.', result: 'Un PDF con una página por imagen, en A4, Carta o ajustada a sus dimensiones.', verify: 'Abre las páginas y revisa la legibilidad del texto pequeño y los márgenes.', fallback: 'Las capturas muy alargadas se reducirán en A4 o Carta; elige ajustar a la imagen si el texto pierde legibilidad.' },
+    en: { title: 'Share screenshots as one document', input: 'Two PNG screenshots in the order they should appear.', result: 'A PDF with one page per image, in A4, Letter or fitted to the image dimensions.', verify: 'Open the pages and check small text and margins for legibility.', fallback: 'Very tall screenshots shrink on A4 or Letter; fit pages to image dimensions if text becomes unreadable.' }
+  },
+  'pdf-a-jpg': {
+    next: 'jpg-a-pdf',
+    es: { title: 'Enviar páginas como imágenes', input: 'Un PDF de tres páginas con una ilustración en cada una.', result: 'Un ZIP con un JPG por página seleccionada, a la resolución elegida.', verify: 'Abre el ZIP y compara detalles finos, bordes y número de imágenes con el PDF.', fallback: 'JPG puede suavizar letras pequeñas; exporta PNG si necesitas conservar trazos más nítidos.' },
+    en: { title: 'Share pages as images', input: 'A three-page PDF with an illustration on each page.', result: 'A ZIP containing one JPG per selected page at your chosen resolution.', verify: 'Open the ZIP and compare fine details, edges and image count against the PDF.', fallback: 'JPG may soften small text; export PNG if you need sharper lines.' }
+  },
+  'ver-metadatos-exif': {
+    next: 'eliminar-metadatos-imagen',
+    es: { title: 'Revisar una foto antes de publicarla', input: 'El archivo original de una foto JPG tomada con el teléfono.', result: 'Los campos EXIF que existan, como cámara, fecha u ubicación; no se altera la foto.', verify: 'Comprueba si aparecen coordenadas GPS y revisa también lo visible en la imagen.', fallback: 'Si no aparece ubicación, quizá el archivo ya fue editado o la cámara no la guardó; no se infiere a partir de la escena.' },
+    en: { title: 'Inspect a photo before publishing', input: 'The original JPG photo taken with a phone.', result: 'Existing EXIF fields, such as camera, date or location; the photo is unchanged.', verify: 'Check for GPS coordinates and review what is visible in the photo too.', fallback: 'If location is absent, the file may have been edited or the camera may not have saved it; the scene is not analyzed.' }
+  },
+  'csv-a-json': {
+    next: 'auditar-archivo-csv',
+    es: { title: 'Preparar registros para una API', input: 'Un CSV con cabeceras nombre,estado y una fila por persona.', result: 'Una lista JSON de objetos; cada cabecera pasa a ser una clave y cada valor sigue siendo texto.', verify: 'Revisa separador, nombres de claves y número de registros antes de copiar el JSON.', fallback: 'Si hay claves repetidas, renombra las cabeceras del CSV: una columna puede sobrescribir a otra.' },
+    en: { title: 'Prepare records for an API', input: 'A CSV with name,status headers and one row per person.', result: 'A JSON array of objects; headers become keys and values remain strings.', verify: 'Check the delimiter, key names and record count before copying the JSON.', fallback: 'Rename repeated CSV headers: one column can overwrite another.' }
+  },
+  'json-a-csv': {
+    next: 'convertir-archivos-csv-excel-json',
+    es: { title: 'Abrir registros en una hoja', input: 'Una lista JSON de objetos con nombre,estado y fecha.', result: 'Una tabla CSV con una columna por clave presente; los objetos anidados quedan serializados en una celda.', verify: 'Abre el CSV y revisa comillas, caracteres especiales y columnas vacías.', fallback: 'Si necesitas columnas separadas para objetos anidados, aplana el JSON antes de convertirlo.' },
+    en: { title: 'Open records in a spreadsheet', input: 'A JSON array of objects with name, status and date fields.', result: 'A CSV table with one column per present key; nested objects are serialized into one cell.', verify: 'Open the CSV and check quotes, special characters and empty columns.', fallback: 'If you need separate columns for nested objects, flatten the JSON before converting.' }
   }
+};
+
+// The labels describe actual input, operation and output. They drive one
+// visual component in both languages, so a conversion cannot look like an
+// unrelated generic catalogue card.
+export const priorityVisuals = {
+  'pdf-a-word': {family:'pdf',es:['PDF digital','Extraer texto','DOCX editable','Convertir a Word'],en:['Digital PDF','Extract text','Editable DOCX','Convert to Word']},
+  'word-a-pdf': {family:'pdf',es:['DOCX','Preparar impresión','Vista imprimible','Preparar PDF'],en:['DOCX','Prepare print view','Printable view','Prepare PDF']},
+  'unir-pdf': {family:'pdf',es:['Varios PDF','Ordenar y unir','Un PDF','Unir archivos'],en:['Multiple PDFs','Order and merge','One PDF','Merge files']},
+  'dividir-pdf': {family:'pdf',es:['PDF','Elegir rangos','ZIP de PDF','Dividir aquí'],en:['PDF','Select page ranges','ZIP of PDFs','Split here']},
+  'comprimir-pdf': {family:'pdf',es:['PDF','Reescribir estructura','PDF optimizado','Optimizar PDF'],en:['PDF','Rewrite structure','Optimized PDF','Optimize PDF']},
+  'imagen-a-texto': {family:'image',es:['Foto o imagen','Reconocer caracteres','Texto copiable','Reconocer texto'],en:['Photo or image','Recognize characters','Copyable text','Recognize text']},
+  'eliminar-metadatos-imagen': {family:'image',es:['JPG o PNG','Recodificar imagen','Copia sin EXIF','Eliminar EXIF aquí'],en:['JPG or PNG','Re-encode image','Copy without EXIF','Remove EXIF here']},
+  'collage-de-fotos': {family:'image',es:['Varias fotos','Componer cuadrícula','Collage cuadrado','Crear collage'],en:['Multiple photos','Arrange grid','Square collage','Create collage']},
+  'formatear-html': {family:'code',es:['HTML','Aplicar sangría','HTML legible','Formatear HTML aquí'],en:['HTML','Apply indentation','Readable HTML','Format HTML here']},
+  'formatear-javascript': {family:'code',es:['JavaScript','Aplicar formato','Código legible','Formatear JavaScript aquí'],en:['JavaScript','Apply formatting','Readable code','Format JavaScript here']},
+  'generador-citas-apa-vancouver': {family:'reference',es:['Datos de la fuente','Elegir estilo','Referencia borrador','Crear referencia aquí'],en:['Source details','Select style','Draft reference','Create reference here']},
+  'comprimir-imagen': {family:'image',es:['PNG','Ajustar calidad','WebP','Comprimir aquí'],en:['PNG','Adjust quality','WebP','Compress here']},
+  'redimensionar-imagen': {family:'image',es:['4000 × 3000 px','Mantener proporción','1200 × 900 px','Redimensionar imagen'],en:['4000 × 3000 px','Keep aspect ratio','1200 × 900 px','Resize image']},
+  'quitar-fondo-imagen': {family:'image',es:['JPG','Estimar fondo','PNG transparente','Quitar fondo'],en:['JPG','Estimate background','Transparent PNG','Remove background']},
+  'convertir-archivos-csv-excel-json': {family:'data',es:['CSV','Convertir tabla','XLSX o JSON','Convertir archivo'],en:['CSV','Convert table','XLSX or JSON','Convert file']},
+  'auditar-archivo-csv': {family:'data',es:['CSV','Analizar filas','Informe','Auditar CSV'],en:['CSV','Analyze rows','Report','Audit CSV']},
+  'extraer-texto-pdf': {family:'pdf',es:['PDF digital','Leer capa de texto','Texto copiable','Extraer texto'],en:['Digital PDF','Read text layer','Copyable text','Extract text']},
+  'jpg-a-pdf': {family:'pdf',es:['Fotos JPG','Ajustar a páginas','Un PDF','Crear PDF'],en:['JPG photos','Fit to pages','One PDF','Create PDF']},
+  'recortar-imagen': {family:'image',es:['1600 × 1200 px','Recortar centro','1200 × 960 px','Recortar imagen'],en:['1600 × 1200 px','Crop center','1200 × 960 px','Crop image']},
+  'png-a-pdf': {family:'pdf',es:['Imágenes PNG','Ajustar a páginas','Un PDF','Convertir PNG a PDF'],en:['PNG images','Fit to pages','One PDF','Convert PNG to PDF']},
+  'pdf-a-jpg': {family:'pdf',es:['PDF','Renderizar páginas','ZIP de JPG','Exportar JPG'],en:['PDF','Render pages','ZIP of JPGs','Export JPGs']},
+  'ver-metadatos-exif': {family:'image',es:['Imagen','Leer campos EXIF','Datos disponibles','Ver metadatos'],en:['Image','Read EXIF fields','Available details','View metadata']},
+  'csv-a-json': {family:'data',es:['CSV','Interpretar cabeceras','JSON','Convertir a JSON'],en:['CSV','Read headers','JSON','Convert to JSON']},
+  'json-a-csv': {family:'data',es:['JSON','Organizar columnas','CSV','Convertir a CSV'],en:['JSON','Arrange columns','CSV','Convert to CSV']}
 };
 
 const esc = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 
+export function priorityActionLabel(slug, language) {
+  return priorityVisuals[slug]?.[language]?.[3];
+}
+
+export function priorityPanelHeading(slug, language) {
+  const visual = priorityVisuals[slug]?.[language];
+  return visual && visual[0] + ' → ' + visual[2];
+}
+
 export function priorityExampleHero(slug, language) {
   const item = priorityExamples[slug]?.[language];
   if (!item) return '';
+  const visual = priorityVisuals[slug];
+  if (!visual) throw Error('SEO: missing visual brief for ' + slug);
+  const [source, operation, output] = visual[language];
   const en = language === 'en';
-  return '<aside class="seo-example" aria-label="' + (en ? 'Practical example' : 'Ejemplo práctico') + '">' +
-    '<span class="seo-section-label">' + (en ? 'A PRACTICAL EXAMPLE' : 'EJEMPLO PRÁCTICO') + '</span>' +
+  return '<aside class="seo-example" data-family="' + esc(visual.family) + '" aria-label="' + (en ? 'Practical example' : 'Ejemplo práctico') + '">' +
+    '<div class="seo-example-head"><span class="seo-section-label">' + (en ? 'A PRACTICAL EXAMPLE' : 'EJEMPLO PRÁCTICO') + '</span><span class="seo-example-family">' +
+    ({pdf:en?'Documents':'Documentos',image:en?'Images':'Imágenes',code:en?'Code':'Código',data:en?'Data':'Datos',reference:en?'References':'Referencias'})[visual.family] + '</span></div>' +
     '<h2>' + esc(item.title) + '</h2>' +
+    '<div class="seo-example-flow" data-family="' + esc(visual.family) + '"><div class="seo-example-node"><span>' + (en ? 'INPUT' : 'ENTRADA') + '</span><strong>' + esc(source) + '</strong></div>' +
+    '<div class="seo-example-process"><span aria-hidden="true">→</span><small>' + esc(operation) + '</small></div>' +
+    '<div class="seo-example-node"><span>' + (en ? 'OUTPUT' : 'RESULTADO') + '</span><strong>' + esc(output) + '</strong></div></div>' +
     '<dl><div><dt>' + (en ? 'Starting point' : 'Punto de partida') + '</dt><dd>' + esc(item.input) + '</dd></div>' +
     '<div><dt>' + (en ? 'What you get' : 'Qué obtienes') + '</dt><dd>' + esc(item.result) + '</dd></div></dl>' +
     '</aside>';

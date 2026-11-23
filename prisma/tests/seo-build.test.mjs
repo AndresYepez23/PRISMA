@@ -6,7 +6,7 @@ import { SEO_BASE, FORMAT_PRESETS } from '../seo/config.mjs';
 import { tools } from '../src/registry.js';
 import { expansionPages } from '../seo/generate-expansion.mjs';
 import { inlineToolIds } from '../seo/inline-tool.mjs';
-import { priorityExamples, priorityUpdated } from '../seo/priority-examples.mjs';
+import { priorityExamples, priorityVisuals, priorityUpdated } from '../seo/priority-examples.mjs';
 const root=new URL('../',import.meta.url),dist=new URL('../dist/',import.meta.url);
 const read=p=>readFile(new URL(p,root),'utf8');
 const readOutput=p=>readFile(new URL(p,dist),'utf8');
@@ -45,17 +45,22 @@ test('both homepages show real task paths, clear Core limits and institutional l
  }
 });
 
-test('19 curated bilingual pairs replace decorative previews with operation-specific checks',async()=>{
+test('24 curated bilingual pairs show truthful input, operation and output',async()=>{
  const selected=Object.entries(priorityExamples);
- assert.equal(selected.length,19);
+ assert.equal(selected.length,24);
+ assert.deepEqual(Object.keys(priorityVisuals).sort(),Object.keys(priorityExamples).sort());
  const englishBySource=new Map(englishPages.map(page=>[page.sourceSlug,page]));
  for(const [slug,item] of selected){
   const esPage=pages.find(page=>page.slug===slug),enPage=englishBySource.get(slug);
   assert.ok(esPage&&enPage,slug);
   for(const [language,path] of [['es','herramientas/'+slug+'/index.html'],['en','en/tools/'+enPage.englishSlug+'/index.html']]){
-   const html=await readOutput(path),example=item[language];
+   const html=await readOutput(path),example=item[language],visual=priorityVisuals[slug];
    assert.ok(example&&example.title.length>10&&['input','result','verify','fallback'].every(key=>typeof example[key]==='string'&&example[key].length>25),path);
    assert.ok(html.includes('class="seo-example"'),path);
+   assert.ok(html.includes('class="seo-example" data-family="'+visual.family+'"'),path);
+   for(const label of visual[language].slice(0,3))assert.ok(html.includes(label.replaceAll('&','&amp;')),path+' visual brief '+label);
+   assert.ok(html.includes('class="seo-cta" href="')&&html.includes(visual[language][3]),path+' specific action');
+   assert.ok(html.includes('<h2>'+visual[language][0]+' → '+visual[language][2]+'</h2>'),path+' operation heading');
    assert.ok(html.includes('class="seo-example-review"'),path);
    assert.ok(!html.includes('class="seo-preview"'),path);
    assert.ok(html.includes(example.title),path+' scenario');

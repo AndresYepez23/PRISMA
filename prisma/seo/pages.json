@@ -1976,9 +1976,9 @@
       "intro": "Transforma una tabla pegada en una lista de objetos con los encabezados como claves.",
       "details": "Pega CSV con encabezados y al menos una fila, elige coma o punto y coma y ejecuta. Los valores se conservan como texto. Usa encabezados únicos para evitar que columnas con el mismo nombre se sobrescriban.",
       "steps": [
-        "Abre convertir csv a json en Prisma Space.",
-        "Pega CSV con encabezados y al menos una fila, elige coma o punto y coma y ejecuta.",
-        "Revisa el resultado antes de copiarlo, descargarlo o utilizarlo."
+        "Pega un CSV con una fila de encabezados distintos y elige el separador correcto.",
+        "Ejecuta la conversión; la primera fila se usa como claves y los valores se conservan como texto.",
+        "Compara el número de objetos JSON con las filas del CSV y comprueba que las claves no se repitan."
       ],
       "tip": "Los valores se conservan como texto. Usa encabezados únicos para evitar que columnas con el mismo nombre se sobrescriban.",
       "faqs": [
@@ -1987,7 +1987,7 @@
           "No. El resultado conserva los valores como cadenas para no adivinar su tipo."
         ],
         [
-          "¿Qué debo revisar antes de usar el resultado?",
+          "¿Qué pasa si dos columnas tienen la misma cabecera?",
           "Los valores se conservan como texto. Usa encabezados únicos para evitar que columnas con el mismo nombre se sobrescriban."
         ]
       ],
@@ -2002,9 +2002,9 @@
       "intro": "Prepara una lista de objetos para abrirla en una hoja de cálculo o importarla en un sistema tabular.",
       "details": "Pega una lista JSON de objetos, ejecuta la conversión y copia la tabla CSV. Las columnas reúnen las claves presentes. Los objetos anidados se serializan dentro de la celda y no se convierten en columnas separadas.",
       "steps": [
-        "Abre convertir json a csv en Prisma Space.",
-        "Pega una lista JSON de objetos, ejecuta la conversión y copia la tabla CSV.",
-        "Revisa el resultado antes de copiarlo, descargarlo o utilizarlo."
+        "Pega una lista JSON de objetos y confirma que contiene las propiedades que quieres exportar.",
+        "Ejecuta la conversión; las propiedades pasan a columnas y los objetos anidados quedan en una celda.",
+        "Copia el CSV y comprueba las columnas, celdas vacías y comillas al abrirlo en una hoja."
       ],
       "tip": "Las columnas reúnen las claves presentes. Los objetos anidados se serializan dentro de la celda y no se convierten en columnas separadas.",
       "faqs": [
@@ -2013,7 +2013,7 @@
           "Su celda queda vacía en la fila correspondiente."
         ],
         [
-          "¿Qué debo revisar antes de usar el resultado?",
+          "¿Se crean columnas para objetos anidados?",
           "Las columnas reúnen las claves presentes. Los objetos anidados se serializan dentro de la celda y no se convierten en columnas separadas."
         ]
       ],
@@ -2548,9 +2548,9 @@
       "intro": "Revisa dimensiones y datos de captura antes de compartir una fotografía.",
       "details": "Carga la imagen, ejecuta la lectura y consulta los campos disponibles. Los metadatos dependen del archivo; redes sociales y editores pueden haberlos eliminado. La ausencia de GPS no demuestra que nunca se almacenó ubicación.",
       "steps": [
-        "Abre ver metadatos exif de una imagen en Prisma Space.",
-        "Carga la imagen, ejecuta la lectura y consulta los campos disponibles.",
-        "Revisa el resultado antes de copiarlo, descargarlo o utilizarlo."
+        "Selecciona la foto original para leer sus metadatos; una copia de una red social puede haberlos perdido.",
+        "Ejecuta la lectura y consulta dimensiones, formato y campos EXIF disponibles.",
+        "Compara los campos de cámara, fecha y GPS que aparezcan; si vas a compartir la foto, elimina los metadatos en una copia."
       ],
       "tip": "Los metadatos dependen del archivo; redes sociales y editores pueden haberlos eliminado. La ausencia de GPS no demuestra que nunca se almacenó ubicación.",
       "faqs": [
@@ -2559,7 +2559,7 @@
           "Puede mostrar datos GPS si existen en los metadatos; no deduce una ubicación a partir de la escena."
         ],
         [
-          "¿Qué debo revisar antes de usar el resultado?",
+          "¿Qué significa que no aparezca ubicación?",
           "Los metadatos dependen del archivo; redes sociales y editores pueden haberlos eliminado. La ausencia de GPS no demuestra que nunca se almacenó ubicación."
         ]
       ],

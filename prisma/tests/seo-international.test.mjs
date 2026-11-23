@@ -56,7 +56,7 @@ test('sitemap preserves verified per-language lastmod dates without stamping unc
   assert.equal(sitemapRecords.get(SEO_BASE+'/herramientas/'+page.sourceSlug+'/'),priorityUpdated);
   assert.equal(sitemapRecords.get(SEO_BASE+'/en/tools/'+page.englishSlug+'/'),priorityUpdated);
  }
- assert.equal(sitemapRecords.get(SEO_BASE+'/herramientas/pdf-a-jpg/'),null,'unchanged pages must not receive a fabricated lastmod');
+ assert.equal(sitemapRecords.get(SEO_BASE+'/herramientas/rotar-pdf/'),null,'unchanged pages must not receive a fabricated lastmod');
  assert.ok([...sitemapRecords.values()].filter(Boolean).every(date=>/^\d{4}-\d{2}-\d{2}$/.test(date)),'lastmod must use a calendar date');
 });
 
