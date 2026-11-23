@@ -142,11 +142,29 @@ body.seo-page{margin:0;min-width:0;min-height:100vh;font:400 15px/1.65 "DM Sans"
 .seo-inline-tool{margin:24px 0}.seo-inline-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.seo-inline-form label{display:grid;gap:6px}.seo-inline-form input,.seo-inline-form select,.seo-inline-form textarea{width:100%;padding:10px;border:1px solid #8193a7;border-radius:8px;background:var(--surface,#fff);color:inherit;font:inherit;box-sizing:border-box}.seo-inline-wide,.seo-inline-result,.seo-inline-status{grid-column:1/-1}.seo-inline-result{white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto}.seo-inline-form button{justify-self:start}@media(max-width:650px){.seo-inline-form{grid-template-columns:1fr}}
 .seo-inline-form [hidden]{display:none!important}.seo-inline-preview,.seo-inline-status,.seo-inline-image{grid-column:1/-1}.seo-inline-image{max-width:100%;max-height:320px;object-fit:contain}.seo-inline-download{justify-self:start}
 
-/* High-intent pages use the hero space to show a realistic input and result. */
-.seo-example{min-width:0;border:1px solid var(--aurora-edge);border-radius:22px;background:radial-gradient(circle at 90% 5%,color-mix(in srgb,var(--aurora-blue) 13%,transparent),transparent 50%),var(--aurora-surface);padding:26px;box-shadow:var(--shadow)}
-.seo-example h2{font-size:clamp(21px,2.2vw,27px);margin:12px 0 19px}
-.seo-example dl{margin:0;display:grid;gap:13px}
-.seo-example dl>div{padding:15px 17px;border:1px solid var(--aurora-edge);border-radius:13px;background:var(--aurora-soft)}
+/* The selected tool pages show a concrete input, operation and output. */
+.seo-example{--example-accent:var(--aurora-cyan);min-width:0;overflow:hidden;border:1px solid var(--aurora-edge);border-top:3px solid var(--example-accent);border-radius:22px;background:radial-gradient(circle at 90% 5%,color-mix(in srgb,var(--example-accent) 15%,transparent),transparent 48%),var(--aurora-surface);padding:25px;box-shadow:var(--shadow)}
+.seo-example[data-family="image"]{--example-accent:#b1a2ee}
+.seo-example[data-family="code"]{--example-accent:#94c7e6}
+.seo-example[data-family="data"]{--example-accent:#91dbd5}
+.seo-example[data-family="reference"]{--example-accent:#e5b589}
+.seo-example-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.seo-example-family{border:1px solid color-mix(in srgb,var(--example-accent) 45%,var(--aurora-edge));border-radius:999px;padding:5px 9px;color:var(--text);font:800 10px/1 Manrope,sans-serif}
+.seo-example h2{font-size:clamp(21px,2.2vw,27px);margin:16px 0 19px}
+.seo-example-flow{display:grid;grid-template-columns:minmax(0,1fr) 78px minmax(0,1fr);align-items:stretch;gap:5px;margin:0 0 18px}
+.seo-example-node{min-width:0;min-height:93px;display:flex;flex-direction:column;justify-content:space-between;gap:12px;padding:13px 14px;border:1px solid color-mix(in srgb,var(--example-accent) 45%,var(--aurora-edge));border-radius:13px;background:color-mix(in srgb,var(--example-accent) 8%,var(--panel));position:relative;overflow:hidden}
+.seo-example-node span{font:800 9px/1.2 Manrope,sans-serif;letter-spacing:.12em;color:var(--muted)}
+.seo-example-node strong{font:800 14px/1.3 Manrope,sans-serif;color:var(--text);overflow-wrap:anywhere}
+.seo-example-process{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center;color:var(--example-accent)}
+.seo-example-process>span{display:grid;place-items:center;width:30px;height:30px;border:1px solid color-mix(in srgb,var(--example-accent) 45%,var(--aurora-edge));border-radius:50%;font-size:18px}
+.seo-example-process small{font-size:10px;line-height:1.35;font-weight:700;color:var(--muted)}
+.seo-example-flow[data-family="pdf"] .seo-example-node{border-radius:11px 20px 11px 11px}
+.seo-example-flow[data-family="image"] .seo-example-node{background:linear-gradient(150deg,color-mix(in srgb,var(--example-accent) 15%,var(--panel)),var(--panel) 65%)}
+.seo-example-flow[data-family="code"] .seo-example-node strong{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:-.04em}
+.seo-example-flow[data-family="data"] .seo-example-node{background-image:linear-gradient(color-mix(in srgb,var(--example-accent) 10%,transparent) 1px,transparent 1px);background-size:100% 18px}
+.seo-example-flow[data-family="reference"] .seo-example-node{border-left:4px solid var(--example-accent)}
+.seo-example dl{margin:0;display:grid;gap:9px}
+.seo-example dl>div{padding:12px 14px;border:1px solid var(--aurora-edge);border-radius:12px;background:var(--aurora-soft)}
 .seo-example dt{font:800 10px/1.4 Manrope,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--aurora-cyan);margin-bottom:6px}
 .seo-example dd{margin:0;color:var(--text);font-size:13px;line-height:1.65;overflow-wrap:anywhere}
 .seo-example-review{margin:26px 0 20px;padding:27px 30px;border:1px solid var(--aurora-edge);border-radius:20px;background:var(--aurora-surface)}
@@ -161,7 +179,7 @@ body.seo-page{margin:0;min-width:0;min-height:100vh;font:400 15px/1.65 "DM Sans"
 .seo-inline-order button{width:32px;height:32px;border:1px solid var(--line-strong);border-radius:7px;background:var(--panel);color:var(--text)}
 .seo-inline-order button:disabled{opacity:.45;cursor:default}
 .seo-inline-order button:focus-visible,.seo-example-review a:focus-visible{outline:2px solid var(--aurora-cyan);outline-offset:2px}
-@media(max-width:600px){.seo-example{padding:20px}.seo-example-review{padding:22px 20px}.seo-example-review-grid{grid-template-columns:1fr;gap:15px}}
+@media(max-width:600px){.seo-example{padding:19px}.seo-example-flow{grid-template-columns:1fr;gap:7px}.seo-example-node{min-height:64px;gap:6px}.seo-example-process{flex-direction:row;gap:9px;min-height:30px}.seo-example-process>span{width:24px;height:24px;transform:rotate(90deg);font-size:15px}.seo-example-process small{font-size:11px}.seo-example-review{padding:22px 20px}.seo-example-review-grid{grid-template-columns:1fr;gap:15px}}
 .seo-page a:focus-visible,.seo-page button:focus-visible{outline:2px solid var(--aurora-cyan);outline-offset:3px}
 #inline-tool-title{scroll-margin-top:120px}
 @media(max-width:600px){

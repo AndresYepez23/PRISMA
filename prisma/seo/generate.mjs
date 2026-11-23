@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tools, categories } from '../src/registry.js';
 import { generateContentHubs } from './content-hubs.mjs';
 import { inlineToolForm, inlineToolIds } from './inline-tool.mjs';
-import { priorityExamples, priorityUpdated, priorityExampleHero, priorityExampleReview } from './priority-examples.mjs';
+import { priorityExamples, priorityUpdated, priorityActionLabel, priorityExampleHero, priorityExampleReview } from './priority-examples.mjs';
 
 import { SEO_BASE as BASE, FORMAT_PRESETS } from './config.mjs';
 const GROUPS = Object.fromEntries(categories.filter(c => c.id !== 'all').map((c,i) => [c.id, {name:c.name, order:i}]));
@@ -98,7 +98,7 @@ function landing(page, pages, toolMap) {
     '<div class="seo-eyebrow"><i></i>' + esc(categoryFor(tool).name) + ' · ' + (['local','browser'].includes(tool.mode)?'Procesamiento local':'Servicio conectado') + ' · ' + (beta ? 'Beta' : 'Disponible') + '</div>',
     '<h1>' + esc(page.h1) + '</h1>',
     '<p class="seo-lead">' + esc(page.description) + '</p>',
-    '<div class="seo-actions"><a class="seo-cta" href="' + esc(actionUrl) + '">' + (inlineToolIds.has(page.tool)?'Usar aquí':'Abrir herramienta') + ' <span aria-hidden="true">→</span></a><a class="seo-subtle" href="#como-funciona">Cómo funciona ↓</a></div>',
+    '<div class="seo-actions"><a class="seo-cta" href="' + esc(actionUrl) + '">' + esc(priorityActionLabel(page.slug,'es') || (inlineToolIds.has(page.tool)?'Usar aquí':'Abrir herramienta')) + ' <span aria-hidden="true">→</span></a><a class="seo-subtle" href="#como-funciona">Cómo funciona ↓</a></div>',
     '<p class="seo-privacy"><span aria-hidden="true">◇</span> ' + esc(page.privacyNote || (['local','browser'].includes(tool.mode) ? 'Procesamiento en el navegador · Sin registro' : 'Consulta las condiciones de uso de la herramienta')) + '</p></div>',
     preview+'</section>',
     '<div class="seo-content-grid" id="como-funciona">',

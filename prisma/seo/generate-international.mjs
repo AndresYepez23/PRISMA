@@ -3,7 +3,7 @@ import { tools, categories as registryCategories } from '../src/registry.js';
 import translations from '../src/locales/en.js';
 import { SEO_BASE as BASE } from './config.mjs';
 import { inlineToolForm, inlineToolIds } from './inline-tool.mjs';
-import { priorityExamples, priorityUpdated, priorityExampleHero, priorityExampleReview } from './priority-examples.mjs';
+import { priorityExamples, priorityUpdated, priorityActionLabel, priorityExampleHero, priorityExampleReview } from './priority-examples.mjs';
 
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[char]);
 const safeJson = value => JSON.stringify(value).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
@@ -152,7 +152,7 @@ function toolLanding(page,pages,toolMap) {
     '<section class="seo-hero"><div class="seo-hero-copy">',
     '<div class="seo-eyebrow"><i></i>'+esc(category)+' · '+esc(modeLabel(tool))+' · '+esc(statusLabel(tool))+'</div>',
     '<h1>'+esc(page.h1)+'</h1><p class="seo-lead">'+esc(page.description)+'</p>',
-    '<div class="seo-actions"><a class="seo-cta" href="'+esc(actionUrl)+'">'+(inlineToolIds.has(page.tool)?'Use here':'Open tool')+' <span aria-hidden="true">→</span></a><a class="seo-subtle" href="#how-it-works">How it works ↓</a></div>',
+    '<div class="seo-actions"><a class="seo-cta" href="'+esc(actionUrl)+'">'+esc(priorityActionLabel(page.sourceSlug,'en') || (inlineToolIds.has(page.tool)?'Use here':'Open tool'))+' <span aria-hidden="true">→</span></a><a class="seo-subtle" href="#how-it-works">How it works ↓</a></div>',
     '<p class="seo-privacy"><span aria-hidden="true">◇</span> '+esc(page.privacyNote || (['local','browser'].includes(tool.mode)?'Processed in your browser · No registration required':'Review the tool usage conditions'))+'</p></div>',
     preview+'</section>',
     '<div class="seo-content-grid" id="how-it-works">',
