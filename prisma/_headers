@@ -1,6 +1,8 @@
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Content-Security-Policy: base-uri 'self'; frame-ancestors 'self'
 
 /prisma-build.json
   Cache-Control: no-store

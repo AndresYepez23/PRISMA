@@ -89,7 +89,7 @@ export async function verifyQueenResult(step,result,inputs=[],{load=moduleLoader
       unverified.push('xlsx-complex-values');
      }else{
       let XLSX;
-      try{const imported=await load('https://esm.sh/xlsx@0.18.5');XLSX=imported.default||imported;}
+      try{const imported=await load('https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs');XLSX=imported.default||imported;}
       catch{unverified.push('xlsx-parser-unavailable');}
       if(XLSX){
        let actual;

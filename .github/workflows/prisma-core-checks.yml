@@ -31,6 +31,11 @@ jobs:
         run: node --test prisma/tests/qwen-core-plan-coverage.test.mjs prisma/tests/qwen-core-client.test.mjs prisma/tests/qwen-core-interpreter.test.mjs prisma/tests/qwen-core-production-routing.test.mjs prisma/tests/qwen-core-hybrid-benchmark.test.mjs prisma/tests/queen-integration.test.mjs prisma/tests/queen-staging.test.mjs prisma/tests/queen.test.mjs prisma/tests/core-agent-routing.test.mjs prisma/tests/core-model-session.test.mjs prisma/tests/conversation-history.test.mjs prisma/tests/provider-orchestration.test.mjs prisma/tests/research-providers.test.mjs prisma/tests/core-create-model-groups.test.mjs prisma/tests/core-composer-single-row.test.mjs prisma/tests/core-creative-catalog.test.mjs prisma/tests/core-create-transcription.test.mjs prisma/tests/core-create-tts.test.mjs prisma/tests/core-create-picker-open.test.mjs prisma/tests/pollinations-audio-multikey.test.mjs
       - name: Validate file requests, task boundaries and Qwen fallback offline
         run: node --test prisma/tests/core-preflight.test.mjs prisma/tests/qwen-core-client.test.mjs
+      - name: Security regressions (no production traffic)
+        run: |
+          node --test prisma/tests/research-security.test.mjs prisma/tests/auth-config-security.test.mjs prisma/tests/stable-api-bridge.test.mjs
+          npm install --prefix "$RUNNER_TEMP/prisma-security" --no-audit --no-fund --ignore-scripts @electric-sql/pglite@0.3.14
+          PRISMA_SECURITY_TOOLS="$RUNNER_TEMP/prisma-security" node prisma/tests/security-rls.mjs
       - name: Build Prisma and test SEO output
         run: |
           node prisma/build.mjs
@@ -48,6 +53,7 @@ jobs:
           node prisma/tests/functional/document-conversion.cjs
           node prisma/tests/functional/public-i18n.cjs
           node prisma/tests/functional/seo-inline-security.cjs
+          node prisma/tests/functional/html-safety-security.cjs
           node prisma/tests/functional/adsense-priority-pages.cjs
       - name: Preserve real document conversion evidence
         if: always()

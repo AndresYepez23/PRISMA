@@ -1,3 +1,6 @@
+import { checkResearchLimits, researchLimitResponse } from '../../_lib/research-limits.js';
+import { readBoundedJson } from '../../_lib/queen.js';
+
 const headers = {
   "Cache-Control": "no-store",
   "Content-Type": "application/json; charset=utf-8",
@@ -133,11 +136,14 @@ export async function onRequestPost({ request, env }) {
 
   let payload;
   try {
-    const raw = await request.text();
-    if (raw.length > 12000) return json({ error: "La consulta supera el tamaño permitido." }, 413);
-    payload = JSON.parse(raw);
-  } catch {
+    payload = await readBoundedJson(request, 12000);
+  } catch (error) {
+    if (error?.status === 413) return json({ error: "La consulta supera el tamaño permitido." }, 413);
     return json({ error: "La solicitud no contiene JSON válido." }, 400);
+  }
+
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload) || typeof payload.query !== 'string') {
+    return json({ error: "La consulta debe ser un texto." }, 400);
   }
 
   const query = String(payload.query || "").trim();
@@ -151,13 +157,15 @@ export async function onRequestPost({ request, env }) {
   if (!["auto", "tavily", "jina"].includes(selectedProvider)) {
     return json({ error: "Proveedor de investigación no válido. Usa auto, tavily o jina." }, 400);
   }
+  const limit = await checkResearchLimits(env, request);
+  if (limit) return researchLimitResponse(limit);
   if (selectedProvider === "jina") {
     const jina = await searchJina(env, query);
     if (jina.results.length) {
       return json({ ok: true, provider: "jina", query, results: jina.results, fallbackUsed: false, diagnostic: true });
     }
     return json({ ok: false, provider: "jina", error: "Jina no devolvió fuentes utilizables.",
-      diagnostics: { jina: { code: jina.error || "NO_RESULTS", status: jina.status || null, detail: jina.detail || null } } }, 502);
+      diagnostics: { jina: { code: jina.error || "NO_RESULTS", status: jina.status || null } } }, 502);
   }
 
   const tavily = await searchTavily(env, query);
@@ -167,7 +175,7 @@ export async function onRequestPost({ request, env }) {
         fallbackUsed: false, diagnostic: true });
     }
     return json({ ok: false, provider: "tavily", error: "Tavily no devolvió fuentes utilizables.",
-      diagnostics: { tavily: { code: tavily.error || "NO_RESULTS", status: tavily.status || null, detail: tavily.detail || null } } }, 502);
+      diagnostics: { tavily: { code: tavily.error || "NO_RESULTS", status: tavily.status || null } } }, 502);
   }
   if (tavily.results.length) {
     return json({ ok: true, provider: "tavily", query, results: tavily.results, usage: tavily.usage || null,
@@ -189,8 +197,8 @@ export async function onRequestPost({ request, env }) {
   return json({
     ok: false, error: message, code: "RESEARCH_PROVIDERS_UNAVAILABLE",
     diagnostics: {
-      tavily: { code: tavily.error || "NO_RESULTS", status: tavily.status || null, detail: tavily.detail || null },
-      jina: { code: jina.error || "NO_RESULTS", status: jina.status || null, detail: jina.detail || null }
+      tavily: { code: tavily.error || "NO_RESULTS", status: tavily.status || null },
+      jina: { code: jina.error || "NO_RESULTS", status: jina.status || null }
     }
   }, 502);
 }
