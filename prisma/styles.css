@@ -317,7 +317,7 @@ body.modal-open{overflow:hidden}
 .core-messages{min-height:330px;max-height:56vh;overflow:auto;overflow-anchor:auto;overscroll-behavior:contain;padding:22px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}
 .core-welcome{text-align:center;max-width:620px;margin:auto;padding:26px 10px}
 .core-welcome-mark{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;margin:0 auto 15px;font-size:24px;color:#101218;background:linear-gradient(135deg,#a4e4dc,#b6a9f2);box-shadow:0 8px 28px #a4e4dc22}
-.core-welcome h2{font:800 24px Manrope,sans-serif;letter-spacing:-.8px;margin:9px 0}
+.core-welcome h1{font:800 24px Manrope,sans-serif;letter-spacing:-.8px;margin:9px 0}
 .core-welcome p{font-size:11px;color:var(--muted);line-height:1.65;max-width:490px;margin:0 auto 17px}
 .core-examples{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
 .core-examples button{border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:8px 10px;color:var(--text);font:500 9px 'DM Sans',sans-serif;cursor:pointer}
@@ -386,7 +386,7 @@ body.modal-open{overflow:hidden}
  .core-side{grid-template-columns:1fr 1fr}.core-side-card{padding:11px}.core-side-card:last-of-type{grid-column:1/-1}
  .core-chat-toolbar{padding:11px 12px}.core-composer{padding:10px}.core-composer-footer{align-items:flex-end}
  .core-composer-tools .mini-button{font-size:8px;padding:6px 8px}.core-composer .button{min-height:32px}
- .core-welcome{padding:16px 4px}.core-welcome h2{font-size:21px}.core-examples button{font-size:8px}
+ .core-welcome{padding:16px 4px}.core-welcome h1{font-size:21px}.core-examples button{font-size:8px}
 }
 
 
@@ -415,7 +415,7 @@ body.modal-open{overflow:hidden}
 .core-welcome{padding:28px 10px}
 .core-welcome-mark{display:none}
 .core-welcome .eyebrow{font-size:9px;letter-spacing:.12em}
-.core-welcome h2{font:650 23px Manrope,sans-serif;letter-spacing:-.65px;margin:9px 0}
+.core-welcome h1{font:650 23px Manrope,sans-serif;letter-spacing:-.65px;margin:9px 0}
 .core-welcome p{font-size:11px;max-width:460px}
 .core-examples{gap:8px}
 .core-examples button{background:var(--panel);font-size:9px;border-radius:20px;padding:8px 12px}
@@ -488,7 +488,7 @@ body.modal-open{overflow:hidden}
 .core-messages{flex:1;min-height:390px;max-height:calc(100vh - 460px);padding:26px}
 .core-welcome{max-width:760px;padding:36px 12px}
 .core-welcome-mark{width:56px;height:56px;font-size:27px}
-.core-welcome h2{font-size:28px}
+.core-welcome h1{font-size:28px}
 .core-welcome p{font-size:13px;max-width:590px}
 .core-examples{gap:9px}
 .core-examples button{font-size:10px;padding:10px 12px;border-radius:11px}
@@ -505,7 +505,7 @@ body.modal-open{overflow:hidden}
  .core-chat-column{min-height:560px}
  .core-messages{min-height:340px;max-height:58vh;padding:16px}
  .core-welcome{padding:22px 6px}
- .core-welcome h2{font-size:23px}
+ .core-welcome h1{font-size:23px}
  .core-examples button{font-size:9px}
  .core-hero{padding:20px 0}
  .core-hero h2{font-size:clamp(30px,8vw,42px)}
@@ -918,7 +918,7 @@ body.is-core-view .core-welcome-eyebrow{
   font:750 10px Manrope,system-ui,sans-serif;
   letter-spacing:.16em;
 }
-body.is-core-view .core-welcome h2{
+body.is-core-view .core-welcome h1{
   max-width:690px;
   margin:16px auto 15px;
   font:800 clamp(30px,3.9vw,48px)/1.12 Manrope,system-ui,sans-serif;
@@ -947,7 +947,7 @@ body.is-core-view .core-welcome p{
   body.is-core-view .topbar{height:64px;flex-basis:64px}
   body.is-core-view .core-messages{padding:12px 6px!important}
   body.is-core-view .core-welcome{padding:14px 6px 22px}
-  body.is-core-view .core-welcome h2{
+  body.is-core-view .core-welcome h1{
     font-size:clamp(28px,7.6vw,38px);
     margin:12px auto;
   }
@@ -1126,7 +1126,7 @@ body.is-core-view .core-top-actions{display:flex}
 body.is-core-view .topbar-actions{gap:8px}
 body.is-core-view .profile-chip{border-color:color-mix(in srgb,var(--accent) 38%,var(--line))}
 body.is-core-view .core-welcome-gradient{background:linear-gradient(100deg,#91e4d6 2%,#83c5e6 47%,#b7a5f2 97%);background-clip:text;-webkit-background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
-body.is-core-view .core-welcome h2{max-width:600px}
+body.is-core-view .core-welcome h1{max-width:600px}
 body.is-core-view .core-voice-button{display:grid;place-items:center;width:38px;height:38px;flex:none;border:1px solid var(--line);border-radius:11px;color:var(--muted);background:var(--bg);padding:0}
 body.is-core-view .core-voice-button svg{display:block;width:19px;height:19px}
 body.is-core-view .core-voice-button:hover,body.is-core-view .core-voice-button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
@@ -2544,7 +2544,7 @@ body.is-core-view .core-welcome-dots{
   height:100%;
   pointer-events:none;
 }
-body.is-core-view .core-welcome h2{
+body.is-core-view .core-welcome h1{
   position:relative;
   z-index:2;
 }
@@ -2629,7 +2629,7 @@ body.is-core-view #core-messages.is-empty > .core-welcome > :not(.core-welcome-a
   position:relative;
   z-index:1;
 }
-body.is-core-view #core-messages.is-empty .core-welcome h2{
+body.is-core-view #core-messages.is-empty .core-welcome h1{
   max-width:760px;
   margin:16px auto 15px;
 }
@@ -2658,7 +2658,7 @@ body.is-core-view #core-messages.is-empty .core-welcome-ambient{
     max-width:100%!important;
     padding:20px 10px 26px!important;
   }
-  body.is-core-view #core-messages.is-empty .core-welcome h2{
+  body.is-core-view #core-messages.is-empty .core-welcome h1{
     font-size:clamp(27px,7.5vw,38px);
     margin:12px auto;
   }
@@ -2943,7 +2943,7 @@ body.is-core-view .core-prism-shape{transform-origin:160px 103px;animation:core-
 body.is-core-view #core-messages.is-empty .core-welcome-eyebrow{
  color:#96dcd7;letter-spacing:.17em;font-size:clamp(9px,1.2vw,11px);
 }
-body.is-core-view #core-messages.is-empty .core-welcome h2{
+body.is-core-view #core-messages.is-empty .core-welcome h1{
  font-size:clamp(26px,4vw,43px);line-height:1.16;letter-spacing:-.045em;
  margin:4px auto 12px;max-width:100%;
 }
@@ -2964,14 +2964,14 @@ body.is-core-view #core-messages.is-empty .core-examples button:focus-visible{ou
 @media(max-width:620px){
  body.is-core-view #core-messages.is-empty > .core-welcome{padding:10px 12px!important}
  body.is-core-view .core-prism-scene{width:min(74vw,260px);height:clamp(116px,20dvh,168px);margin:4px auto 0}
- body.is-core-view #core-messages.is-empty .core-welcome h2{font-size:clamp(26px,7vw,35px);margin:4px auto 10px}
+ body.is-core-view #core-messages.is-empty .core-welcome h1{font-size:clamp(26px,7vw,35px);margin:4px auto 10px}
  body.is-core-view #core-messages.is-empty .core-welcome p{max-width:330px;margin-bottom:14px}
  body.is-core-view #core-messages.is-empty .core-examples{gap:7px}
  body.is-core-view #core-messages.is-empty .core-examples button{font-size:10px;min-height:35px;padding:8px 11px}
 }
 @media(max-height:690px){
  body.is-core-view .core-prism-scene{height:110px}
- body.is-core-view #core-messages.is-empty .core-welcome h2{font-size:clamp(24px,5vw,34px)}
+ body.is-core-view #core-messages.is-empty .core-welcome h1{font-size:clamp(24px,5vw,34px)}
  body.is-core-view #core-messages.is-empty .core-welcome p{margin-bottom:10px}
 }
 @media(prefers-reduced-motion:reduce){body.is-core-view .core-prism-shape{animation:none}}
@@ -2989,8 +2989,8 @@ body:not(.is-core-view) .hero-section{
 body:not(.is-core-view) .hero-section::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.38;background-image:radial-gradient(circle,rgba(144,207,227,.38) 1px,transparent 1.7px);background-size:24px 24px;mask-image:radial-gradient(ellipse at 76% 48%,#000,transparent 70%)}
 body:not(.is-core-view) .hero-copy{position:relative;z-index:2;min-width:0}
 body:not(.is-core-view) .hero-copy .eyebrow{color:#98ded7;font-size:clamp(9px,1vw,11px);letter-spacing:.15em}
-body:not(.is-core-view) .hero-copy h1{font-size:clamp(35px,4.5vw,65px);line-height:1.12;letter-spacing:-.06em;margin:20px 0 18px;color:#f4f5fa;text-wrap:balance}
-body:not(.is-core-view) .hero-copy h1 em{font-weight:750;background:linear-gradient(100deg,#8ce0d3,#83bce9 52%,#b8a3f0);background-clip:text;-webkit-background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+body:not(.is-core-view) .hero-copy h2{font-size:clamp(35px,4.5vw,65px);line-height:1.12;letter-spacing:-.06em;margin:20px 0 18px;color:#f4f5fa;text-wrap:balance}
+body:not(.is-core-view) .hero-copy h2 em{font-weight:750;background:linear-gradient(100deg,#8ce0d3,#83bce9 52%,#b8a3f0);background-clip:text;-webkit-background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
 body:not(.is-core-view) .hero-description{color:#c0cadb;font-size:clamp(12px,1.25vw,15px);line-height:1.7;max-width:480px}
 body:not(.is-core-view) .hero-actions{gap:10px}
 body:not(.is-core-view) .hero-actions .button{border-radius:13px;min-height:45px;padding:10px 17px;font-size:12px}
@@ -3018,7 +3018,7 @@ body:not(.is-core-view) .tool-card{border-radius:16px;min-height:170px}
  body:not(.is-core-view) .hero-section{grid-template-columns:1fr;gap:0;padding:30px 22px 25px;min-height:0;border-radius:23px}
  body:not(.is-core-view) .hero-copy{text-align:center}
  body:not(.is-core-view) .hero-copy .eyebrow{justify-content:center}
- body:not(.is-core-view) .hero-copy h1{font-size:clamp(34px,7vw,52px);margin:18px 0 13px}
+ body:not(.is-core-view) .hero-copy h2{font-size:clamp(34px,7vw,52px);margin:18px 0 13px}
  body:not(.is-core-view) .hero-description{margin:0 auto 19px}
  body:not(.is-core-view) .hero-actions{justify-content:center}
  body:not(.is-core-view) .hero-art{height:280px;margin-top:12px}
@@ -3026,7 +3026,7 @@ body:not(.is-core-view) .tool-card{border-radius:16px;min-height:170px}
 }
 @media(max-width:620px){
  body:not(.is-core-view) .hero-section{padding:26px 14px 19px;border-radius:19px}
- body:not(.is-core-view) .hero-copy h1{font-size:clamp(32px,9vw,43px);line-height:1.13}
+ body:not(.is-core-view) .hero-copy h2{font-size:clamp(32px,9vw,43px);line-height:1.13}
  body:not(.is-core-view) .hero-description{font-size:12px;line-height:1.6;max-width:330px}
  body:not(.is-core-view) .hero-actions .button{min-height:43px;font-size:11px;flex:1 1 auto}
  body:not(.is-core-view) .hero-art{height:248px;margin-top:8px}
@@ -3124,7 +3124,7 @@ body.is-core-view #core-messages{
   height:100%;
   flex:0 0 auto;
  }
- body.is-core-view #core-messages.is-empty .core-welcome h2{
+ body.is-core-view #core-messages.is-empty .core-welcome h1{
   margin:0 auto 12px;
  }
 }
@@ -3790,12 +3790,12 @@ html[data-reduce-motion="true"] *,html[data-reduce-motion="true"] *::before,html
     flex:none!important;
   }
   body.is-core-view #core-messages.is-empty .core-welcome-eyebrow,
-  body.is-core-view #core-messages.is-empty .core-welcome h2,
+  body.is-core-view #core-messages.is-empty .core-welcome h1,
   body.is-core-view #core-messages.is-empty .core-welcome p,
   body.is-core-view #core-messages.is-empty .core-examples{
     flex-shrink:0!important;
   }
-  body.is-core-view #core-messages.is-empty .core-welcome h2{
+  body.is-core-view #core-messages.is-empty .core-welcome h1{
     position:relative;
     width:100%;
     z-index:2;
@@ -3811,7 +3811,7 @@ html[data-reduce-motion="true"] *,html[data-reduce-motion="true"] *::before,html
   body.is-core-view #core-messages.is-empty > .core-welcome{
     padding:10px 12px 16px!important;
   }
-  body.is-core-view #core-messages.is-empty .core-welcome h2{
+  body.is-core-view #core-messages.is-empty .core-welcome h1{
     font-size:clamp(24px,6.7vw,32px);
     margin:0 auto 8px!important;
   }
@@ -3968,3 +3968,15 @@ body.is-core-view .core-compose-surface{
 
 /* A runtime update is opt-in: never cover the app or force a second startup. */
 .runtime-update-toast{display:flex;align-items:center;gap:12px;max-width:min(440px,calc(100vw - 24px))}.runtime-update-toast span{flex:1;min-width:0;line-height:1.5}.runtime-update-toast .mini-button{flex:0 0 auto;white-space:nowrap}
+
+/* First-visit task paths remain available even when Core has no AI connection. */
+body.is-core-view .core-example-label{display:block;margin:2px 0 9px;color:var(--subtle);font:700 10px Manrope,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+body.is-core-view .core-start-links{width:min(100%,650px);margin:20px auto 10px;padding-top:18px;border-top:1px solid var(--line-strong)}
+body.is-core-view .core-start-links strong{display:block;margin-bottom:11px;font:750 12px Manrope,sans-serif;color:var(--text)}
+body.is-core-view .core-start-links>div{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+body.is-core-view .core-start-links a{display:inline-flex;align-items:center;min-height:34px;padding:7px 11px;border:1px solid var(--line-strong);border-radius:9px;background:var(--panel);color:var(--text);font:650 11px 'DM Sans',sans-serif;text-decoration:none;transition:border-color .18s,background .18s}
+body.is-core-view .core-start-links a:hover{border-color:var(--accent);background:var(--panel-2)}
+body.is-core-view .core-start-links a:focus-visible,body.is-core-view .core-welcome-trust a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+body.is-core-view #core-messages.is-empty .core-welcome p.core-welcome-trust{max-width:610px;margin:10px auto 0;font-size:10px;line-height:1.6;color:var(--muted)}
+body.is-core-view .core-welcome-trust a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+@media(max-width:620px){body.is-core-view .core-start-links{margin-top:16px;padding-top:14px}body.is-core-view .core-start-links a{font-size:10px;min-height:33px}body.is-core-view #core-messages.is-empty .core-welcome p.core-welcome-trust{font-size:9px}}

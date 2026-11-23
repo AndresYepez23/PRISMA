@@ -1,7 +1,8 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tools, categories } from '../src/registry.js';
 import { generateContentHubs } from './content-hubs.mjs';
-import { inlineToolForm } from './inline-tool.mjs';
+import { inlineToolForm, inlineToolIds } from './inline-tool.mjs';
+import { priorityExamples, priorityUpdated, priorityExampleHero, priorityExampleReview } from './priority-examples.mjs';
 
 import { SEO_BASE as BASE, FORMAT_PRESETS } from './config.mjs';
 const GROUPS = Object.fromEntries(categories.filter(c => c.id !== 'all').map((c,i) => [c.id, {name:c.name, order:i}]));
@@ -69,7 +70,10 @@ function relatedCards(page, pages, toolMap) {
 }
 function landing(page, pages, toolMap) {
   const tool = toolMap.get(page.tool);
-  const actionUrl=['pdf-split','image-strip-metadata'].includes(page.tool)?'#inline-tool-title':toolUrl(page);
+  const actionUrl=inlineToolIds.has(page.tool)?'#inline-tool-title':toolUrl(page);
+  const priority=priorityExamples[page.slug];
+  const next=priority?.next && pages.find(item=>item.slug===priority.next);
+  if(priority?.next&&!next)throw Error('SEO: missing practical next step '+priority.next);
   const url = urlFor(page.slug);
   const beta = tool.status === 'beta';
   const schema = [
@@ -82,6 +86,11 @@ function landing(page, pages, toolMap) {
   ];
   const steps = page.steps.map(step => '<li><span>' + esc(step) + '</span></li>').join('\n');
   const faqs = page.faqs.map(pair => '<details><summary>' + esc(pair[0]) + '</summary><p>' + esc(pair[1]) + '</p></details>').join('\n');
+  const preview=priority?priorityExampleHero(page.slug,'es'):[
+    '<div class="seo-preview" aria-hidden="true"><div class="seo-preview-orb"></div><div class="seo-preview-label">PRISMA SPACE / ' + esc(page.slug.toUpperCase().replaceAll('-', ' ')) + '</div>',
+    '<div class="seo-preview-content"><div class="seo-preview-symbol"><img src="/assets/prisma-mark.svg" width="46" height="46" alt=""></div><strong>' + esc(tool.name) + '</strong><span>' + (beta ? 'Función en beta' : 'Lista para usar') + '</span></div>',
+    '<div class="seo-preview-foot"><span>Una tarea, una solución</span><span>' + (['local','browser'].includes(tool.mode) ? 'PROCESAMIENTO LOCAL' : 'SERVICIO CONECTADO') + '</span></div></div>'
+  ].join('');
   const body = [
     '<main class="seo-main">',
     '<nav class="seo-breadcrumb" aria-label="Ruta de navegación"><a href="/?lang=es">Inicio</a><span>/</span><a href="/herramientas/">Herramientas</a><span>/</span><a href="/herramientas/#' + esc(tool.category) + '">' + esc(categoryFor(tool).name) + '</a><span>/</span><span aria-current="page">' + esc(page.h1) + '</span></nav>',
@@ -89,16 +98,15 @@ function landing(page, pages, toolMap) {
     '<div class="seo-eyebrow"><i></i>' + esc(categoryFor(tool).name) + ' · ' + (['local','browser'].includes(tool.mode)?'Procesamiento local':'Servicio conectado') + ' · ' + (beta ? 'Beta' : 'Disponible') + '</div>',
     '<h1>' + esc(page.h1) + '</h1>',
     '<p class="seo-lead">' + esc(page.description) + '</p>',
-    '<div class="seo-actions"><a class="seo-cta" href="' + esc(actionUrl) + '">Abrir herramienta <span aria-hidden="true">↗</span></a><a class="seo-subtle" href="#como-funciona">Cómo funciona ↓</a></div>',
+    '<div class="seo-actions"><a class="seo-cta" href="' + esc(actionUrl) + '">' + (inlineToolIds.has(page.tool)?'Usar aquí':'Abrir herramienta') + ' <span aria-hidden="true">→</span></a><a class="seo-subtle" href="#como-funciona">Cómo funciona ↓</a></div>',
     '<p class="seo-privacy"><span aria-hidden="true">◇</span> ' + esc(page.privacyNote || (['local','browser'].includes(tool.mode) ? 'Procesamiento en el navegador · Sin registro' : 'Consulta las condiciones de uso de la herramienta')) + '</p></div>',
-    '<div class="seo-preview" aria-hidden="true"><div class="seo-preview-orb"></div><div class="seo-preview-label">PRISMA SPACE / ' + esc(page.slug.toUpperCase().replaceAll('-', ' ')) + '</div>',
-    '<div class="seo-preview-content"><div class="seo-preview-symbol"><img src="/assets/prisma-mark.svg" width="46" height="46" alt=""></div><strong>' + esc(tool.name) + '</strong><span>' + (beta ? 'Función en beta' : 'Lista para usar') + '</span></div>',
-    '<div class="seo-preview-foot"><span>Una tarea, una solución</span><span>' + (['local','browser'].includes(tool.mode) ? 'PROCESAMIENTO LOCAL' : 'SERVICIO CONECTADO') + '</span></div></div></section>',
+    preview+'</section>',
     '<div class="seo-content-grid" id="como-funciona">',
     '<section class="seo-panel"><div class="seo-section-label">QUÉ PUEDES HACER</div><h2>' + esc(page.h1) + ': lo que necesitas saber</h2><p>' + esc(page.intro) + '</p><p>' + esc(page.details) + '</p></section>',
     '<section class="seo-panel"><div class="seo-section-label">PASO A PASO</div><h2>Cómo utilizar esta herramienta</h2><ol class="seo-steps">' + steps + '</ol><a class="seo-inline-link" href="' + esc(actionUrl) + '">Abrir ' + esc(tool.name) + ' ↗</a></section>',
     '</div>',
     inlineToolForm(page.tool,'es'),
+    priorityExampleReview(page.slug,'es',next&&{href:'/herramientas/'+next.slug+'/',h1:next.h1}),
     '<aside class="seo-note"><span class="seo-note-icon">i</span><div><strong>Antes de empezar</strong><p>' + esc(page.tip) + '</p>' + (beta ? '<small>Esta función figura como beta en el catálogo de Prisma Space.</small>' : '') + '</div></aside>',
     '<section class="seo-faq" aria-labelledby="faq-title"><div class="seo-section-label">PREGUNTAS FRECUENTES</div><h2 id="faq-title">Dudas habituales</h2>' + faqs + '</section>',
     '<section class="seo-related" aria-labelledby="related-title"><div class="seo-related-heading"><div><div class="seo-section-label">TAMBIÉN TE PUEDE SERVIR</div><h2 id="related-title">Herramientas relacionadas</h2></div><a href="/herramientas/">Ver todas ↗</a></div><div class="seo-related-grid">' + relatedCards(page,pages,toolMap) + '</div></section>',
@@ -164,8 +172,8 @@ export async function generateSeoPages(output) {
   await writeFile(new URL('index.html',listing),directory(pages,toolMap),'utf8');
   const contentUrls=await generateContentHubs(output,{base:BASE,pages});
   const urls=[
-    {loc:BASE+'/'}, {loc:BASE+'/herramientas/'},
-    ...pages.map(page=>({loc:urlFor(page.slug),lastmod:page.lastmod})),
+    {loc:BASE+'/',lastmod:priorityUpdated}, {loc:BASE+'/herramientas/'},
+    ...pages.map(page=>({loc:urlFor(page.slug),lastmod:priorityExamples[page.slug]?priorityUpdated:page.lastmod})),
     {loc:BASE+'/privacy'}, {loc:BASE+'/acerca'},
     ...contentUrls.map(loc=>({loc}))
   ];

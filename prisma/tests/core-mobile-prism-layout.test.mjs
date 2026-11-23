@@ -12,7 +12,7 @@ const mobileWelcomeFix = styles.slice(styles.indexOf('/* Prisma Core · mobile w
 test('welcome SVG stays in normal flow above the heading in both markup and runtime', () => {
   for (const source of [html, core]) {
     const scene = source.indexOf('class="core-prism-scene"');
-    const heading = source.indexOf('<h2>¿Qué necesitas hacer?', scene);
+    const heading = source.indexOf('<h1>Convierte archivos y resuelve tareas', scene);
     assert.ok(scene >= 0, 'welcome scene must exist');
     assert.ok(heading > scene, 'heading must follow the scene');
   }
@@ -29,7 +29,7 @@ test('mobile and coarse-pointer welcome reserve a non-shrinking aspect-ratio box
 
 test('welcome SVG is clipped rather than painted across text when the viewport contracts', () => {
   assert.match(mobileWelcomeFix, /\.core-prism-svg\{[\s\S]*?overflow:hidden!important/);
-  assert.match(mobileWelcomeFix, /\.core-welcome h2\{[\s\S]*?margin:0 auto 10px!important/);
+  assert.match(mobileWelcomeFix, /\.core-welcome h1\{[\s\S]*?margin:0 auto 10px!important/);
   assert.match(mobileWelcomeFix, /max-height:740px/);
   assert.match(mobileWelcomeFix, /max-height:590px/);
   assert.doesNotMatch(mobileWelcomeFix, /^\s*overflow:visible\s*;/m);

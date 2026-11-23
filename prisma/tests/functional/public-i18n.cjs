@@ -68,12 +68,14 @@ const server=http.createServer((req,res)=>{
    assert.equal(new URL(page.url()).search,'?tool=pdf-to-word');
    assert.equal(new URL(page.url()).hash,'#workspace');
    assert.match(await page.locator('.main-footer').textContent(),/Acerca de Prisma/);
-   assert.equal(await page.locator('a[href="/acerca"]').count(),1);
+   assert.equal(await page.locator('.main-footer a[href="/acerca"]').count(),1);
+   assert.equal(await page.locator('.core-start-links a[href="/herramientas/dividir-pdf/"]').count(),1);
    assert.match(await page.locator('#profile-menu-privacy').textContent(),/Puedes explorar Prisma sin cuenta/);
    await page.evaluate(()=>window.prismaI18n.setLanguage('en'));
    assert.equal(new URL(page.url()).pathname,'/en/');
    assert.match(await page.locator('.main-footer').textContent(),/About Prisma/);
-   assert.equal(await page.locator('a[href="/en/about"]').count(),1);
+   assert.equal(await page.locator('.main-footer a[href="/en/about"]').count(),1);
+   assert.equal(await page.locator('.core-start-links a[href="/en/tools/split-pdf-into-separate-files/"]').count(),1);
    assert.equal(await page.locator('#test-user-content').textContent(),'archivo — a user title');
    cases.push('English → Spanish → English preserves page, query, fragment and user content');await closeContext(ctx);
   }

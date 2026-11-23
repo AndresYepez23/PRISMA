@@ -141,3 +141,32 @@ body.seo-page{margin:0;min-width:0;min-height:100vh;font:400 15px/1.65 "DM Sans"
 }
 .seo-inline-tool{margin:24px 0}.seo-inline-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.seo-inline-form label{display:grid;gap:6px}.seo-inline-form input,.seo-inline-form select,.seo-inline-form textarea{width:100%;padding:10px;border:1px solid #8193a7;border-radius:8px;background:var(--surface,#fff);color:inherit;font:inherit;box-sizing:border-box}.seo-inline-wide,.seo-inline-result,.seo-inline-status{grid-column:1/-1}.seo-inline-result{white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto}.seo-inline-form button{justify-self:start}@media(max-width:650px){.seo-inline-form{grid-template-columns:1fr}}
 .seo-inline-form [hidden]{display:none!important}.seo-inline-preview,.seo-inline-status,.seo-inline-image{grid-column:1/-1}.seo-inline-image{max-width:100%;max-height:320px;object-fit:contain}.seo-inline-download{justify-self:start}
+
+/* High-intent pages use the hero space to show a realistic input and result. */
+.seo-example{min-width:0;border:1px solid var(--aurora-edge);border-radius:22px;background:radial-gradient(circle at 90% 5%,color-mix(in srgb,var(--aurora-blue) 13%,transparent),transparent 50%),var(--aurora-surface);padding:26px;box-shadow:var(--shadow)}
+.seo-example h2{font-size:clamp(21px,2.2vw,27px);margin:12px 0 19px}
+.seo-example dl{margin:0;display:grid;gap:13px}
+.seo-example dl>div{padding:15px 17px;border:1px solid var(--aurora-edge);border-radius:13px;background:var(--aurora-soft)}
+.seo-example dt{font:800 10px/1.4 Manrope,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--aurora-cyan);margin-bottom:6px}
+.seo-example dd{margin:0;color:var(--text);font-size:13px;line-height:1.65;overflow-wrap:anywhere}
+.seo-example-review{margin:26px 0 20px;padding:27px 30px;border:1px solid var(--aurora-edge);border-radius:20px;background:var(--aurora-surface)}
+.seo-example-review h2{margin:8px 0 20px}
+.seo-example-review-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:17px}
+.seo-example-review-grid strong{font:800 12px Manrope,sans-serif;color:var(--text)}
+.seo-example-review-grid p{color:var(--muted);font-size:13px;line-height:1.7;margin:5px 0 0}
+.seo-example-review a{display:inline-block;margin-top:2px}
+.seo-inline-order{padding:0;margin:12px 0 0;list-style:none;display:grid;gap:7px}
+.seo-inline-order li{display:flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid var(--aurora-edge);border-radius:9px;background:var(--aurora-soft)}
+.seo-inline-order li span{flex:1;min-width:0;overflow-wrap:anywhere;font-size:13px}
+.seo-inline-order button{width:32px;height:32px;border:1px solid var(--line-strong);border-radius:7px;background:var(--panel);color:var(--text)}
+.seo-inline-order button:disabled{opacity:.45;cursor:default}
+.seo-inline-order button:focus-visible,.seo-example-review a:focus-visible{outline:2px solid var(--aurora-cyan);outline-offset:2px}
+@media(max-width:600px){.seo-example{padding:20px}.seo-example-review{padding:22px 20px}.seo-example-review-grid{grid-template-columns:1fr;gap:15px}}
+.seo-page a:focus-visible,.seo-page button:focus-visible{outline:2px solid var(--aurora-cyan);outline-offset:3px}
+#inline-tool-title{scroll-margin-top:120px}
+@media(max-width:600px){
+ .seo-header-inner{display:grid;grid-template-columns:1fr;gap:8px;padding:10px 16px 8px}
+ .seo-nav{width:100%;min-width:0;display:flex;justify-content:space-between;gap:9px;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+ .seo-nav::-webkit-scrollbar{display:none}
+ .seo-nav .seo-language-switch{flex:0 0 auto}
+}

@@ -48,6 +48,7 @@ jobs:
           node prisma/tests/functional/document-conversion.cjs
           node prisma/tests/functional/public-i18n.cjs
           node prisma/tests/functional/seo-inline-security.cjs
+          node prisma/tests/functional/adsense-priority-pages.cjs
       - name: Preserve real document conversion evidence
         if: always()
         uses: actions/upload-artifact@v4

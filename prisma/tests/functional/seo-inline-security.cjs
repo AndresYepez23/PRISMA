@@ -54,7 +54,9 @@ const server=createServer((req,res)=>{
    const exif=new TextEncoder().encode('Exif\0\0GPSLatitude=10.5');const length=exif.length+2;
    const withExif=new Uint8Array(jpeg.length+exif.length+4);
    withExif.set(jpeg.slice(0,2));withExif.set([255,225,length>>8,length&255],2);withExif.set(exif,6);withExif.set(jpeg.slice(2),6+exif.length);
-   return {pdf:Array.from(await pdf.save()),photo:Array.from(withExif)};
+   const first=await PDFDocument.create(),second=await PDFDocument.create();
+   first.addPage([200,250]).drawText('First document');second.addPage([300,250]).drawText('Second document');
+   return {pdf:Array.from(await pdf.save()),photo:Array.from(withExif),first:Array.from(await first.save()),second:Array.from(await second.save())};
   });
   for(const [language,path] of [['es','/herramientas/dividir-pdf/'],['en','/en/tools/split-pdf-into-separate-files/']]){
    await page.goto(origin+path);
@@ -79,6 +81,51 @@ const server=createServer((req,res)=>{
    assert.deepEqual(bytes.slice(0,2),[255,216],language+' JPEG signature');
    assert.equal(Buffer.from(bytes).includes(Buffer.from('GPSLatitude')),false,language+' EXIF data survived');
   }
-  console.log('SEO inline citation, PDF split, EXIF and DOCX HTML safety: passed');
+  for(const [language,path] of [['es','/herramientas/unir-pdf/'],['en','/en/tools/merge-pdf-files-into-one-document/']]){
+   await page.goto(origin+path);
+   assert.equal(await page.locator('.seo-actions .seo-cta').getAttribute('href'),'#inline-tool-title');
+   await page.locator('[data-seo-inline-tool] [name=file]').setInputFiles([
+    {name:'first.pdf',mimeType:'application/pdf',buffer:Buffer.from(fixture.first)},
+    {name:'second.pdf',mimeType:'application/pdf',buffer:Buffer.from(fixture.second)}
+   ]);
+   assert.equal(await page.locator('.seo-inline-order li').count(),2);
+   await page.locator('.seo-inline-order li:nth-child(2) button').first().click();
+   assert.match(await page.locator('.seo-inline-order li').first().textContent(),/second\.pdf/);
+   await page.locator('[data-seo-inline-tool] button[type=submit]').click();
+   await page.locator('.seo-inline-download:not([hidden])').waitFor({timeout:60000});
+   const widths=await page.evaluate(async()=>{
+    const {PDFDocument}=await import('https://esm.sh/pdf-lib@1.17.1');
+    const bytes=await(await fetch(document.querySelector('.seo-inline-download').href)).arrayBuffer();
+    const pdf=await PDFDocument.load(bytes);return pdf.getPages().map(item=>item.getWidth());
+   });
+   assert.deepEqual(widths,[300,200],language+' PDF order');
+  }
+  for(const [language,path] of [['es','/herramientas/comprimir-imagen/'],['en','/en/tools/compress-an-image-without-installing-software/']]){
+   await page.goto(origin+path);
+   assert.equal(await page.locator('.seo-actions .seo-cta').getAttribute('href'),'#inline-tool-title');
+   await page.locator('[data-seo-inline-tool] [name=file]').setInputFiles({name:'foto.jpg',mimeType:'image/jpeg',buffer:Buffer.from(fixture.photo)});
+   await page.locator('[data-seo-inline-tool] [name=quality]').fill('65');
+   await page.locator('[data-seo-inline-tool] button[type=submit]').click();
+   await page.locator('.seo-inline-download:not([hidden])').waitFor({timeout:30000});
+   assert.match(await page.locator('.seo-inline-download').getAttribute('download'),/\.webp$/);
+   assert.match(await page.locator('.seo-inline-status').textContent(),/Original:.*KB.*KB/);
+   assert.equal(await page.locator('.seo-inline-image').isVisible(),true);
+  }
+  const imagePdf=await page.evaluate(async()=>{
+   const {runTool}=await import('/src/engines.js'),{PDFDocument}=await import('https://esm.sh/pdf-lib@1.17.1');
+   const canvas=document.createElement('canvas');canvas.width=400;canvas.height=200;canvas.getContext('2d').fillRect(0,0,400,200);
+   const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg'));
+   const file=new File([blob],'sample.jpg',{type:'image/jpeg'});
+   const fitted=await runTool('image-pdf',[file],{pageSize:'fit'});
+   const standard=await runTool('image-pdf',[file],{pageSize:'a4'});
+   const measure=async result=>{
+    const pdf=await PDFDocument.load(await result.blob.arrayBuffer());
+    const first=pdf.getPage(0);return [first.getWidth(),first.getHeight()];
+   };
+   return {fit:await measure(fitted),a4:await measure(standard)};
+  });
+  assert.deepEqual(imagePdf.fit,[300,150],'Fit page must match image aspect ratio and size');
+  assert.ok(Math.abs(imagePdf.a4[0]-595.28)<.01&&Math.abs(imagePdf.a4[1]-841.89)<.01,'A4 page dimensions changed');
+  console.log('SEO inline tools, image-to-PDF fit, PDF order and DOCX HTML safety: passed');
  }finally{await browser.close();server.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;server.close();});

@@ -1629,7 +1629,20 @@ async function dispatchTool(id,files=[],p={},cb){
  if(id.startsWith('pdf-'))return pdfTool(id,files,p,cb);
  if(['image-pdf'].includes(id)){
   const {PDFDocument}=await load(PDF_LIB),doc=await PDFDocument.create();
-  for(let i=0;i<files.length;i++){const f=files[i];const img=await createImageBitmap(f);const page=doc.addPage(p.pageSize==='letter'?[612,792]:[595.28,841.89]);const pad=28,scale=Math.min((page.getWidth()-pad*2)/img.width,(page.getHeight()-pad*2)/img.height);const w=img.width*scale,h=img.height*scale;const canvas=document.createElement('canvas');canvas.width=img.width;canvas.height=img.height;canvas.getContext('2d').drawImage(img,0,0);const bytes=await new Promise(r=>canvas.toBlob(async b=>r(await b.arrayBuffer()),'image/jpeg',.92));const emb=await doc.embedJpg(bytes);page.drawImage(emb,{x:(page.getWidth()-w)/2,y:(page.getHeight()-h)/2,width:w,height:h});progress(cb,(i+1)/files.length*.8,'Creando páginas...');}
+  for(let i=0;i<files.length;i++){
+   const f=files[i],img=await createImageBitmap(f),fit=p.pageSize==='fit';
+   // PDF dimensions use points. A common scale keeps the source aspect ratio
+   // while respecting the 14,400-point maximum page dimension.
+   const unit=Math.min(.75,14400/Math.max(img.width,img.height));
+   const page=doc.addPage(fit?[Math.max(1,img.width*unit),Math.max(1,img.height*unit)]:p.pageSize==='letter'?[612,792]:[595.28,841.89]);
+   const pad=fit?0:28,scale=fit?unit:Math.min((page.getWidth()-pad*2)/img.width,(page.getHeight()-pad*2)/img.height);
+   const w=img.width*scale,h=img.height*scale,canvas=document.createElement('canvas');
+   canvas.width=img.width;canvas.height=img.height;canvas.getContext('2d').drawImage(img,0,0);img.close?.();
+   const bytes=await new Promise(r=>canvas.toBlob(async blob=>r(await blob.arrayBuffer()),'image/jpeg',.92));
+   const emb=await doc.embedJpg(bytes);
+   page.drawImage(emb,{x:(page.getWidth()-w)/2,y:(page.getHeight()-h)/2,width:w,height:h});
+   progress(cb,(i+1)/files.length*.8,'Creando páginas...');
+  }
   return download(makeBlob(await doc.save(),'application/pdf'),'imagenes-a-pdf.pdf');
  }
  if(id==='image-gen'||['image-collage','image-palette','image-flip','image-watermark','image-favicon'].includes(id))return imageAdvanced(id,files,p,cb);
