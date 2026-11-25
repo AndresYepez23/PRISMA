@@ -1,3 +1,5 @@
+import {recordCoreMetric} from './core-telemetry.js';
+import {toolProgress,toolFailure} from './tool-feedback.js';
 import {runTool} from './engines.js';
 import {planPdfSplit} from './pdf-split-options.js';
 import {toolExample} from './tool-examples.js';
@@ -8,17 +10,22 @@ if(form){
  const id=form.dataset.seoInlineTool,en=document.documentElement.lang==='en';
  const fileInput=form.querySelector('input[type=file]');
  const fileTool=!!fileInput;
+ const submit=form.querySelector('button[type=submit]'),submitLabel=submit.textContent;
+ const meter=appendProgress();
+ function appendProgress(){const node=document.createElement('progress');node.className='seo-inline-meter';node.max=1;node.hidden=true;node.setAttribute('aria-label',en?'Operation progress':'Progreso de la operación');form.querySelector('[role=status]').before(node);return node;}
  const word=(es,english)=>en?english:es;
  const append=(tag,className,content)=>{const node=document.createElement(tag);node.className=className;node.hidden=true;if(content)node.textContent=content;form.append(node);return node;};
  const output=form.querySelector('pre')||append('pre','seo-inline-result');output.tabIndex=0;
  const resultLink=form.querySelector('.seo-inline-download')||append('a','seo-cta seo-inline-download',word('Descargar resultado','Download result'));resultLink.setAttribute('download','');
  const copy=append('button','seo-inline-copy',word('Copiar resultado','Copy result'));copy.type='button';
- copy.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(output.textContent);form.querySelector('[role=status]').textContent=word('Resultado copiado.','Result copied.');}catch{output.focus();form.querySelector('[role=status]').textContent=word('Selecciona el texto para copiarlo.','Select the result text to copy it.');}});
+ copy.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(output.textContent);recordCoreMetric(id,'copied');form.querySelector('[role=status]').textContent=word('Resultado copiado.','Result copied.');}catch{output.focus();form.querySelector('[role=status]').textContent=word('Selecciona el texto para copiarlo.','Select the result text to copy it.');}});
  let printHtml='',revision=0;
  const print=form.querySelector('.seo-inline-print')||append('button','seo-inline-print',word('Abrir vista para guardar como PDF','Open view to save as PDF'));print.type='button';
- print.addEventListener('click',()=>{if(!printHtml)return;const win=window.open('','_blank');if(!win){form.querySelector('[role=status]').textContent=word('Permite la ventana emergente para abrir la vista de impresión.','Allow the popup to open the print view.');return;}win.opener=null;win.document.open();win.document.write(printHtml);win.document.close();win.addEventListener('load',()=>win.print());});
+ resultLink.addEventListener('click',()=>recordCoreMetric(id,'download-clicked'));
+ print.addEventListener('click',()=>{if(!printHtml)return;const win=window.open('','_blank');if(!win){form.querySelector('[role=status]').textContent=word('Permite la ventana emergente para abrir la vista de impresión.','Allow the popup to open the print view.');return;}recordCoreMetric(id,'print-opened');win.opener=null;win.document.open();win.document.write(printHtml);win.document.close();win.addEventListener('load',()=>win.print());});
+ const reload=append('button','seo-inline-reload',word('Recargar página','Reload page'));reload.type='button';reload.addEventListener('click',()=>location.reload());
  const example=!fileTool?(form.querySelector('.seo-example-load')||append('button','seo-example-load',word('Probar un ejemplo','Try an example'))):null;if(example)example.type='button';
- const resetResult=()=>{printHtml='';resultLink.hidden=true;output.hidden=true;copy.hidden=true;print.hidden=true;for(const media of form.querySelectorAll('img,audio,video')){media.pause?.();media.removeAttribute('src');media.hidden=true;}form.querySelector('[role=status]').textContent='';};
+ const resetResult=()=>{reload.hidden=true;meter.hidden=true;submit.textContent=submitLabel;delete submit.dataset.retry;printHtml='';resultLink.hidden=true;output.hidden=true;copy.hidden=true;print.hidden=true;for(const media of form.querySelectorAll('img,audio,video')){media.pause?.();media.removeAttribute('src');media.hidden=true;}form.querySelector('[role=status]').textContent='';};
  if(example){
   const sample=toolExample(id)||Object.fromEntries([...form.querySelectorAll('[name]')].map(field=>[field.name,field.type==='checkbox'?field.defaultChecked:field.defaultValue??field.value]));
   if(Object.values(sample).some(Boolean)){example.hidden=false;example.addEventListener('click',()=>{revision++;resetResult();releaseUrls();for(const [name,value] of Object.entries(sample)){const field=form.elements.namedItem(name);if(!field)continue;if(field.type==='checkbox')field.checked=Boolean(value);else field.value=String(value);}form.querySelector('textarea,input')?.focus();form.querySelector('[role=status]').textContent=word('Ejemplo cargado. Puedes editarlo antes de ejecutar.','Example loaded. You can edit it before running.');});}
@@ -43,7 +50,7 @@ if(form){
      const button=document.createElement('button');button.type='button';button.textContent=symbol;
      button.setAttribute('aria-label',(en?direction<0?'Move up: ':'Move down: ':direction<0?'Subir: ':'Bajar: ')+files[index].name);
      button.disabled=position+direction<0||position+direction>=order.length;
-     button.addEventListener('click',()=>{[order[position],order[position+direction]]=[order[position+direction],order[position]];renderOrder();});
+     button.addEventListener('click',()=>{revision++;resetResult();releaseUrls();[order[position],order[position+direction]]=[order[position+direction],order[position]];renderOrder();});
      row.append(button);
     }
     orderList.append(row);
@@ -74,10 +81,12 @@ if(form){
 
  }
  form.addEventListener('input',()=>{revision++;resetResult();releaseUrls();});
- window.addEventListener('pagehide',releaseUrls,{once:true});
+ window.addEventListener('pagehide',event=>{if(!event.persisted)releaseUrls();});
  form.dataset.ready='true';
  form.addEventListener('submit',async event=>{
   event.preventDefault();
+  if(form.hasAttribute('aria-busy'))return;
+  if(submit.dataset.retry==='true')recordCoreMetric(id,'retry');
   const button=form.querySelector('button[type=submit]'),status=form.querySelector('[role=status]'),output=form.querySelector('pre');
   const params=Object.fromEntries(new FormData(form));
   for(const checkbox of form.querySelectorAll('input[type=checkbox]'))params[checkbox.name]=checkbox.checked;
@@ -86,18 +95,19 @@ if(form){
   const files=form.querySelector('.seo-inline-order')?order.map(index=>fileInput.files[index]):fileInput?.multiple?[...fileInput.files]:file?[file]:[];
   resetResult();button.disabled=true;form.setAttribute('aria-busy','true');status.textContent=en?'Processing…':'Procesando…';if(output)output.hidden=true;
   const link=form.querySelector('.seo-inline-download'),image=form.querySelector('.seo-inline-image');
-  if(link)link.hidden=true;if(image)image.hidden=true;releaseUrls();
+  if(link)link.hidden=true;if(image)image.hidden=true;releaseUrls();meter.hidden=false;meter.removeAttribute('value');
   try{
    if(fileTool){
     if(!files.length)throw Error(en?'Select a file first.':'Selecciona un archivo.');
     const max=Number(form.dataset.maxFiles)||20;
     if(files.length>max||id==='image-collage'&&files.length<2)throw Error(en?`Select ${id==='image-collage'?'2 to 12':'at most '+max} files.`:`Selecciona ${id==='image-collage'?'de 2 a 12':'como máximo '+max} archivos.`);
-    if(files.reduce((sum,item)=>sum+item.size,0)>100*1024*1024)throw Error(en?'The local limit is 100 MB in total.':'El límite local es de 100 MB en total.');
+    const maxBytes=Number(form.dataset.maxBytes)||104857600;
+    if(files.reduce((sum,item)=>sum+item.size,0)>maxBytes)throw Error(en?'The local limit is '+Math.round(maxBytes/1048576)+' MB in total.':'El límite local es de '+Math.round(maxBytes/1048576)+' MB en total.');
     const accepted=fileInput.accept.split(',').map(value=>value.trim().toLowerCase()).filter(Boolean);
     if(files.some(item=>!accepted.some(rule=>rule.startsWith('.')?item.name.toLowerCase().endsWith(rule):rule==='*/*'||(rule.endsWith('/*')?item.type.toLowerCase().startsWith(rule.slice(0,-1)):item.type.toLowerCase()===rule))))throw Error(en?'Choose a supported file type.':'Selecciona un formato admitido.');
    }
-   const result=await runTool(id,files,params,(progress,message)=>{if(operationRevision!==revision)return;status.textContent=en?`Processing… ${Math.round(progress*100)}%`:(message||`Procesando… ${Math.round(progress*100)}%`);});
-   if(operationRevision!==revision){if(result.previewUrl)URL.revokeObjectURL(result.previewUrl);return;}
+   const result=await runTool(id,files,params,(progress,message,detail)=>{if(operationRevision!==revision)return;const state=toolProgress(progress,message,detail,en?'en':'es');status.textContent=state.text;if(state.fraction===null)meter.removeAttribute('value');else meter.value=state.fraction;});
+   if(operationRevision!==revision){if(result.previewUrl)URL.revokeObjectURL(result.previewUrl);status.textContent=word('La entrada cambió durante el proceso. Ejecuta de nuevo con la selección actual.','The input changed during processing. Run again with the current selection.');return;}
    const text=typeof result.text==='string'?result.text:typeof result.html==='string'?result.html:result.colors?.join('\n');
    const blob=result.blob||(typeof text==='string'?new Blob([text],{type:'text/plain;charset=utf-8'}):null);
    if(blob){downloadUrl=URL.createObjectURL(blob);link.href=downloadUrl;link.download=result.filename||'prisma-'+id+'.txt';link.hidden=false;}
@@ -111,7 +121,7 @@ if(form){
     const size=value=>Math.ceil(value/1024)+' KB';
     status.textContent='Original: '+size(file.size)+' → '+size(result.blob.size)+'. '+(result.blob.size>=file.size?word('La copia no es más pequeña; prueba otra calidad o formato.','The copy is not smaller; try another quality or format.'):word('Revisa la calidad antes de compartir.','Check image quality before sharing.'));
    }else status.textContent=en?'Result ready. Review it before use.':result.summary||'Resultado listo. Revísalo antes de usarlo.';
-  }catch(error){if(operationRevision===revision)status.textContent=error?.message||'Error';}
-  finally{button.disabled=false;form.removeAttribute('aria-busy');}
+  }catch(error){if(operationRevision===revision){const failure=toolFailure(error,en?'en':'es',navigator.onLine!==false);status.textContent=failure.text;reload.hidden=!failure.reload;if(failure.retry){button.textContent=word('Reintentar','Try again');button.dataset.retry='true';}}}
+  finally{meter.hidden=true;button.disabled=false;form.removeAttribute('aria-busy');}
  });
 }

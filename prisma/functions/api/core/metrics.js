@@ -10,7 +10,7 @@ export async function onRequestPost({request,env}){
  let raw='',size=0;const decoder=new TextDecoder();
  try{while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>6000){await reader.cancel();return reply(413);}raw+=decoder.decode(value,{stream:true});}raw+=decoder.decode();}catch{return reply(400);}
  let data;try{data=JSON.parse(raw);}catch{return reply(400);}
- if(!Array.isArray(data.events)||data.events.length<1||data.events.length>20)return reply(400);
+ if(!Array.isArray(data?.events)||data.events.length<1||data.events.length>20)return reply(400);
  const rows=data.events.map(e=>metricEvent(e?.id,e?.event,e));if(rows.some(e=>!e))return reply(400);
  if(!env.PRISMA_RATE_DB?.prepare)return reply(503);
  const day=new Date().toISOString().slice(0,10);

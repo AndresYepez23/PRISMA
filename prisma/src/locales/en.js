@@ -1,4 +1,6 @@
 const translations = {
+  "JPG, PNG o WebP de hasta 40 MB. La carga del modelo es automática; el modo de compatibilidad puede descargar cerca de 190 MB en el primer uso. Necesita memoria y conexión.": "JPG, PNG or WebP up to 40 MB. Model loading is automatic; compatibility mode may download about 190 MB on first use. It needs memory and a connection.",
+  "No se pudo copiar. Selecciona el texto para copiarlo manualmente.": "Could not copy. Select the text to copy it manually.",
   "Ver todas las herramientas": "View all tools",
   "Guías para resolver tu tarea": "Guides for your task",
   "Buscar por nombre o categoría ↗": "Search by name or category ↗",

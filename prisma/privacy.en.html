@@ -20,7 +20,7 @@
     header{padding:28px 30px;border:1px solid var(--line);border-radius:18px;background:radial-gradient(circle at 88% 20%,rgba(128,190,231,.15),transparent 55%),linear-gradient(130deg,#162438,#1d213b)}
     .eyebrow{font-size:10px;letter-spacing:.16em;color:var(--accent);font-weight:700}h1{font-size:clamp(30px,5vw,44px);line-height:1.12;letter-spacing:-.045em;margin:10px 0}
     header p,.updated{color:var(--muted);font-size:13px}nav{display:flex;gap:9px;flex-wrap:wrap;margin:22px 0}nav a{padding:8px 12px;border:1px solid var(--line);border-radius:30px;text-decoration:none;font-size:12px;background:rgba(137,186,224,.06)}
-    article{padding:24px 26px;margin:13px 0;border:1px solid var(--line);border-radius:17px;background:linear-gradient(145deg,#161e2d,#1a2133)};scroll-margin-top:20px}
+    article{padding:24px 26px;margin:13px 0;border:1px solid var(--line);border-radius:17px;background:linear-gradient(145deg,#161e2d,#1a2133);scroll-margin-top:20px}
     h2{font-size:20px;letter-spacing:-.025em;margin:0 0 12px}h3{font-size:14px;margin:20px 0 6px}p,li{color:var(--muted);font-size:13px}ul{padding-left:21px}li{margin:6px 0}
     .note{padding:13px 15px;border-left:2px solid var(--accent);background:rgba(154,219,210,.06);border-radius:0 9px 9px 0}footer{padding-top:20px;color:var(--muted);font-size:11px;text-align:center}
     :root[data-theme="light"]{color-scheme:light;--bg:#f3f7fc;--panel:#fff;--line:rgba(49,81,111,.18);--text:#1c293d;--muted:#53637b;--accent:#237b78}
@@ -33,7 +33,7 @@
 </head>
 <body><main class="shell">
   <a class="back" href="/en/">← Return to Prisma Space</a>
-  <header><div class="eyebrow">PRISMA SPACE · LEGAL INFORMATION</div><h1>Privacy, Cookies and Terms of Use</h1><p>Learn what information Prisma Space processes and how accounts, conversations, files, providers, and advertising are handled.</p><div class="updated">Last updated: November 13, 2026</div></header>
+  <header><div class="eyebrow">PRISMA SPACE · LEGAL INFORMATION</div><h1>Privacy, Cookies and Terms of Use</h1><p>Learn what information Prisma Space processes and how accounts, conversations, files, providers, and advertising are handled.</p><div class="updated">Last updated: November 25, 2026</div></header>
   <div class="legal-language-options"><a href="/privacy" hreflang="es" lang="es" aria-label="View this page in Spanish">View this page in Spanish</a></div>
   <nav aria-label="Sections on this page"><a href="#privacidad">Data and Accounts</a><a href="#archivos">Files and Providers</a><a href="#publicidad">Cookies and Ads</a><a href="#condiciones">Terms</a></nav>
   <article id="privacidad"><h2>1. Data, Accounts and Storage</h2>
@@ -51,6 +51,7 @@
     </ul>
     <h3>Transactional emails</h3>
     <p>After a new account is confirmed, Prisma Space may send a non-promotional welcome email to the verified address. Delivery is handled by Resend, and its technical status is recorded to prevent duplicates.</p>
+
   </article>
   <article id="archivos"><h2>2. Files, AI and External Providers</h2>
     <h3>Local and external processing</h3>
@@ -72,7 +73,7 @@
     <p>Where ads are served to users in the European Economic Area, the United Kingdom, or Switzerland, Prisma Space will configure a Google-certified consent management platform when required for compliance with rules on personalized advertising.</p>
   </article>
   <article id="seguridad"><h2>4. Metrics, Security and Retention</h2>
-    <p>When application telemetry is enabled, Prisma records aggregate counters by day and tool, such as event type, duration, and file count. These events do not include prompts, messages, file names, document content, credentials, or account identifiers.</p>
+    <p>Prisma Space counts tool requests, successful results, errors and clicks to download, copy or open a print view. Daily totals contain only a catalog tool identifier, event, bounded processing time and file count. They contain no visitor or account identifier, filename, file contents, prompts, result text or error messages. No analytics cookies are set. These counters respect the browser’s Do Not Track and Global Privacy Control settings.</p>
     <p>To enforce usage limits and prevent abuse, the server may use the IP address received from Cloudflare infrastructure and store a hash-derived fingerprint in its counters instead of the untransformed IP address. Cloudflare may also process IP addresses, headers, and technical metadata to provide and protect hosting, under its own terms.</p>
     <p>Local data remains on your device until you delete it or clear browser data. Personal keys saved in sessionStorage are removed when the session ends or when you disconnect them. Synchronized conversation data remains in your account until you delete the conversations or the relevant account is handled. External providers apply their own retention periods.</p>
     <p>For privacy inquiries, requests about your personal data, or private support, email <a href="mailto:proyectosmetas25@gmail.com">proyectosmetas25@gmail.com</a>. You can also visit <a href="/en/about#soporte">About Prisma Space and Support</a>. Do not post passwords, tokens, conversations, or documents in public reports.</p>

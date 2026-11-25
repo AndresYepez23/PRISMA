@@ -1,3 +1,5 @@
+import {recordCoreMetric} from './core-telemetry.js';
+import {toolProgress,toolFailure} from './tool-feedback.js';
 import { renderToolFields } from './tool-fields.js';
 import { updateUnitInputs } from './tool-input-options.js';
 import { initPrismaCore, setPrismaCoreViewActive, startNewPrismaConversation } from './core.js';
@@ -933,7 +935,8 @@ function addSelectedFiles(incoming,tool){
   const max=tool.multiple?(tool.maxFiles||20):1;
   const limited=next.slice(0,max);
   const total=limited.reduce((sum,file)=>sum+file.size,0);
-  if(total>200*1024*1024){toast('El conjunto supera el límite de 200 MB para procesamiento en navegador.','error');return;}
+  const maxBytes=tool.maxBytes||200*1024*1024;
+  if(total>maxBytes){toast(document.documentElement.lang==='en'?'The selection exceeds the '+Math.round(maxBytes/1048576)+' MB local limit.':'El conjunto supera el límite local de '+Math.round(maxBytes/1048576)+' MB.','error');return;}
   if(next.length>max)toast('Esta herramienta admite hasta '+max+' archivos.','info');
   selectedFiles=limited;renderFileList();
 }
@@ -1014,10 +1017,11 @@ function readParams(){
   $$('#modal-body [name]').forEach(el=>{if(el.type==='checkbox')params[el.name]=el.checked;else params[el.name]=el.value;});
   return params;
 }
-function updateProgress(progress,message){
+function updateProgress(progress,message,detail){
   const wrap=$('#progress-wrap');if(!wrap)return;wrap.classList.remove('hidden');
-  const pct=Math.max(0,Math.min(100,Math.round((progress||0)*100)));
-  $('#progress-bar').style.width=pct+'%';$('#progress-value').textContent=pct+'%';$('#progress-message').textContent=message||'Procesando...';
+  const state=toolProgress(progress,message,detail,document.documentElement.lang),pct=state.fraction===null?0:Math.round(state.fraction*100);
+  wrap.classList.toggle('is-indeterminate',state.fraction===null);
+  $('#progress-bar').style.width=(state.fraction===null?100:pct)+'%';$('#progress-value').textContent=detail?.phase||state.fraction===null?'':pct+'%';$('#progress-message').textContent=detail?.phase?state.text:document.documentElement.lang==='en'?'Processing…':message||'Procesando…';
 }
 async function executeCurrentWorkflow(){
   if(!currentWorkflow||running)return;
@@ -1071,7 +1075,7 @@ async function executeCurrentTool(){
   if(!currentTool||running)return;
   if(currentTool.file&&!selectedFiles.length){toast('Selecciona al menos un archivo.','error');return;}
   const operationId=++activeOperation,toolAtStart=currentTool,filesAtStart=[...selectedFiles];
-  const progressForOperation=(progress,message)=>{if(operationId===activeOperation&&currentTool===toolAtStart)updateProgress(progress,message);};
+  const progressForOperation=(progress,message,detail)=>{if(operationId===activeOperation&&currentTool===toolAtStart)updateProgress(progress,message,detail);};
   running=true;$('#modal-body').setAttribute('aria-busy','true');$('#modal-run').disabled=true;$('#modal-run').textContent='Procesando...';$('#tool-output').innerHTML='';
   updateProgress(.02,'Preparando herramienta...');
   try{
@@ -1090,8 +1094,8 @@ async function executeCurrentTool(){
     if(operationId!==activeOperation||currentTool!==toolAtStart||$('#tool-modal').classList.contains('hidden'))return;
     console.error(error);
     const reason=toolAtStart.id.startsWith('video-')?localizedVideoError(error):
-      (error?.message||'Error inesperado. Prueba con otro archivo o vuelve a intentarlo.');
-    $('#tool-output').innerHTML='<div class="tool-hint"><strong>No se pudo completar la operación.</strong><br>'+escapeHtml(reason)+'</div>';
+      toolFailure(error,document.documentElement.lang,navigator.onLine!==false).text;
+    $('#tool-output').innerHTML='<div class="tool-hint"><strong>'+(document.documentElement.lang==='en'?'The operation could not finish.':'No se pudo completar la operación.')+'</strong><br>'+escapeHtml(reason)+'</div>';
     toast(reason,'error');
   }finally{
     if(operationId!==activeOperation||currentTool!==toolAtStart)return;
@@ -1101,6 +1105,7 @@ async function executeCurrentTool(){
 }
 
 function renderOutput(result){
+  const metricId=currentTool?.id;
   const panel=document.createElement('div');panel.className='output-panel';
   let html='<div class="output-head"><strong>✓ Resultado listo</strong><div class="output-actions">';
   if(result.blob)html+='<button class="mini-button" id="download-output">'+icon('download')+' Descargar</button>';
@@ -1120,9 +1125,9 @@ function renderOutput(result){
   if(result.colors?.length)html+='<div class="color-palette-results">'+result.colors.map(color=>'<button class="color-swatch" type="button" data-color="'+escapeHtml(color)+'" title="Copiar '+escapeHtml(color)+'"><span style="background:'+escapeHtml(color)+'"></span><code>'+escapeHtml(color)+'</code></button>').join('')+'</div>';
   if(result.summary)html+='<p class="tool-hint" style="margin:10px 0 0">'+escapeHtml(result.summary)+'</p>';
   panel.innerHTML=html;$('#tool-output').append(panel);
-  if(result.blob)$('#download-output').addEventListener('click',()=>downloadBlob(result.blob,result.filename||'prisma-result'));
-  if(result.printHtml)$('#print-output').addEventListener('click',()=>{const win=window.open('','_blank');if(!win){toast('Permite las ventanas emergentes para imprimir el documento.','error');return;}win.opener=null;win.document.open();win.document.write(result.printHtml);win.document.close();win.addEventListener('load',()=>win.print());});
-  if(result.text)$('#copy-output').addEventListener('click',async()=>{await navigator.clipboard.writeText(result.text);toast('Texto copiado.');});
+  if(result.blob)$('#download-output').addEventListener('click',()=>{recordCoreMetric(metricId,'download-clicked');downloadBlob(result.blob,result.filename||'prisma-result');});
+  if(result.printHtml)$('#print-output').addEventListener('click',()=>{const win=window.open('','_blank');if(!win){toast('Permite las ventanas emergentes para imprimir el documento.','error');return;}recordCoreMetric(metricId,'print-opened');win.opener=null;win.document.open();win.document.write(result.printHtml);win.document.close();win.addEventListener('load',()=>win.print());});
+  if(result.text)$('#copy-output').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(result.text);recordCoreMetric(metricId,'copied');toast('Texto copiado.');}catch{toast('No se pudo copiar. Selecciona el texto para copiarlo manualmente.','error');}});
   $$('.color-swatch',panel).forEach(b=>b.addEventListener('click',async()=>{await navigator.clipboard.writeText(b.dataset.color);toast(b.dataset.color+' copiado.');}));
 }
 function downloadBlob(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);}

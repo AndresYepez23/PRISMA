@@ -100,6 +100,8 @@ const server=createServer((req,res)=>{
     const pdf=await PDFDocument.load(bytes);return pdf.getPages().map(item=>item.getWidth());
    });
    assert.deepEqual(widths,[300,200],language+' PDF order');
+   await page.locator('.seo-inline-order li:nth-child(2) button').first().click();
+   assert.equal(await page.locator('.seo-inline-download').isVisible(),false,language+' old merge result survived reorder');
   }
   for(const [language,path] of [['es','/herramientas/comprimir-imagen/'],['en','/en/tools/compress-an-image-without-installing-software/']]){
    await page.goto(origin+path);

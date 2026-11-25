@@ -158,7 +158,7 @@ function toolLanding(page,pages,toolMap) {
     '<section class="seo-panel"><div class="seo-section-label">STEP BY STEP</div><h2>How to use this tool</h2><ol class="seo-steps">'+steps+'</ol><a class="seo-inline-link" href="'+esc(actionUrl)+'">Open '+esc(t(tool.name))+' ↗</a></section>',
     '</div>',
     priorityExampleReview(page.sourceSlug,'en',next&&{href:'/en/tools/'+next.englishSlug+'/',h1:next.h1}),
-    '<aside class="seo-note"><span class="seo-note-icon">i</span><div><strong>Before you start</strong><p>'+esc(page.tip)+'</p>'+'</div></aside>',
+    page.tool==='image-bg'?'':'<aside class="seo-note"><span class="seo-note-icon">i</span><div><strong>Before you start</strong><p>'+esc(page.tip)+'</p>'+'</div></aside>',
     faqHtml(page.faqs),
     '<section class="seo-related" aria-labelledby="related-title"><div class="seo-related-heading"><div><div class="seo-section-label">YOU MAY ALSO NEED</div><h2 id="related-title">Related tools</h2></div><a href="/en/tools/">Browse all ↗</a></div><div class="seo-related-grid">'+relatedHtml+'</div></section>',
     '</main>'
