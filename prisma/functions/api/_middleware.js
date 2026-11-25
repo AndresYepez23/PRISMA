@@ -28,6 +28,10 @@ export async function onRequest({ request, next }, { fetcher = fetch } = {}) {
     });
   }
 
+  // Aggregate tool counters use this deployment's verified D1 binding and no
+  // provider credentials. Bridging them would execute the old metrics handler.
+  if (incoming.pathname === '/api/core/metrics') return next();
+
   const qwenInterpreter = incoming.pathname === '/api/core/qwen-interpret';
   const targetOrigin = qwenInterpreter ? QWEN_INTERPRETER_ORIGIN : STABLE_CORE_ORIGIN;
   const target = new URL(incoming.pathname + incoming.search, targetOrigin);
