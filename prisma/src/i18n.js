@@ -1,4 +1,5 @@
 import translations from './locales/en.js';
+import fieldTranslations from './locales/tool-fields.en.js';
 
 const STORAGE_KEY = 'prisma-language';
 const root = document.documentElement;
@@ -37,7 +38,7 @@ const manualTranslations = {
   'Las claves maestras se guardan como secretos en Cloudflare. Los visitantes usan los motores de Prisma sin introducir sus propias credenciales.': 'Master keys are stored as Cloudflare secrets. Visitors can use Prisma engines without entering their own credentials.',
   'Consumo de IA de esta sesión: sin solicitudes registradas.': 'AI usage for this session: no requests recorded.'
 };
-const dictionary = { ...translations, ...manualTranslations };
+const dictionary = { ...translations, ...fieldTranslations, ...manualTranslations };
 const phraseTranslations = Object.entries(dictionary)
   .filter(([source]) => source.length >= 7 && /\s/.test(source) &&
     !/[<>\\{};]/.test(source) && !/[&|]{2}|=>|\/\\|\\b/.test(source) &&

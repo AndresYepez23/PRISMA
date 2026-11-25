@@ -1672,21 +1672,21 @@
       "h1": "Generador de paletas de colores",
       "description": "Obtén cinco colores HSL como punto de partida para explorar una identidad visual o un fondo.",
       "intro": "Obtén cinco colores HSL como punto de partida para explorar una identidad visual o un fondo.",
-      "details": "Abre la herramienta, genera una paleta y copia los valores HSL que te interesen. Las combinaciones son aleatorias. El formulario actual no permite fijar un color base ni elegir una armonía, y no garantiza contraste accesible.",
+      "details": "Elige una armonía análoga, complementaria o triádica y genera cinco colores HSL para copiar en CSS. El tono inicial es aleatorio; no puedes fijar un color base.",
       "steps": [
-        "Abre generador de paletas de colores en Prisma Space.",
-        "Abre la herramienta, genera una paleta y copia los valores HSL que te interesen.",
-        "Revisa el resultado antes de copiarlo, descargarlo o utilizarlo."
+        "Elige la armonía de color.",
+        "Genera la paleta y copia los valores HSL en tu CSS.",
+        "Comprueba el contraste de textos y controles antes de publicar."
       ],
-      "tip": "Las combinaciones son aleatorias. El formulario actual no permite fijar un color base ni elegir una armonía, y no garantiza contraste accesible.",
+      "tip": "Comprueba cada combinación de texto y fondo con la herramienta de contraste. La paleta no garantiza contraste accesible.",
       "faqs": [
         [
           "¿Los colores están en formato HEX?",
           "La herramienta entrega valores HSL que puedes utilizar directamente en CSS."
         ],
         [
-          "¿Qué debo revisar antes de usar el resultado?",
-          "Las combinaciones son aleatorias. El formulario actual no permite fijar un color base ni elegir una armonía, y no garantiza contraste accesible."
+          "¿Puedo fijar un color base?",
+          "El tono inicial es aleatorio. Puedes elegir la armonía, pero no fijar un color base concreto."
         ]
       ],
       "keyword": "generador paletas colores"
@@ -3695,7 +3695,7 @@
         "Selecciona A4 o Carta y comprueba el orden de los archivos.",
         "Ejecuta y descarga el PDF; revisa márgenes y nitidez antes de imprimir."
       ],
-      "tip": "Trabaja con imágenes estáticas. La opción Ajustar a la imagen del formulario no cambia el tamaño de página en el motor actual: utiliza A4 o Carta.",
+      "tip": "Utiliza imágenes estáticas. Ajustar a la imagen crea una página con las dimensiones de cada imagen; A4 o Carta pueden dejar márgenes. Comprueba la legibilidad después de exportar.",
       "faqs": [
         [
           "¿Cada imagen ocupa una página?",
