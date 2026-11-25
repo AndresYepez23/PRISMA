@@ -32,3 +32,10 @@ test('leaving the page flushes the bounded queue once, without cookies or referr
   assert.equal(sent[0].options.keepalive,true);assert.ok(!sent[0].options.body.includes('SECRET'));
  }finally{globalThis.window=oldWindow;globalThis.fetch=oldFetch;}
 });
+
+test('server privacy headers skip aggregation even if a client sends an event',async()=>{
+ for(const name of ['DNT','Sec-GPC']){
+  const req=request({events:[{id:'word-count',event:'succeeded'}]});req.headers.set(name,'1');
+  const response=await onRequestPost({request:req,env:{PRISMA_RATE_DB:{prepare(){throw Error('Privacy signal reached the database');}}}});assert.equal(response.status,204);
+ }
+});

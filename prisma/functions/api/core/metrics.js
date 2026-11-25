@@ -5,6 +5,7 @@ export async function onRequestPost({request,env}){
  if(request.headers.get('Origin')!==url.origin)return reply(403);
  if(!request.headers.get('Content-Type')?.startsWith('application/json'))return reply(415);
  if(Number(request.headers.get('Content-Length')||0)>6000)return reply(413);
+ if(request.headers.get('DNT')==='1'||request.headers.get('Sec-GPC')==='1')return reply(204);
  // Bound the stream even when Content-Length is absent or dishonest.
  const reader=request.body?.getReader();if(!reader)return reply(400);
  let raw='',size=0;const decoder=new TextDecoder();
