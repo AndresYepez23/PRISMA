@@ -463,7 +463,7 @@
         "Ejecuta el procesamiento con el modelo local.",
         "Revisa los bordes y descarga el PNG transparente si el resultado te sirve."
       ],
-      "tip": "Esta función está en beta. Cabello fino, objetos translúcidos y fondos similares al sujeto pueden producir imperfecciones.",
+      "tip": "Usa JPG, PNG o WebP de hasta 40 MB. La carga del modelo es automática; el modo de compatibilidad puede descargar cerca de 190 MB en el primer uso. Necesita memoria y conexión; revisa los bordes finos del resultado.",
       "faqs": [
         [
           "¿Necesito registrarme para quitar el fondo?",

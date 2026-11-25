@@ -1,3 +1,4 @@
+import {recognizeLocalImage} from './local-ocr.js';
 import { validateImageParameters, verifyImageResult } from './image-contracts.js';
 import { validateAgentStepResult } from './core-agent-guard.js';
 import { recordCoreMetric } from './core-telemetry.js';
@@ -17,14 +18,14 @@ const PDF_LIB='https://esm.sh/pdf-lib@1.17.1';
 const QR='https://esm.sh/qrcode@1.5.4';
 const MAMMOTH='https://esm.sh/mammoth@1.9.1';
 const TESS='https://esm.sh/tesseract.js@5.1.1';
-const BG0='https://esm.sh/@bg0/browser@0.1.2';
+const BG0='https://esm.sh/@bg0/browser@0.1.1';
 const FF='https://esm.sh/@ffmpeg/ffmpeg@0.12.10';
 const UTIL='https://esm.sh/@ffmpeg/util@0.12.2';
 const load=async url=>import(url);
 const bytes=blob=>blob.arrayBuffer();
 const download=(blob,name)=>({blob,filename:name});
 const fileName=f=>(f.name||'archivo').replace(/\.[^.]+$/,'');
-const progress=(cb,p,msg)=>cb?.(p,msg);
+const progress=(cb,p,msg,detail)=>cb?.(p,msg,detail);
 const makeBlob=(bytes,type)=>new Blob([bytes],{type});
 function parsePages(value,total){
  return parsePdfPageSelection(value,total);
@@ -119,8 +120,10 @@ async function pdfTool(id,files,p,cb){
 async function imageTool(id,files,p,cb){
  const f=files[0];progress(cb,.15,'Leyendo imagen...');
  if(id==='image-bg'){
-  const {removeBackground}=await load(BG0);progress(cb,.25,'Cargando modelo de IA en el navegador...');
-  const blob=await removeBackground(f,{quality:'quality',onProgress:e=>progress(cb,.25+(e.progress||0)*.65,e.message||'Eliminando fondo...')});
+  progress(cb,.1,'Cargando modelo de IA en el navegador…',{phase:'local-model'});
+  const {removeBackground}=await load(BG0);
+  const result=await removeBackground(f,{quality:'quality',onProgress:e=>progress(cb,e.progress,e.message,{phase:e.stage==='processing'?'background-remove':e.stage==='finishing'?'background-finish':'local-model',fraction:e.progress})});
+  const blob=result.blob;if(!(blob instanceof Blob)||!blob.size||blob.type!=='image/png')throw Object.assign(Error('No valid background-removal PNG'),{code:'inference-failed'});
   return {...download(blob,fileName(f)+'-sin-fondo.png'),previewUrl:URL.createObjectURL(blob)};
  }
  if(id==='image-strip-metadata'){
@@ -138,8 +141,8 @@ async function imageTool(id,files,p,cb){
   return {text:JSON.stringify(info,null,2),summary:'Lectura local. Si existen datos GPS, podrían aparecer en los metadatos.'};
  }
  if(id==='image-ocr'){
-  const {createWorker}=await load(TESS);const worker=await createWorker(p.language||'spa');progress(cb,.2,'Reconociendo texto...');
-  const result=await worker.recognize(f);await worker.terminate();return {text:result.data.text||'No se detectó texto.',summary:'Confianza estimada: '+Math.round(result.data.confidence)+'%'};
+  let createWorker;try{({createWorker}=await load(TESS));}catch(cause){throw Object.assign(Error('Local OCR engine could not load',{cause}),{code:'LOCAL_MODEL_LOAD_FAILED'});}
+  return recognizeLocalImage(f,p.language,cb,createWorker);
  }
  const img=new Image(),url=URL.createObjectURL(f);
  try{await new Promise((res,rej)=>{img.onload=res;img.onerror=()=>rej(Error('No se pudo abrir la imagen.'));img.src=url;});
@@ -1377,14 +1380,14 @@ async function validateJsonSchema(p,cb){
 let localVisionPromise=null;
 async function classifyImageLocally(files,p,cb){
  if(!files[0])throw Error('Selecciona una imagen JPG, PNG o WebP.');
- progress(cb,.06,'Preparando ViT ONNX. La primera ejecución descarga el modelo gratuito al navegador…');
+ progress(cb,.06,'Preparando ViT ONNX. La primera ejecución descarga el modelo gratuito al navegador…',{phase:'local-model'});
  if(!localVisionPromise)localVisionPromise=(async()=>{
    const {pipeline}=await load('https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.2');
-   return pipeline('image-classification','Xenova/vit-base-patch16-224',{device:'wasm',dtype:'q4'});
+   return pipeline('image-classification','Xenova/vit-base-patch16-224',{device:'wasm',dtype:'q4',progress_callback:event=>{const fraction=event.total>0?event.loaded/event.total:Number.isFinite(event.progress)?event.progress/100:undefined;progress(cb,.1,'Cargando el modelo en tu dispositivo…',{phase:'local-model',fraction});}});
  })().catch(e=>{localVisionPromise=null;throw e;});
  const model=await localVisionPromise,url=URL.createObjectURL(files[0]);
  try{
-  progress(cb,.72,'Reconociendo categorías visuales localmente…');
+  progress(cb,.72,'Reconociendo categorías visuales localmente…',{phase:'image-classify'});
   const predictions=await model(url,{top_k:5});
   const rows=Array.isArray(predictions)?predictions:[predictions];
   const report=['CLASIFICACIÓN VISUAL · ViT ONNX','Etiquetas aproximadas en inglés:','',
