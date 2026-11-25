@@ -70,7 +70,7 @@ const sdk=`export async function createWorker(language,oem,{logger,errorHandler}
    await page.evaluate(async()=>{const {flushCoreMetrics}=await import('/src/core-telemetry.js');await flushCoreMetrics();});
    if(privacy==='default'){
     const payload=events.flatMap(e=>e.body.events);for(const expected of ['requested','succeeded','copied','download-clicked'])assert.ok(payload.some(event=>event.event===expected),expected+' not recorded');
-    for(const event of events){assert.equal(event.headers.cookie,undefined);assert.equal(event.headers.referer,undefined);assert.ok(!JSON.stringify(event).includes('SECRET'));}
+    for(const event of events){assert.equal(event.headers.origin,'https://prismaspace.space');assert.equal(event.headers.cookie,undefined);assert.equal(event.headers.referer,undefined);assert.ok(!JSON.stringify(event).includes('SECRET'));}
    }else assert.equal(events.length,0,privacy+' privacy signal was ignored');
    await context.close();
   }
