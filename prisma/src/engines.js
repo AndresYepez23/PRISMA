@@ -288,7 +288,7 @@ async function hashFile(file){
  return {text:'SHA-256  '+hex+'\nArchivo: '+file.name+'\nTamaño: '+formatBytesEngine(file.size),summary:'Huella calculada localmente con Web Crypto.'};
 }
 async function excelToJson(file,p,cb){
- const mod=await import('https://esm.sh/xlsx@0.18.5'),XLSX=mod.default||mod;
+ const mod=await import('https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs'),XLSX=mod.default||mod;
  progress(cb,.2,'Leyendo libro de cálculo...');
  const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
  if(!wb.SheetNames.length)throw Error('El archivo no contiene hojas legibles.');
@@ -411,7 +411,7 @@ async function jsonToExcel(p){
  let rows;try{rows=JSON.parse(source)}catch(e){throw Error('JSON inválido: '+e.message)}
  if(!Array.isArray(rows)||!rows.length||rows.some(x=>!x||typeof x!=='object'||Array.isArray(x)))throw Error('El JSON debe ser una lista no vacía de objetos.');
  if(rows.length>50000)throw Error('El límite es de 50.000 registros.');
- const mod=await import('https://esm.sh/xlsx@0.18.5'),XLSX=mod.default||mod;
+ const mod=await import('https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs'),XLSX=mod.default||mod;
  const wb=XLSX.utils.book_new(),ws=XLSX.utils.json_to_sheet(rows);
  XLSX.utils.book_append_sheet(wb,ws,'Datos');
  const data=XLSX.write(wb,{bookType:'xlsx',type:'array'});

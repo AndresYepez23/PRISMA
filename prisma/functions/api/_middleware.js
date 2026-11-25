@@ -2,6 +2,7 @@
 // API requests on newer Pages deployments use the immutable known-good Functions
 // deployment. No credentials are copied, retrieved, or embedded in this file.
 // Keep this explicit until a *new* production deployment passes a binding regression gate.
+import { checkResearchLimits, researchLimitResponse } from '../_lib/research-limits.js';
 export const STABLE_CORE_ORIGIN = 'https://17a6c338.prismaspace.pages.dev';
 // Dedicated, isolated Qwen inference service. It owns its Qwen credentials and D1;
 // production Pages does not need to copy or expose any Qwen secrets.
@@ -13,7 +14,7 @@ export function isPrismaSpaceHost(hostname) {
     hostname.endsWith('.prismaspace.pages.dev');
 }
 
-export async function onRequest({ request, next }, { fetcher = fetch } = {}) {
+export async function onRequest({ request, env, next }, { fetcher = fetch } = {}) {
   const incoming = new URL(request.url);
   // Never bridge a different Pages project (notably prisma-queen-staging).
   if (!isPrismaSpaceHost(incoming.hostname) || !incoming.pathname.startsWith('/api/')) {
@@ -26,6 +27,16 @@ export async function onRequest({ request, next }, { fetcher = fetch } = {}) {
     return Response.json({ ok: false, code: 'INVALID_ORIGIN' }, {
       status: 403, headers: { 'Cache-Control': 'no-store' }
     });
+  }
+
+  // Protect the bridge too: local route fixes do not run on the old backend.
+  // A separate namespace avoids double-charging if a future backend has its own guard.
+  let decodedPath;
+  try { decodedPath = decodeURIComponent(incoming.pathname); }
+  catch { return Response.json({ ok: false, code: 'INVALID_PATH' }, { status: 400 }); }
+  if (request.method === 'POST' && /^\/api\/research(?:\/|$)/i.test(decodedPath)) {
+    const limit = await checkResearchLimits(env, request, 'research-bridge');
+    if (limit) return researchLimitResponse(limit);
   }
 
   const qwenInterpreter = incoming.pathname === '/api/core/qwen-interpret';
