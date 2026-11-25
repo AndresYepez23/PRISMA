@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {onRequest, STABLE_CORE_ORIGIN} from '../functions/api/_middleware.js';
+import {onRequestPost} from '../functions/api/core/metrics.js';
 
 const preview='https://sample123.prismaspace.pages.dev';
 const request=(path, init={})=>new Request(preview+path, init);
@@ -66,4 +67,19 @@ test('backend failures do not silently call keyless new deployment',async()=>{
     {fetcher:async()=>{throw Error('network error')}});
   assert.equal(result.status,502);
   assert.equal((await result.json()).code,'CORE_BACKEND_UNREACHABLE');
+});
+
+test('metrics reach the current handler through the real middleware, preserving origin and privacy',async()=>{
+ for(const privacy of ['', 'DNT', 'Sec-GPC']){
+  const headers={Origin:preview,'Content-Type':'application/json'};if(privacy)headers[privacy]='1';
+  const req=request('/api/core/metrics',{method:'POST',headers,body:'null'});
+  let fetched=false;
+  const result=await onRequest({request:req,next:()=>onRequestPost({request:req,env:{}})},{fetcher:async()=>{fetched=true;throw Error('Old backend must not receive metrics');}});
+  assert.equal(fetched,false);assert.equal(result.status,privacy?204:400);assert.equal(result.headers.get('X-Prisma-Core-Backend'),null);
+ }
+});
+test('metrics keep cross-origin rejection before the local exception',async()=>{
+ let local=false,fetched=false;
+ const result=await onRequest({request:request('/api/core/metrics',{method:'POST',headers:{Origin:'https://evil.example'},body:'{}'}),next:()=>{local=true;return new Response();}},{fetcher:async()=>{fetched=true;return new Response();}});
+ assert.equal(result.status,403);assert.equal(local,false);assert.equal(fetched,false);
 });
