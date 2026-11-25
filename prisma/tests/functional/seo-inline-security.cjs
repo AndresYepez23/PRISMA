@@ -113,6 +113,10 @@ const server=createServer((req,res)=>{
    assert.equal(await page.locator('.seo-inline-image').isVisible(),true);
   }
   for(const [path,id,files,signature,extension] of [
+   ['/herramientas/extraer-paginas-pdf/','pdf-extract',[{name:'digital.pdf',mimeType:'application/pdf',buffer:Buffer.from(fixture.pdf)}],[37,80,68,70],/\.pdf$/],
+   ['/herramientas/rotar-pdf/','pdf-rotate',[{name:'digital.pdf',mimeType:'application/pdf',buffer:Buffer.from(fixture.pdf)}],[37,80,68,70],/\.pdf$/],
+   ['/herramientas/insertar-paginas-blanco-pdf/','pdf-add-blank',[{name:'digital.pdf',mimeType:'application/pdf',buffer:Buffer.from(fixture.pdf)}],[37,80,68,70],/\.pdf$/],
+   ['/herramientas/png-a-jpg/','image-convert',[{name:'photo.png',mimeType:'image/png',buffer:Buffer.from(fixture.png)}],[255,216],/\.jpg$/],
    ['/herramientas/pdf-a-word/','pdf-to-word',[{name:'digital.pdf',mimeType:'application/pdf',buffer:Buffer.from(fixture.pdf)}],[80,75],/\.docx$/],
    ['/en/tools/convert-pdf-to-jpg/','pdf-to-image',[{name:'digital.pdf',mimeType:'application/pdf',buffer:Buffer.from(fixture.pdf)}],[80,75],/\.zip$/],
    ['/herramientas/jpg-a-pdf/','image-pdf',[{name:'uno.jpg',mimeType:'image/jpeg',buffer:Buffer.from(fixture.photo)},{name:'dos.jpg',mimeType:'image/jpeg',buffer:Buffer.from(fixture.photo)}],[37,80,68,70],/\.pdf$/],
@@ -130,6 +134,11 @@ const server=createServer((req,res)=>{
    const bytes=await page.evaluate(async()=>Array.from(new Uint8Array(await(await fetch(document.querySelector('.seo-inline-download').href)).arrayBuffer())));
    assert.deepEqual(bytes.slice(0,signature.length),signature,path+' output signature');
    assert.match(await page.locator('.seo-inline-download').getAttribute('download'),extension,path+' extension');
+   if(['pdf-extract','pdf-rotate','pdf-add-blank'].includes(id)){
+    const details=await page.evaluate(async()=>{const {PDFDocument}=await import('https://esm.sh/pdf-lib@1.17.1');const pdf=await PDFDocument.load(await(await fetch(document.querySelector('.seo-inline-download').href)).arrayBuffer());return {pages:pdf.getPageCount(),angle:pdf.getPage(0).getRotation().angle};});
+    assert.equal(details.pages,id==='pdf-extract'?3:id==='pdf-add-blank'?5:4,path+' pages');if(id==='pdf-rotate')assert.equal(details.angle,90,path+' rotation');
+   }
+
   }
   for(const [path,id,file,expected] of [
    ['/herramientas/extraer-texto-pdf/','pdf-text',{name:'digital.pdf',mimeType:'application/pdf',buffer:Buffer.from(fixture.pdf)},'Page 1'],
@@ -151,9 +160,13 @@ const server=createServer((req,res)=>{
   assert.equal(await page.locator('.seo-inline-download').isVisible(),false);
   for(const [path,language] of [['/herramientas/word-a-pdf/','es'],['/en/tools/convert-word-to-pdf-from-your-browser/','en']]){
    await page.goto(origin+path);
-   const target=await page.locator('.seo-actions .seo-cta').getAttribute('href');
-   assert.equal(new URL(target,origin).searchParams.get('tool'),'docx-pdf',path);
-   await page.locator('.seo-actions .seo-cta').click();
+   assert.equal(await page.locator('.seo-actions .seo-cta').getAttribute('href'),'#inline-tool-title',path);
+   await page.locator('[name=file]').setInputFiles(require('node:path').resolve(__dirname,'../fixtures/conversion.docx'));
+   await page.locator('[data-seo-inline-tool] button[type=submit]').click();
+   await page.locator('.seo-inline-print:not([hidden])').waitFor({timeout:20000});
+   const fallback=page.locator('.seo-inline-tool > p > a').last();
+   assert.equal(new URL(await fallback.getAttribute('href'),origin).searchParams.get('tool'),'docx-pdf',path);
+   await fallback.click();
    await page.locator('#tool-modal:not(.hidden)').waitFor({timeout:15000});
    assert.match(await page.locator('#modal-title').textContent(),language==='es'?/Word a PDF/:/Word to PDF/);
    assert.match(await page.locator('#file-input').getAttribute('accept'),/\.docx/);

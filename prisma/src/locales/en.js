@@ -1,4 +1,8 @@
 const translations = {
+  "Ver todas las herramientas": "View all tools",
+  "Guías para resolver tu tarea": "Guides for your task",
+  "Buscar por nombre o categoría ↗": "Search by name or category ↗",
+
   "Convierte archivos y": "Convert files and",
   "resuelve tareas.": "complete tasks.",
   "Abre una herramienta para empezar ahora o describe tu objetivo a Prisma Core. Las funciones de IA necesitan un motor disponible y pueden utilizar servicios externos.": "Open a tool to start now, or describe your goal to Prisma Core. AI features need an available engine and may use external services.",

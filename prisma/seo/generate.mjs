@@ -1,3 +1,4 @@
+import {toolOverview} from './tool-experience.mjs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tools, categories } from '../src/registry.js';
 import { generateContentHubs } from './content-hubs.mjs';
@@ -84,30 +85,26 @@ function landing(page, pages, toolMap) {
       { '@type':'ListItem', position:3, name:page.h1, item:url }
     ] }
   ];
-  const steps = page.steps.map(step => '<li><span>' + esc(step) + '</span></li>').join('\n');
+  const steps = page.steps.filter((step,index)=>!(hasInlineTool(page)&&index===0&&/^Abre .+ en Prisma Space\.$/.test(step))).map(step => '<li><span>' + esc(step) + '</span></li>').join('\n');
   const faqs = page.faqs.map(pair => '<details><summary>' + esc(pair[0]) + '</summary><p>' + esc(pair[1]) + '</p></details>').join('\n');
-  const preview=priority?priorityExampleHero(page.slug,'es'):[
-    '<div class="seo-preview" aria-hidden="true"><div class="seo-preview-orb"></div><div class="seo-preview-label">PRISMA SPACE / ' + esc(page.slug.toUpperCase().replaceAll('-', ' ')) + '</div>',
-    '<div class="seo-preview-content"><div class="seo-preview-symbol"><img src="/assets/prisma-mark.svg" width="46" height="46" alt=""></div><strong>' + esc(tool.name) + '</strong><span>' + (beta ? 'Función en beta' : 'Lista para usar') + '</span></div>',
-    '<div class="seo-preview-foot"><span>Una tarea, una solución</span><span>' + (['local','browser'].includes(tool.mode) ? 'PROCESAMIENTO LOCAL' : 'SERVICIO CONECTADO') + '</span></div></div>'
-  ].join('');
+  const preview=priority?priorityExampleHero(page.slug,'es'):toolOverview(page,'es');
   const body = [
     '<main class="seo-main">',
     '<nav class="seo-breadcrumb" aria-label="Ruta de navegación"><a href="/?lang=es">Inicio</a><span>/</span><a href="/herramientas/">Herramientas</a><span>/</span><a href="/herramientas/#' + esc(tool.category) + '">' + esc(categoryFor(tool).name) + '</a><span>/</span><span aria-current="page">' + esc(page.h1) + '</span></nav>',
     '<section class="seo-hero"><div class="seo-hero-copy">',
-    '<div class="seo-eyebrow"><i></i>' + esc(categoryFor(tool).name) + ' · ' + (['local','browser'].includes(tool.mode)?'Procesamiento local':'Servicio conectado') + ' · ' + (beta ? 'Beta' : 'Disponible') + '</div>',
+    '<div class="seo-eyebrow"><i></i>' + esc(categoryFor(tool).name) + ' · ' + (['local','browser'].includes(tool.mode)?'Procesamiento local':'Servicio conectado') + ' · ' + (beta ? 'Revisa los límites' : 'Disponible') + '</div>',
     '<h1>' + esc(page.h1) + '</h1>',
     '<p class="seo-lead">' + esc(page.description) + '</p>',
     '<div class="seo-actions"><a class="seo-cta" href="' + esc(actionUrl) + '">' + esc(priorityActionLabel(page.slug,'es') || (hasInlineTool(page)?'Usar aquí':'Abrir herramienta')) + ' <span aria-hidden="true">→</span></a><a class="seo-subtle" href="#como-funciona">Cómo funciona ↓</a></div>',
     '<p class="seo-privacy"><span aria-hidden="true">◇</span> ' + esc(page.privacyNote || (['local','browser'].includes(tool.mode) ? 'Procesamiento en el navegador · Sin registro' : 'Consulta las condiciones de uso de la herramienta')) + '</p></div>',
     preview+'</section>',
+    inlineToolForm(page.tool,'es',page),
     '<div class="seo-content-grid" id="como-funciona">',
-    '<section class="seo-panel"><div class="seo-section-label">' + (priority?'OPERACIÓN Y LÍMITES':'QUÉ PUEDES HACER') + '</div><h2>' + esc(priorityPanelHeading(page.slug,'es') || page.h1 + ': lo que necesitas saber') + '</h2><p>' + esc(page.intro) + '</p><p>' + esc(page.details) + '</p></section>',
+    '<section class="seo-panel"><div class="seo-section-label">' + (priority?'OPERACIÓN Y LÍMITES':'QUÉ PUEDES HACER') + '</div><h2>' + esc(priorityPanelHeading(page.slug,'es') || page.h1 + ': lo que necesitas saber') + '</h2>' + (page.intro===page.description?'':'<p>'+esc(page.intro)+'</p>') + '<p>' + esc(page.details) + '</p></section>',
     '<section class="seo-panel"><div class="seo-section-label">PASO A PASO</div><h2>Cómo utilizar esta herramienta</h2><ol class="seo-steps">' + steps + '</ol><a class="seo-inline-link" href="' + esc(actionUrl) + '">Abrir ' + esc(tool.name) + ' ↗</a></section>',
     '</div>',
-    inlineToolForm(page.tool,'es',page),
     priorityExampleReview(page.slug,'es',next&&{href:'/herramientas/'+next.slug+'/',h1:next.h1}),
-    '<aside class="seo-note"><span class="seo-note-icon">i</span><div><strong>Antes de empezar</strong><p>' + esc(page.tip) + '</p>' + (beta&&!priority ? '<small>Esta función figura como beta en el catálogo de Prisma Space.</small>' : '') + '</div></aside>',
+    '<aside class="seo-note"><span class="seo-note-icon">i</span><div><strong>Antes de empezar</strong><p>' + esc(page.tip) + '</p>' + '</div></aside>',
     '<section class="seo-faq" aria-labelledby="faq-title"><div class="seo-section-label">PREGUNTAS FRECUENTES</div><h2 id="faq-title">Dudas habituales</h2>' + faqs + '</section>',
     '<section class="seo-related" aria-labelledby="related-title"><div class="seo-related-heading"><div><div class="seo-section-label">TAMBIÉN TE PUEDE SERVIR</div><h2 id="related-title">Herramientas relacionadas</h2></div><a href="/herramientas/">Ver todas ↗</a></div><div class="seo-related-grid">' + relatedCards(page,pages,toolMap) + '</div></section>',
     '</main>'
@@ -127,8 +124,8 @@ function directory(pages,toolMap) {
   }).join('\n');
   const body=[
     '<main class="seo-main"><nav class="seo-breadcrumb" aria-label="Ruta de navegación"><a href="/?lang=es">Inicio</a><span>/</span><span aria-current="page">Directorio de herramientas</span></nav>',
-    '<section class="seo-directory-hero"><div class="seo-eyebrow"><i></i>DIRECTORIO · PRISMA SPACE</div><h1>Herramientas online para resolver tareas digitales</h1>',
-    '<p>Convierte documentos, edita imágenes, procesa vídeo y audio, crea contenido y resuelve tareas de estudio desde Prisma Space. Explora '+pages.length+' fichas prácticas que explican operaciones concretas y abre la herramienta correspondiente en un clic.</p><div class="seo-tags">'+tags+'</div></section>',
+    '<section class="seo-directory-hero"><div class="seo-eyebrow"><i></i>DIRECTORIO · PRISMA SPACE</div><h1>Encuentra la herramienta para tu tarea</h1>',
+    '<p>Busca entre '+pages.length+' fichas por nombre o categoría. Comprueba el resultado, los formatos y los requisitos de cada operación antes de empezar.</p><div class="seo-tags">'+tags+'</div></section>',
     sections,
     '<aside class="seo-note"><span class="seo-note-icon">i</span><div><strong>Disponibilidad y privacidad</strong><p>Este directorio reúne fichas SEO de operaciones concretas; el catálogo interactivo puede incluir funciones y variantes adicionales. Comprueba si cada operación se procesa localmente o depende de un proveedor conectado. Las funciones Beta pueden tener limitaciones.</p></div></aside>',
     '</main>'

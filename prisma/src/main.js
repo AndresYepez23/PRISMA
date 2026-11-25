@@ -1,4 +1,5 @@
 import { renderToolFields } from './tool-fields.js';
+import { updateUnitInputs } from './tool-input-options.js';
 import { initPrismaCore, setPrismaCoreViewActive, startNewPrismaConversation } from './core.js';
 import { planPdfSplit } from './pdf-split-options.js';
 import { installMobileSidebarGestures } from './sidebar-gestures.js';
@@ -750,7 +751,7 @@ function openTool(t){
     drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('dragover');addSelectedFiles([...e.dataTransfer.files],t);});
     $('#file-list').addEventListener('click',e=>{const remove=e.target.closest('[data-remove-file]');if(remove){selectedFiles.splice(Number(remove.dataset.removeFile),1);renderFileList();return;}if(e.target.closest('[data-clear-files]')){selectedFiles=[];renderFileList();}});
   }
-  if(['image-gen','ai-assistant','music-lyrics','ai-voice','ai-transcribe','ai-youtube-kit','ai-prompt-lab','ai-study-notes','ai-code-helper','ai-compare-options','ai-action-plan','ai-text-review'].includes(t.id))setupAIAuthorization(t);
+  if(['image-gen','ai-assistant','music-lyrics','ai-voice','ai-transcribe','ai-youtube-kit','ai-prompt-lab','ai-study-notes','ai-webpage','ai-code-helper','ai-compare-options','ai-action-plan','ai-text-review'].includes(t.id))setupAIAuthorization(t);
   if(t.id==='api-explorer')setupApiExplorer();
   if(t.id==='pdf-split')setupPdfSplitOptions();
   if(t.id==='units')$('#field-kind').addEventListener('change',updateUnitOptions);
@@ -919,9 +920,7 @@ function openWorkflow(workflow){
   $('#modal-close').focus({preventScroll:true});
 }
 function updateUnitOptions(){
-  const kind=$('#field-kind').value;
-  const sets={length:[['m','Metros'],['km','Kilómetros'],['cm','Centímetros'],['mm','Milímetros'],['mi','Millas'],['ft','Pies'],['in','Pulgadas'],['yd','Yardas']],mass:[['kg','Kilogramos'],['g','Gramos'],['mg','Miligramos'],['lb','Libras'],['oz','Onzas'],['t','Toneladas']],area:[['m2','m²'],['km2','km²'],['cm2','cm²'],['ha','Hectáreas'],['acre','Acres'],['ft2','Pies²']],volume:[['l','Litros'],['ml','Mililitros'],['m3','m³'],['gal','Galones US'],['cup','Tazas US']],speed:[['ms','m/s'],['kmh','km/h'],['mph','mph'],['kn','Nudos']],data:[['B','Bytes'],['KB','Kilobytes'],['MB','Megabytes'],['GB','Gigabytes'],['TB','Terabytes']],temperature:[['C','Celsius'],['F','Fahrenheit'],['K','Kelvin']]};
-  const opts=sets[kind];['from','to'].forEach((name,i)=>{$('#field-'+name).innerHTML=opts.map(o=>'<option value="'+o[0]+'">'+o[1]+'</option>').join('');$('#field-'+name).value=kind==='length'?(i?'km':'m'):kind==='mass'?(i?'g':'kg'):(i?'F':'C');});
+  updateUnitInputs($('#modal-body'),document.documentElement.lang);
 }
 function updateTimestampField(){
   const mode=$('#field-mode').value;

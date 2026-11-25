@@ -1767,7 +1767,7 @@
       "category": "web",
       "decision": "deferred",
       "pages": [],
-      "reason": "Existe el generador HTML, pero buildFields no ofrece el campo prompt para su apertura directa. No se modifica la interfaz para habilitarlo.",
+      "reason": "Formulario funcional en la aplicación, reutilizando el motor existente. Se conserva sin ficha adicional hasta justificar una intención y demanda propias.",
       "evidence": [
         "src/registry.js",
         "src/main.js#buildFields",
@@ -2254,7 +2254,7 @@
       "category": "text",
       "decision": "deferred",
       "pages": [],
-      "reason": "Motor extractivo presente, pero el formulario directo no ofrece la entrada de texto. Sin ficha individual hasta validar el acceso y la demanda.",
+      "reason": "Formulario funcional en la aplicación, reutilizando el motor existente. Se conserva sin ficha adicional hasta justificar una intención y demanda propias.",
       "evidence": [
         "src/registry.js",
         "src/main.js#buildFields",
@@ -2286,7 +2286,7 @@
       "category": "data",
       "decision": "deferred",
       "pages": [],
-      "reason": "Motor presente, pero apertura directa sin campos en buildFields para introducir el texto requerido. No se anuncia una operación que el CTA no permite completar.",
+      "reason": "Formulario funcional en la aplicación, reutilizando el motor existente. Se conserva sin ficha adicional hasta justificar una intención y demanda propias.",
       "evidence": [
         "src/registry.js",
         "src/main.js#buildFields",
@@ -2333,7 +2333,7 @@
       "category": "dev",
       "decision": "deferred",
       "pages": [],
-      "reason": "Motor presente, pero apertura directa sin campos en buildFields para introducir el texto requerido. No se anuncia una operación que el CTA no permite completar.",
+      "reason": "Formulario funcional en la aplicación, reutilizando el motor existente. Se conserva sin ficha adicional hasta justificar una intención y demanda propias.",
       "evidence": [
         "src/registry.js",
         "src/main.js#buildFields",
@@ -2348,7 +2348,7 @@
       "category": "dev",
       "decision": "deferred",
       "pages": [],
-      "reason": "Motor presente, pero apertura directa sin campos en buildFields para introducir el texto requerido. No se anuncia una operación que el CTA no permite completar.",
+      "reason": "Formulario funcional en la aplicación, reutilizando el motor existente. Se conserva sin ficha adicional hasta justificar una intención y demanda propias.",
       "evidence": [
         "src/registry.js",
         "src/main.js#buildFields",
@@ -2380,7 +2380,7 @@
       "category": "image",
       "decision": "deferred",
       "pages": [],
-      "reason": "Duplicado de contraste; además no tiene campos en buildFields. Se cubre con contrast.",
+      "reason": "Formulario funcional en la aplicación. La misma intención ya se cubre con contrast; no necesita otra ficha.",
       "evidence": [
         "src/registry.js",
         "src/main.js#buildFields",
@@ -2395,7 +2395,7 @@
       "category": "text",
       "decision": "deferred",
       "pages": [],
-      "reason": "Motor presente, pero apertura directa sin campos en buildFields para introducir el texto requerido. No se anuncia una operación que el CTA no permite completar.",
+      "reason": "Formulario funcional en la aplicación, reutilizando el motor existente. Se conserva sin ficha adicional hasta justificar una intención y demanda propias.",
       "evidence": [
         "src/registry.js",
         "src/main.js#buildFields",

@@ -1,7 +1,9 @@
+import {tools} from '../src/registry.js';
+import {toolContract,toolOutcome} from './tool-experience.mjs';
 const esc=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 export const inlineToolIds=new Set(['pdf-split','image-strip-metadata','pdf-merge','image-compress','html-format','js-format','citation-generator']);
 const directFilePages=new Set(['pdf-a-word','pdf-a-jpg','jpg-a-pdf','png-a-pdf','imagen-a-texto','collage-de-fotos','ver-metadatos-exif','comprimir-pdf','extraer-texto-pdf','redimensionar-imagen','recortar-imagen']);
-export const hasInlineTool=page=>inlineToolIds.has(page.tool)||directFilePages.has(page.sourceSlug||page.slug);
+export const hasInlineTool=page=>tools.some(tool=>tool.id===page.tool&&['local','browser'].includes(tool.mode)&&tool.status!=='soon');
 
 function fileToolForm(id,language){
  const en=language==='en',pdf=id==='pdf-split',merge=id==='pdf-merge',compress=id==='image-compress';
@@ -35,7 +37,7 @@ function directFileForm(id,language,page){
   'pdf-to-word':label('Selecciona un PDF digital con texto seleccionable. El DOCX puede necesitar ajustes de diseño.','Choose a digital PDF with selectable text. The DOCX may need layout corrections.'),
   'pdf-to-image':label('Obtendrás un ZIP con un JPG por página seleccionada.','You will get a ZIP with one JPG per selected page.'),
   'image-pdf':label('Cada imagen ocupa una página; revisa el orden antes de convertir.','Each image gets one page; check the selection order before converting.'),
-  'image-ocr':label('El OCR entrega texto, no una copia del diseño. Revisa cifras y nombres.','OCR returns text, not a copy of the layout. Check numbers and names.'),
+  'image-ocr':label('El OCR entrega texto, no una copia del diseño. La primera ejecución descarga el modelo de idioma. Revisa cifras y nombres.','OCR returns text, not a copy of the layout. The first run downloads the language model. Check numbers and names.'),
   'image-collage':label('Selecciona entre 2 y 12 fotos. La cuadrícula recorta cada celda automáticamente.','Select 2 to 12 photos. The grid crops each cell automatically.'),
   'image-metadata':label('Consulta los datos EXIF presentes sin modificar la imagen.','Read existing EXIF details without changing the image.'),
   'pdf-compress':label('Se reescribe la estructura del PDF; el archivo resultante no siempre es más pequeño.','The PDF structure is rewritten; the result is not always smaller.'),
@@ -52,13 +54,13 @@ function directFileForm(id,language,page){
  const query=new URLSearchParams({tool:id,...(language==='es'?{lang:'es'}:{}),...(page.format?{format:page.format}:{})});
  const fallback=(en?'/en/':'/')+'?'+query.toString().replaceAll('&','&amp;');
  const resultText=['image-ocr','image-metadata','pdf-text'].includes(id);
- return '<section class="seo-panel seo-inline-tool" aria-labelledby="inline-tool-title"><div class="seo-section-label">'+label('HERRAMIENTA','TOOL')+'</div><h2 id="inline-tool-title">'+label('Usar aquí: ','Use here: ')+esc(page.h1)+'</h2><p>'+notes[id]+'</p><form data-seo-inline-tool="'+id+'" data-max-files="'+(id==='image-collage'?12:multi?20:1)+'" class="seo-inline-form"><label class="seo-inline-wide">'+label(multi?'Archivos en orden de selección':'Archivo',multi?'Files in selection order':'File')+'<input name="file" type="file" accept="'+accept+'"'+(multi?' multiple':'')+' required></label>'+options+'<button type="submit" class="seo-cta">'+label('Procesar archivo','Process file')+'</button><p class="seo-inline-status" role="status" aria-live="polite"></p>'+(multi?'<p class="seo-inline-selected seo-inline-wide" aria-live="polite"></p>':'')+'<a class="seo-cta seo-inline-download" hidden download>'+label('Descargar resultado','Download result')+'</a>'+(resultText?'<pre class="seo-inline-result" tabindex="0" hidden></pre>':'<img class="seo-inline-image" alt="'+label('Vista previa del resultado','Result preview')+'" hidden>')+'</form><p><a href="'+fallback+'">'+label('Abrir en Prisma Core','Open in Prisma Core')+' ↗</a></p></section><script type="module" src="/src/seo-inline-tools.js"></script>';
+ return '<section class="seo-panel seo-inline-tool" aria-labelledby="inline-tool-title"><div class="seo-section-label">'+label('HERRAMIENTA','TOOL')+'</div><h2 id="inline-tool-title">'+label('Usar aquí: ','Use here: ')+esc(page.h1)+'</h2><p>'+notes[id]+'</p><form data-seo-inline-tool="'+id+'" data-max-files="'+(id==='image-collage'?12:multi?20:1)+'" class="seo-inline-form"><label class="seo-inline-wide">'+label(multi?'Archivos en orden de selección':'Archivo',multi?'Files in selection order':'File')+'<input name="file" type="file" accept="'+accept+'"'+(multi?' multiple':'')+' required></label>'+options+'<button type="submit" class="seo-cta">'+label('Procesar archivo','Process file')+'</button><p class="seo-inline-status" role="status" aria-live="polite"></p>'+(multi?'<ol class="seo-inline-order seo-inline-wide" aria-live="polite"></ol>':'')+'<a class="seo-cta seo-inline-download" hidden download>'+label('Descargar resultado','Download result')+'</a>'+(resultText?'<pre class="seo-inline-result" tabindex="0" hidden></pre>':'<img class="seo-inline-image" alt="'+label('Vista previa del resultado','Result preview')+'" hidden>')+'</form><p><a href="'+fallback+'">'+label('Abrir en Prisma Core','Open in Prisma Core')+' ↗</a></p></section><script type="module" src="/src/seo-inline-tools.js"></script>';
 }
 
 export function inlineToolForm(id,language,page){
  if(page&&directFilePages.has(page.sourceSlug||page.slug))return directFileForm(id,language,page);
  if(['pdf-split','image-strip-metadata','pdf-merge','image-compress'].includes(id))return fileToolForm(id,language);
- if(!['html-format','js-format','citation-generator'].includes(id))return '';
+ if(!['html-format','js-format','citation-generator'].includes(id))return page?sharedToolForm(page,language):'';
  const en=language==='en',citation=id==='citation-generator';
  const label=(es,english)=>en?english:es;
  const field=(name,title,required=false)=>'<label>'+esc(title)+'<input name="'+name+'" maxlength="300"'+(required?' required':'')+'></label>';
@@ -73,4 +75,22 @@ export function inlineToolForm(id,language,page){
   citation?label('Ejemplo: García, A.; 2024; Manual de estudio; Editorial Ejemplo. Elige APA 7 o Vancouver y revisa la salida contra la fuente. Vancouver también requiere numerar la bibliografía según el orden de citación; el generador no conoce ese orden.','Example: Smith, J.; 2024; Study handbook; Example Press. Choose APA 7 or Vancouver and check the result against the source. Vancouver also requires numbering references in citation order; the generator does not know that order.'):
   label('Formatea el código en tu navegador. Se carga Prettier al ejecutar; el código no se ejecuta.','Format code in your browser. Prettier loads when you run it; your code is not executed.'))+
   '</p><form data-seo-inline-tool="'+id+'" class="seo-inline-form">'+controls+'<button type="submit" class="seo-cta">'+label('Generar resultado','Generate result')+'</button><p class="seo-inline-status" role="status" aria-live="polite"></p><pre class="seo-inline-result" tabindex="0" hidden></pre></form></section><script type="module" src="/src/seo-inline-tools.js"></script>';
+}
+
+function sharedToolForm(page,language){
+ const en=language==='en',label=(es,english)=>en?english:es,tool=tools.find(t=>t.id===page.tool);
+ const query=new URLSearchParams({tool:tool.id,...(en?{}:{lang:'es'}),...(page.format?{format:page.format}:{})});
+ const fallback=(en?'/en/':'/')+'?'+esc(query.toString());
+ if(!hasInlineTool(page))return '<section class="seo-panel seo-launch-tool" aria-labelledby="launch-tool-title"><div class="seo-section-label">'+label('SERVICIO CONECTADO','CONNECTED SERVICE')+'</div><h2 id="launch-tool-title">'+label('Antes de abrir la herramienta','Before opening the tool')+'</h2><p>'+label('La herramienta necesita conexión a un servicio externo. En Prisma Core puedes consultar los motores disponibles y configurar una conexión personal si la operación lo requiere. Las cuotas y la disponibilidad pueden variar.','This tool needs an external service. In Prisma Core you can check available engines and configure a personal connection if required. Quotas and availability may vary.')+'</p><a class="seo-cta" href="'+fallback+'">'+label('Abrir esta operación','Open this operation')+' →</a></section>';
+ const fields=toolContract(tool,language);
+ const controls=fields.map(f=>{
+  const title='<span>'+esc(f.label)+'</span>',hint=f.hint?'<small>'+esc(f.hint)+'</small>':'';
+  if(f.type==='checkbox')return '<label class="seo-inline-check"><input type="checkbox" name="'+f.name+'"'+(f.value?' checked':'')+'>'+title+'</label>';
+  let value=page.format&&f.name==='format'?page.format:f.value;
+  if(tool.id==='image-ocr'&&f.name==='language')value=en?'eng':'spa';
+  const control=f.type==='textarea'?'<textarea name="'+f.name+'" rows="7" maxlength="200000" spellcheck="false">'+esc(value)+'</textarea>':f.type==='select'?'<select name="'+f.name+'">'+f.options.map(([key,text])=>'<option value="'+esc(key)+'"'+(String(key)===String(value)?' selected':'')+'>'+esc(text)+'</option>').join('')+'</select>':'<input name="'+f.name+'" type="'+f.type+'" value="'+esc(value)+'" '+(f.extra||'')+(f.type==='text'?' maxlength="10000"':'')+'>';
+  return '<label'+(f.type==='textarea'?' class="seo-inline-wide"':'')+'>'+title+control+hint+'</label>';
+ }).join('');
+ const file=tool.file?'<label class="seo-inline-wide">'+label(tool.multiple?'Archivos':'Archivo',tool.multiple?'Files':'File')+'<input type="file" name="file" accept="'+esc(tool.accept||'*/*')+'"'+(tool.multiple?' multiple':'')+' required><small>'+label('Hasta 100 MB en total. El archivo se procesa en tu dispositivo.','Up to 100 MB in total. The file is processed on your device.')+'</small></label><p class="seo-inline-selected seo-inline-wide" aria-live="polite"></p>':'';
+ return '<section class="seo-panel seo-inline-tool" aria-labelledby="inline-tool-title"><div class="seo-section-label">'+label('ESPACIO DE TRABAJO','WORKSPACE')+'</div><h2 id="inline-tool-title">'+label('Usar aquí: ','Use here: ')+esc(page.h1||page.title)+'</h2><p>'+esc(toolOutcome(page,language))+'</p><form data-seo-inline-tool="'+tool.id+'" data-max-files="'+(tool.multiple?20:1)+'" class="seo-inline-form">'+file+controls+'<div class="seo-inline-wide seo-inline-actions"><button type="submit" class="seo-cta">'+label('Generar resultado','Generate result')+'</button>'+(!tool.file?'<button type="button" class="seo-example-load" hidden>'+label('Probar un ejemplo','Try an example')+'</button>':'')+'</div><p class="seo-inline-status" role="status" aria-live="polite"></p><a class="seo-cta seo-inline-download" hidden download>'+label('Descargar resultado','Download result')+'</a><pre class="seo-inline-result" tabindex="0" hidden></pre><img class="seo-inline-image" alt="'+label('Vista previa del resultado','Result preview')+'" hidden><audio controls class="seo-inline-media" hidden></audio><video controls playsinline class="seo-inline-media" hidden></video><button type="button" class="seo-inline-print" hidden>'+label('Abrir vista para guardar como PDF','Open view to save as PDF')+'</button></form><p><a href="'+fallback+'">'+label('Abrir esta operación en Prisma Core','Open this operation in Prisma Core')+' ↗</a></p></section><script type="module" src="/src/seo-inline-tools.js"></script>';
 }

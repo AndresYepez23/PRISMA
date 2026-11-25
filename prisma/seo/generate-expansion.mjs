@@ -1,3 +1,5 @@
+import {toolOverview} from './tool-experience.mjs';
+import {inlineToolForm,hasInlineTool} from './inline-tool.mjs';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {markup as spanishMarkup} from './generate.mjs';
 import {markup as englishMarkup} from './generate-international.mjs';
@@ -106,13 +108,14 @@ export async function generateExpansionPages(output){
  validateExpansion(expansionPages,existing);
  for(const p of expansionPages){
   const en=p.language==='en',url=BASE+p.path;
-  const cta=(en?'/en/?tool=':'/?lang=es&tool=')+encodeURIComponent(p.tool);
+  const appCta=(en?'/en/?tool=':'/?lang=es&tool=')+encodeURIComponent(p.tool);
+  const cta=isToolLanding(p)&&hasInlineTool(p)?'#inline-tool-title':appCta;
   const sourceCategory=isToolLanding(p)?sourceCategories.find(item=>item.toolCategories.includes(toolMap.get(p.tool)?.category)):null;
   const englishCategory=sourceCategory&&englishCategories.find(item=>item.sourceSlug===sourceCategory.slug);
   const categoryHref=sourceCategory?(en?'/en/categories/'+englishCategory.englishSlug+'/':'/categorias/'+sourceCategory.slug+'/'):'';
   const categoryName=sourceCategory?(en?englishCategory.name:sourceCategory.name):'';
   const categoryLink=sourceCategory?'<p><a href="'+esc(categoryHref)+'">'+(en?'Browse category: ':'Ver categoría: ')+esc(categoryName)+' ↗</a></p>':'';
-  const body='<main class="seo-main"><section class="seo-directory-hero"><h1>'+esc(p.title)+'</h1><p>'+esc(p.intro)+'</p><a class="seo-cta" href="'+esc(cta)+'">'+(en?'Open tool':'Abrir herramienta')+' ↗</a></section><div class="seo-article-sections">'+p.sections.map(([heading,text])=>'<section class="seo-article-section"><h2>'+esc(heading)+'</h2><p>'+esc(text)+'</p></section>').join('')+'</div><section class="seo-faq"><h2>'+(en?'Frequently asked questions':'Preguntas frecuentes')+'</h2>'+p.faqs.map(([q,a])=>'<details><summary>'+esc(q)+'</summary><p>'+esc(a)+'</p></details>').join('')+'</section><section class="seo-related"><h2>'+(en?'Related resources':'Recursos relacionados')+'</h2>'+[...p.related,...p.sources].map(([href,label])=>'<p><a href="'+esc(href)+'">'+esc(label)+'</a></p>').join('')+categoryLink+'</section></main>';
+  const body='<main class="seo-main"><section class="'+(isToolLanding(p)?'seo-hero':'seo-directory-hero')+'"><div class="seo-hero-copy"><h1>'+esc(p.title)+'</h1><p class="seo-lead">'+esc(p.intro)+'</p><div class="seo-actions"><a class="seo-cta" href="'+esc(cta)+'">'+(isToolLanding(p)&&hasInlineTool(p)?(en?'Use here':'Usar aquí'):(en?'Open tool':'Abrir herramienta'))+' ↗</a></div></div>'+(isToolLanding(p)?toolOverview(p,p.language):'')+'</section>'+(isToolLanding(p)?inlineToolForm(p.tool,p.language,{...p,h1:p.title}):'')+'<div class="seo-article-sections">'+p.sections.map(([heading,text])=>'<section class="seo-article-section"><h2>'+esc(heading)+'</h2><p>'+esc(text)+'</p></section>').join('')+'</div><section class="seo-faq"><h2>'+(en?'Frequently asked questions':'Preguntas frecuentes')+'</h2>'+p.faqs.map(([q,a])=>'<details><summary>'+esc(q)+'</summary><p>'+esc(a)+'</p></details>').join('')+'</section><section class="seo-related"><h2>'+(en?'Related resources':'Recursos relacionados')+'</h2>'+[...p.related,...p.sources].map(([href,label])=>'<p><a href="'+esc(href)+'">'+esc(label)+'</a></p>').join('')+categoryLink+'</section></main>';
   const schema={'@context':'https://schema.org','@type':'WebPage',name:p.title,description:p.description,url,inLanguage:p.language};
   let html=(en?englishMarkup:spanishMarkup)(p.title,p.description,url,schema,body,en&&p.pair?BASE+p.pair:undefined);
   html=html.replace(/<link\b[^>]*rel="alternate"[^>]*>/g,'').replace('</head>',alternates(p)+'\n</head>');

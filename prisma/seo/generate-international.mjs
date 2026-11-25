@@ -1,3 +1,4 @@
+import {toolOverview} from './tool-experience.mjs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tools, categories as registryCategories } from '../src/registry.js';
 import translations from '../src/locales/en.js';
@@ -17,7 +18,7 @@ const toolUrl = page => {
   return appUrl + '?' + query.toString();
 };
 const modeLabel = tool => tool.mode === 'local' ? 'Local processing' : tool.mode === 'browser' ? 'In your browser' : tool.mode === 'byok' ? 'Your own connection' : 'Connected service';
-const statusLabel = tool => tool.status === 'beta' ? 'Beta' : 'Available';
+const statusLabel = tool => tool.status === 'beta' ? 'Check limitations' : 'Available';
 const categoryFor = tool => categoryMap.get(tool.category) || {name:'Tools',order:99};
 const compactTitle = value => {
   const title = String(value || '').trim();
@@ -136,16 +137,12 @@ function toolLanding(page,pages,toolMap) {
       {'@type':'ListItem',position:3,name:page.h1,item:url}
     ]}
   ];
-  const steps=page.steps.map(step=>'<li><span>'+esc(step)+'</span></li>').join('\n');
+  const steps=page.steps.filter((step,index)=>!(hasInlineTool(page)&&index===0&&/^Open .+ in Prisma Space\.$/.test(step))).map(step=>'<li><span>'+esc(step)+'</span></li>').join('\n');
   const relatedHtml=related.map(item=>{
     const peerTool=toolMap.get(item.tool);
     return '<a class="seo-related-card" href="/en/tools/'+esc(item.englishSlug)+'/"><strong>'+esc(item.h1)+'</strong><small>'+esc(categoryFor(peerTool).name)+'</small><span aria-hidden="true">↗</span></a>';
   }).join('\n');
-  const preview=priority?priorityExampleHero(page.sourceSlug,'en'):[
-    '<div class="seo-preview" aria-hidden="true"><div class="seo-preview-orb"></div><div class="seo-preview-label">PRISMA SPACE / '+esc(page.englishSlug.toUpperCase().replaceAll('-',' '))+'</div>',
-    '<div class="seo-preview-content"><div class="seo-preview-symbol"><img src="/assets/prisma-mark.svg" width="46" height="46" alt=""></div><strong>'+esc(t(tool.name))+'</strong><span>'+(tool.status==='beta'?'Beta feature':'Ready to use')+'</span></div>',
-    '<div class="seo-preview-foot"><span>One task, one solution</span><span>' + (['local','browser'].includes(tool.mode) ? 'LOCAL PROCESSING' : 'CONNECTED SERVICE') + '</span></div></div>'
-  ].join('');
+  const preview=priority?priorityExampleHero(page.sourceSlug,'en'):toolOverview(page,'en');
   const body=[
     '<main class="seo-main">',
     breadcrumb([{name:'Home',href:'/en/'},{name:'Tools',href:'/en/tools/'},{name:category,href:'/en/categories/'},{name:page.h1}]),
@@ -155,13 +152,13 @@ function toolLanding(page,pages,toolMap) {
     '<div class="seo-actions"><a class="seo-cta" href="'+esc(actionUrl)+'">'+esc(priorityActionLabel(page.sourceSlug,'en') || (hasInlineTool(page)?'Use here':'Open tool'))+' <span aria-hidden="true">→</span></a><a class="seo-subtle" href="#how-it-works">How it works ↓</a></div>',
     '<p class="seo-privacy"><span aria-hidden="true">◇</span> '+esc(page.privacyNote || (['local','browser'].includes(tool.mode)?'Processed in your browser · No registration required':'Review the tool usage conditions'))+'</p></div>',
     preview+'</section>',
+    inlineToolForm(page.tool,'en',page),
     '<div class="seo-content-grid" id="how-it-works">',
-    '<section class="seo-panel"><div class="seo-section-label">'+(priority?'OPERATION AND LIMITS':'WHAT YOU CAN DO')+'</div><h2>'+esc(priorityPanelHeading(page.sourceSlug,'en') || page.h1+': what you need to know')+'</h2><p>'+esc(page.intro)+'</p><p>'+esc(page.details)+'</p></section>',
+    '<section class="seo-panel"><div class="seo-section-label">'+(priority?'OPERATION AND LIMITS':'WHAT YOU CAN DO')+'</div><h2>'+esc(priorityPanelHeading(page.sourceSlug,'en') || page.h1+': what you need to know')+'</h2>'+(page.intro===page.description?'':'<p>'+esc(page.intro)+'</p>')+'<p>'+esc(page.details)+'</p></section>',
     '<section class="seo-panel"><div class="seo-section-label">STEP BY STEP</div><h2>How to use this tool</h2><ol class="seo-steps">'+steps+'</ol><a class="seo-inline-link" href="'+esc(actionUrl)+'">Open '+esc(t(tool.name))+' ↗</a></section>',
     '</div>',
-    inlineToolForm(page.tool,'en',page),
     priorityExampleReview(page.sourceSlug,'en',next&&{href:'/en/tools/'+next.englishSlug+'/',h1:next.h1}),
-    '<aside class="seo-note"><span class="seo-note-icon">i</span><div><strong>Before you start</strong><p>'+esc(page.tip)+'</p>'+(tool.status==='beta'&&!priority?'<small>This feature is marked as beta in the Prisma Space catalog.</small>':'')+'</div></aside>',
+    '<aside class="seo-note"><span class="seo-note-icon">i</span><div><strong>Before you start</strong><p>'+esc(page.tip)+'</p>'+'</div></aside>',
     faqHtml(page.faqs),
     '<section class="seo-related" aria-labelledby="related-title"><div class="seo-related-heading"><div><div class="seo-section-label">YOU MAY ALSO NEED</div><h2 id="related-title">Related tools</h2></div><a href="/en/tools/">Browse all ↗</a></div><div class="seo-related-grid">'+relatedHtml+'</div></section>',
     '</main>'
@@ -183,7 +180,7 @@ function directory(pages,toolMap) {
     return '<section class="seo-category" id="'+esc(id)+'"><div class="seo-section-label">BROWSE BY CATEGORY</div><h2>'+esc(categoryMap.get(id)?.name||id)+'</h2><div class="seo-directory-grid">'+links+'</div></section>';
   }).join('\n');
   const body='<main class="seo-main"><nav class="seo-breadcrumb" aria-label="Breadcrumb"><a href="/en/">Home</a><span>/</span><span aria-current="page">Online tool directory</span></nav>'+
-    '<section class="seo-directory-hero"><div class="seo-eyebrow"><i></i>TOOL DIRECTORY · PRISMA SPACE</div><h1>Online tools for everyday digital tasks</h1><p>Convert documents, edit images, process video and audio, create content, and complete study tasks with Prisma Space. Explore '+pages.length+' practical tool pages that explain specific tasks, then open the corresponding tool in one click.</p><div class="seo-tags">'+tags+'</div></section>'+
+    '<section class="seo-directory-hero"><div class="seo-eyebrow"><i></i>TOOL DIRECTORY · PRISMA SPACE</div><h1>Find the tool for your task</h1><p>Search '+pages.length+' tool pages by name or category. Check the result, formats and requirements of each operation before you start.</p><div class="seo-tags">'+tags+'</div></section>'+
     sections+
     '<aside class="seo-note"><span class="seo-note-icon">i</span><div><strong>Availability and privacy</strong><p>This directory brings together task-specific tool pages; the interactive catalogue may also include additional features and format variants. Check whether each operation runs locally or uses a connected provider. Beta features may have limitations.</p></div></aside></main>';
   return markup(title,description,url,{'@context':'https://schema.org','@type':'CollectionPage',name:title,description,url,inLanguage:'en'},body,BASE+'/herramientas/');
