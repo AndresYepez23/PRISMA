@@ -5,7 +5,7 @@ import { generateContentHubs } from './content-hubs.mjs';
 import { inlineToolForm, hasInlineTool } from './inline-tool.mjs';
 import { priorityExamples, priorityUpdated, priorityActionLabel, priorityPanelHeading, priorityExampleHero, priorityExampleReview } from './priority-examples.mjs';
 
-import { SEO_BASE as BASE, FORMAT_PRESETS } from './config.mjs';
+import { SEO_BASE as BASE, FORMAT_PRESETS, HOME_UPDATED } from './config.mjs';
 const GROUPS = Object.fromEntries(categories.filter(c => c.id !== 'all').map((c,i) => [c.id, {name:c.name, order:i}]));
 const esc = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 const safeJson = object => JSON.stringify(object).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
@@ -169,7 +169,7 @@ export async function generateSeoPages(output) {
   await writeFile(new URL('index.html',listing),directory(pages,toolMap),'utf8');
   const contentUrls=await generateContentHubs(output,{base:BASE,pages});
   const urls=[
-    {loc:BASE+'/',lastmod:priorityUpdated}, {loc:BASE+'/herramientas/'},
+    {loc:BASE+'/',lastmod:HOME_UPDATED}, {loc:BASE+'/herramientas/'},
     ...pages.map(page=>({loc:urlFor(page.slug),lastmod:priorityExamples[page.slug]?priorityUpdated:page.lastmod})),
     {loc:BASE+'/privacy'}, {loc:BASE+'/acerca'},
     ...contentUrls.map(loc=>({loc}))
@@ -177,6 +177,6 @@ export async function generateSeoPages(output) {
   const sitemap='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+
     urls.map(item=>'  <url><loc>'+esc(item.loc)+'</loc>'+(item.lastmod?'<lastmod>'+esc(item.lastmod)+'</lastmod>':'')+'</url>').join('\n')+'\n</urlset>\n';
   await writeFile(new URL('sitemap.xml',output),sitemap,'utf8');
-  await writeFile(new URL('robots.txt',output),'User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /functions/\nSitemap: '+BASE+'/sitemap.xml\n','utf8');
+  await writeFile(new URL('robots.txt',output),'User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /functions/\nDisallow: /cdn-cgi/\nSitemap: '+BASE+'/sitemap.xml\n','utf8');
   console.log('PRISMA SEO: '+pages.length+' herramientas, '+contentUrls.length+' páginas de categorías, soluciones y guías; sitemap.xml y robots.txt generados.');
 }

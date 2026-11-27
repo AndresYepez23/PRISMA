@@ -40,8 +40,8 @@ const server=http.createServer((req,res)=>{
  try{
   for(const [route,saved,locale,language] of [
    ['/en/','es','es-CO','en'],['/en/','','es-CO','en'],
-   ['/','es','en-US','es'],['/','en','es-CO','en'],
-   ['/','','en-US','en'],['/','','es-CO','es'],
+   ['/','es','en-US','es'],['/','en','es-CO','es'],
+   ['/','','en-US','es'],['/','','es-CO','es'],
    ['/?lang=es','en','en-US','es'],['/en/?lang=es','es','es-CO','en']
   ]){
    const ctx=await context({locale});
@@ -53,7 +53,46 @@ const server=http.createServer((req,res)=>{
    const path=new URL(route,origin).pathname;
    assert.equal(new URL(page.url()).pathname,path,'Automatic language detection changed the URL');
    assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'),'https://prismaspace.space'+path);
+   assert.equal(await page.evaluate(()=>localStorage.getItem('prisma-language')),saved||null,'Visiting a language route must not overwrite the saved preference');
+   const languageLink=page.locator('[data-app-language-switch]').first();
+   assert.equal(await languageLink.getAttribute('href'),language==='es'?'/en/':'/');
+   assert.equal(await languageLink.getAttribute('hreflang'),language==='es'?'en':'es');
    cases.push('locale '+JSON.stringify({route,saved,locale,language}));await closeContext(ctx);
+  }
+  // A crawler and a first-time visitor must receive the same public document
+  // language and metadata, irrespective of browser locale or saved preference.
+  {
+   const metadata=async page=>({
+    lang:await page.locator('html').getAttribute('lang'),title:await page.title(),
+    h1:await page.locator('h1').textContent(),canonical:await page.locator('link[rel="canonical"]').getAttribute('href'),
+    description:await page.locator('meta[name="description"]').getAttribute('content'),
+    tools:await page.locator('.core-start-links a').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href')))
+   });
+   for(const [route,locale,saved] of [['/','en-US','en'],['/en/','es-CO','es']]){
+    const staticCtx=await context({javaScriptEnabled:false,locale}),staticPage=await staticCtx.newPage();
+    await staticPage.goto(origin+route);const expected=await metadata(staticPage);await closeContext(staticCtx);
+    const ctx=await context({locale});await ctx.addInitScript(value=>localStorage.setItem('prisma-language',value),saved);
+    const page=await ctx.newPage();await page.goto(origin+route);await page.waitForFunction(()=>Boolean(window.prismaI18n));
+    assert.deepEqual(await metadata(page),expected,'Public document changed language or metadata after JavaScript at '+route);
+    await page.locator('[data-app-language-switch]:visible').first().click();await page.waitForFunction(()=>Boolean(window.prismaI18n));
+    assert.equal(new URL(page.url()).pathname,route==='/'?'/en/':'/');
+    assert.equal(await page.locator('html').getAttribute('lang'),route==='/'?'en':'es');
+    assert.equal(await page.locator('[data-app-language-switch]').first().getAttribute('href'),route);
+    cases.push('Static/rendered metadata, PDF navigation and reciprocal language links at '+route);await closeContext(ctx);
+   }
+  }
+  {
+   const ctx=await context({locale:'es-CO'});
+   await ctx.addInitScript(()=>localStorage.setItem('prisma-language','es'));
+   const page=await ctx.newPage();await page.goto(origin+'/?lang=en&tool=pdf-to-word&source=bookmark#workspace');
+   await page.waitForFunction(()=>Boolean(window.prismaI18n));
+   assert.equal(new URL(page.url()).pathname,'/en/');
+   assert.equal(new URL(page.url()).search,'?tool=pdf-to-word&source=bookmark');
+   assert.equal(new URL(page.url()).hash,'#workspace');
+   assert.equal(await page.locator('html').getAttribute('lang'),'en');
+   assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'),'https://prismaspace.space/en/');
+   assert.equal(await page.evaluate(()=>localStorage.getItem('prisma-language')),'es');
+   cases.push('Explicit English bookmarks normalize the route without losing tool, fragment or preference');await closeContext(ctx);
   }
   {
    const ctx=await context({locale:'en-US'}),page=await ctx.newPage();

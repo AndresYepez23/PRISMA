@@ -49,15 +49,16 @@ test('English requests are normalized without losing negative instructions or co
  assert.equal(payload.text,'Prisma Space is a workspace');
 });
 
-test('English language selection respects explicit routes, saved preferences and regional Spanish browsers',async()=>{
+test('public language routes remain stable across saved preferences and browser locales',async()=>{
  const i18n=await read('src/i18n.js');
  const selection=i18n.slice(i18n.indexOf('const STORAGE_KEY'),i18n.indexOf('const manualTranslations'));
  for(const [path,saved,browser,expected] of [
   ['/en/','es','es-CO','en'],['/en/','','es-ES','en'],
   ['/herramientas/pdf-a-word/','en','en-US','es'],['/privacy','en','en-US','es'],['/privacy.html','en','en-US','es'],
-  ['/','es','en-US','es'],['/','en','es-CO','en'],
-  ['/','','es-CO','es'],['/','','en-US','en'],
-  ['/?lang=es','en','en-US','es'],['/?lang=invalid','','en-US','en'],
+  ['/','es','en-US','es'],['/','en','es-CO','es'],
+  ['/','','es-CO','es'],['/','','en-US','es'],
+  ['/?lang=es','en','en-US','es'],['/?lang=invalid','','en-US','es'],
+  ['/?lang=en&tool=pdf-to-word','es','es-CO','en'],
   ['/en/?lang=es','es','es-CO','en']
  ]) {
   const url=new URL(path,'https://prismaspace.space');
@@ -112,7 +113,7 @@ test('app keeps legal/navigation links and PWA metadata in the selected language
  assert.match(i18n,/syncAppMetadata\(\)/);
  assert.ok(i18n.includes("language === 'en' ? '/manifest.en.webmanifest' : '/manifest.webmanifest'"));
  assert.match(i18n,/element\?\.tagName === 'META'/);
- assert.ok(index.includes('<meta name="prisma-default-language" content="auto">'));
+ assert.ok(index.includes('<meta name="prisma-default-language" content="es">'));
  assert.ok(index.includes('<base href="/">'));
 });
 

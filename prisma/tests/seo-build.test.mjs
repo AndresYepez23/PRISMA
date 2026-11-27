@@ -40,6 +40,8 @@ test('both homepages show real task paths, clear Core limits and institutional l
   assert.ok(html.includes('class="core-start-links"'),path);
   assert.ok(html.includes(language==='es'?'Las funciones de IA necesitan un motor disponible':'AI features need an available engine'),path);
   assert.ok(html.includes('href="'+(language==='es'?'/herramientas/dividir-pdf/':'/en/tools/split-pdf-into-separate-files/')+'"'),path);
+  for(const href of language==='es'?['/herramientas/word-a-pdf/','/herramientas/unir-pdf/']:['/en/tools/convert-word-to-pdf-from-your-browser/','/en/tools/merge-pdf-files-into-one-document/'])assert.ok(html.includes('href="'+href+'"'),path+' missing direct PDF navigation');
+  assert.ok(html.includes('data-app-language-switch data-no-translate href="'+(language==='es'?'/en/':'/')+'"'),path+' missing reciprocal language navigation');
   assert.ok(html.includes('mailto:proyectosmetas25@gmail.com'),path);
   assert.ok(html.includes('href="'+(language==='es'?'/acerca':'/en/about')+'"'),path);
  }
