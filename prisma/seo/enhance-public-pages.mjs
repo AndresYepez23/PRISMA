@@ -3,6 +3,12 @@ import {tools} from '../src/registry.js';
 import {hasInlineTool} from './inline-tool.mjs';
 import {SEO_BASE as BASE} from './config.mjs';
 
+// These published support addresses must remain usable without Cloudflare's
+// decoder script. Opt out per link, preserving the zone-wide protection.
+export function preserveContactLinks(html){
+ return html.replace(/<!--email_off-->[\s\S]*?<!--\/email_off-->|<!--[\s\S]*?-->|<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>|<a\b[^>]*\bhref="mailto:[^"]*"[^>]*>[\s\S]*?<\/a>/gi,tag=>/^<a\b/i.test(tag)?'<!--email_off-->'+tag+'<!--/email_off-->':tag);
+}
+
 // This pass improves shared navigation after all existing generators have run.
 // Public routes, canonical, language alternates and sitemap entries are untouched.
 export async function enhancePublicPages(output){
@@ -71,7 +77,7 @@ export async function enhancePublicPages(output){
   }
   // The institutional documents share keyboard access with the rest of the site.
   if(!html.includes('class="seo-page"'))html=html.replace('</head>','<style>.prisma-skip-link{position:fixed;top:8px;left:8px;z-index:10000;transform:translateY(-200%);padding:10px 16px;background:#91dbd5;color:#142432;border-radius:8px}.prisma-skip-link:focus{transform:none}</style></head>');
-  await writeFile(file,html);enhanced++;
+  await writeFile(file,preserveContactLinks(html));enhanced++;
  }
  console.log('Prisma experience: '+enhanced+' existing public pages enhanced; '+byPath.size+' tool routes preserved.');
 }

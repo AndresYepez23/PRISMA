@@ -4,6 +4,7 @@ import { readFile, stat, readdir } from 'node:fs/promises';
 import { priorityExamples, priorityUpdated } from '../seo/priority-examples.mjs';
 import { expansionPages, validateExpansion } from '../seo/generate-expansion.mjs';
 import { SEO_BASE, HOME_UPDATED } from '../seo/config.mjs';
+import { preserveContactLinks } from '../seo/enhance-public-pages.mjs';
 
 const root=new URL('../',import.meta.url);
 const dist=new URL('../dist/',import.meta.url);
@@ -212,6 +213,21 @@ test('bilingual sitemap exposes paired alternates for every published page',asyn
  }
  const robots=await readOutput('robots.txt');
  assert.ok(robots.includes('Sitemap: '+SEO_BASE+'/sitemap.xml'));
+ assert.match(robots,/Disallow: \/cdn-cgi\/\n/,'Cloudflare system URLs must not be crawled as public pages');
+});
+
+test('public contact links opt out of email obfuscation without changing scripts or existing guards',()=>{
+ const contact='<a href="mailto:public@example.com">Contact</a>';
+ const protectedLink='<!--email_off-->'+contact+'<!--/email_off-->';
+ const script='<script>const contact='+JSON.stringify(contact)+';</script>';
+ const comment='<!--'+contact+'-->';
+ assert.equal(preserveContactLinks(script+contact+comment),script+protectedLink+comment);
+ assert.equal(preserveContactLinks(protectedLink),protectedLink,'Protection must be idempotent');
+ for(const [url,html] of documents){
+  const contacts=[...html.matchAll(/<a\b[^>]*\bhref="mailto:[^"]*"[^>]*>[\s\S]*?<\/a>/g)];
+  for(const [anchor] of contacts)assert.ok(html.includes('<!--email_off-->'+anchor+'<!--/email_off-->'),url+' has an unprotected contact link');
+  assert.doesNotMatch(html,/href="[^"]*\/cdn-cgi\/l\/email-protection/,url);
+ }
 });
 
 test('every public page has reciprocal language URLs, coherent metadata and matching structured data',()=>{

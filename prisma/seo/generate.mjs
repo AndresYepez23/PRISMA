@@ -177,6 +177,6 @@ export async function generateSeoPages(output) {
   const sitemap='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+
     urls.map(item=>'  <url><loc>'+esc(item.loc)+'</loc>'+(item.lastmod?'<lastmod>'+esc(item.lastmod)+'</lastmod>':'')+'</url>').join('\n')+'\n</urlset>\n';
   await writeFile(new URL('sitemap.xml',output),sitemap,'utf8');
-  await writeFile(new URL('robots.txt',output),'User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /functions/\nSitemap: '+BASE+'/sitemap.xml\n','utf8');
+  await writeFile(new URL('robots.txt',output),'User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /functions/\nDisallow: /cdn-cgi/\nSitemap: '+BASE+'/sitemap.xml\n','utf8');
   console.log('PRISMA SEO: '+pages.length+' herramientas, '+contentUrls.length+' páginas de categorías, soluciones y guías; sitemap.xml y robots.txt generados.');
 }
