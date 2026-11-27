@@ -17,13 +17,14 @@ const browserLanguages = Array.isArray(navigator.languages) && navigator.languag
 const preferredBrowserLanguage = String(browserLanguages[0] || navigator.language || 'es');
 const browserSpanish = /^es(?:-|$)/i.test(preferredBrowserLanguage);
 const routeLanguage = /^\/en(?:\/|$)/i.test(location.pathname) ? 'en' :
-  /^\/(?:herramientas|categorias|soluciones|guias)(?:\/|$)|^\/(?:privacy|acerca)(?:\.html)?$/i.test(location.pathname) ? 'es' : '';
+  (location.pathname === '/' || /^\/(?:herramientas|categorias|soluciones|guias)(?:\/|$)|^\/(?:privacy|acerca)(?:\.html)?$/i.test(location.pathname)) ? 'es' : '';
 const requestedLanguage = new URLSearchParams(location.search).get('lang');
 const explicitLanguage = ['es','en'].includes(requestedLanguage) ? requestedLanguage : '';
-const initialLanguage = routeLanguage || explicitLanguage || savedLanguage ||
+const initialLanguage = (location.pathname === '/' ? explicitLanguage : '') || routeLanguage || explicitLanguage || savedLanguage ||
   (defaultMeta === 'en' ? 'en' : defaultMeta === 'es' ? 'es' : browserSpanish ? 'es' : 'en');
-// The neutral app may adapt its UI, but language detection must never redirect
-// visitors or crawlers. Only an explicit language switch changes the app URL.
+// Public language URLs keep the same language before and after JavaScript.
+// Saved/browser preferences must not turn the Spanish canonical into English.
+// Only an explicit language choice may change the app URL.
 
 const manualTranslations = {
   'Prisma Space — Crea, convierte y experimenta': 'Prisma Space — Create, Convert, and Experiment',
@@ -155,7 +156,9 @@ const ATTRIBUTES = ['placeholder', 'title', 'aria-label', 'alt', 'content'];
 // These are public index/legal routes; explicit SEO landing URLs keep their own locale.
 const localizedPaths = new Map([
   ['/herramientas/pdf-a-word/', '/en/tools/free-pdf-to-word-converter/'],
+  ['/herramientas/word-a-pdf/', '/en/tools/convert-word-to-pdf-from-your-browser/'],
   ['/herramientas/dividir-pdf/', '/en/tools/split-pdf-into-separate-files/'],
+  ['/herramientas/unir-pdf/', '/en/tools/merge-pdf-files-into-one-document/'],
   ['/herramientas/imagen-a-texto/', '/en/tools/convert-image-to-text-with-ocr/'],
   ['/herramientas/eliminar-metadatos-imagen/', '/en/tools/remove-exif-metadata-from-an-image/'],
   ['/herramientas/collage-de-fotos/', '/en/tools/create-a-photo-collage-online/'],
@@ -173,6 +176,7 @@ const publicAliases = new Map([
 ]);
 
 function translateInternalLink(anchor) {
+  if (anchor?.hasAttribute?.('data-app-language-switch')) return;
   const href = anchor?.getAttribute?.('href');
   if (!href || href.startsWith('#')) return;
   let url;
@@ -200,7 +204,7 @@ const appMetadata = {
     socialDescription: 'Herramientas prácticas para PDF, imágenes y datos, con procesamiento local y un asistente para tareas que necesitan IA.'
   },
   en: {
-    title: 'Prisma Space — Create, convert and explore',
+    title: 'Prisma Space — Create, Convert, and Experiment',
     description: 'Convert and review PDFs, images and data with browser tools. Prisma Core helps choose steps and distinguishes local features from connected AI engines.',
     socialDescription: 'Practical tools for PDFs, images and data, with local processing and an assistant for tasks that need AI.'
   }
@@ -249,8 +253,13 @@ function translateAttribute(element, attribute) {
 function applyAll() {
   root.lang = language;
   root.dataset.language = language;
-  // Keep the installable PWA language aligned with the actual UI, including
-  // first visits that enter at / and are routed to /en/ without a full reload.
+  for (const languageSwitch of document.querySelectorAll('[data-app-language-switch]')) {
+    languageSwitch.setAttribute('href', language === 'en' ? '/' : '/en/');
+    languageSwitch.setAttribute('lang', language === 'en' ? 'es' : 'en');
+    languageSwitch.setAttribute('hreflang', language === 'en' ? 'es' : 'en');
+    languageSwitch.textContent = language === 'en' ? 'Español' : 'English';
+  }
+  // Keep the installable PWA language aligned after an explicit language switch.
   const manifest = document.querySelector('link[rel="manifest"]');
   if (manifest) {
     const target = language === 'en' ? '/manifest.en.webmanifest' : '/manifest.webmanifest';
@@ -317,7 +326,10 @@ if (root.lang === 'en') {
     lastAttributes.set(element, new Map([...values.keys()].map(attribute => [attribute, element.getAttribute(attribute)])));
   });
 }
-applyAll();
+// Preserve old explicit ?lang=en links without serving English at the Spanish
+// canonical. Keep tool parameters, fragments and the stored preference intact.
+if (location.pathname === '/' && explicitLanguage === 'en') setLanguage('en', { persist: false });
+else applyAll();
 
 const observer = new MutationObserver(records => {
   if (applying) return;

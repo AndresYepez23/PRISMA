@@ -2,7 +2,7 @@ import {toolOverview} from './tool-experience.mjs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tools, categories as registryCategories } from '../src/registry.js';
 import translations from '../src/locales/en.js';
-import { SEO_BASE as BASE } from './config.mjs';
+import { SEO_BASE as BASE, HOME_UPDATED } from './config.mjs';
 import { inlineToolForm, hasInlineTool } from './inline-tool.mjs';
 import { priorityExamples, priorityUpdated, priorityActionLabel, priorityPanelHeading, priorityExampleHero, priorityExampleReview } from './priority-examples.mjs';
 
@@ -266,7 +266,7 @@ function injectAlternates(html,esUrl,enUrl) {
 function appEnglishHtml(html) {
   html=html.replace('<html lang="es"','<html lang="en"')
     .replace('href="./manifest.webmanifest"','href="./manifest.en.webmanifest"')
-    .replace('content="auto"','content="en"')
+    .replace(/(<meta name="prisma-default-language" content=")(?:auto|es)(">)/,'$1en$2')
     .replace('content="es_ES"','content="en_US"')
     .replace('<title>Prisma Space — Crea, convierte y experimenta</title>','<title>Prisma Space — Create, Convert, and Experiment</title>')
     .replace('content="Prisma Space — Crea, convierte y experimenta"','content="Prisma Space — Create, Convert, and Experiment"')
@@ -276,18 +276,18 @@ function appEnglishHtml(html) {
     .replace(/<meta property="og:url" content="[^"]*">/,'<meta property="og:url" content="'+BASE+'/en/">');
   if (!html.includes('name="prisma-default-language"')) html=html.replace('<head>','<head><meta name="prisma-default-language" content="en">');
   const tags=alternateTags(BASE+'/',BASE+'/en/');
-  if (!html.includes('hreflang="en"')) html=html.replace('</head>',tags+'\n</head>');
+  if (!/<link\b[^>]*\bhreflang="en"/.test(html)) html=html.replace('</head>',tags+'\n</head>');
   // Emit translated HTML for crawlers and before JavaScript loads. Never run
   // replacements over scripts, styles, code, URLs or user-provided content.
   const decode=value=>value.replace(/&(?:amp|quot|#39|lt|gt);/g, entity=>({'&amp;':'&','&quot;':'"','&#39;':"'",'&lt;':'<','&gt;':'>'})[entity]);
   const translate=value=>value.replace(/\S[\s\S]*\S|\S/, text=>esc(t(decode(text))));
   const paths=new Map([['/','/en/'],['/herramientas/','/en/tools/'],['/categorias/','/en/categories/'],['/soluciones/','/en/solutions/'],['/guias/','/en/guides/'],['/privacy','/en/privacy'],['/acerca','/en/about'],
-    ...[['pdf-a-word','free-pdf-to-word-converter'],['dividir-pdf','split-pdf-into-separate-files'],['imagen-a-texto','convert-image-to-text-with-ocr'],['eliminar-metadatos-imagen','remove-exif-metadata-from-an-image'],['collage-de-fotos','create-a-photo-collage-online']].map(([es,en])=>['/herramientas/'+es+'/','/en/tools/'+en+'/'])]);
+    ...[['pdf-a-word','free-pdf-to-word-converter'],['word-a-pdf','convert-word-to-pdf-from-your-browser'],['dividir-pdf','split-pdf-into-separate-files'],['unir-pdf','merge-pdf-files-into-one-document'],['imagen-a-texto','convert-image-to-text-with-ocr'],['eliminar-metadatos-imagen','remove-exif-metadata-from-an-image'],['collage-de-fotos','create-a-photo-collage-online']].map(([es,en])=>['/herramientas/'+es+'/','/en/tools/'+en+'/'])]);
   html=html.replace(/<!--[\s\S]*?-->|<(script|style|code|pre)\b[^>]*>[\s\S]*?<\/\1\s*>|<[^>]+>|[^<]+/gi,token=>{
     if (/^<!--|^<(?:script|style|code|pre)\b/i.test(token)) return token;
     if (!token.startsWith('<')) return translate(token);
     token=token.replace(/\b(placeholder|title|aria-label|alt)="([^"]*)"/g,(_,attribute,value)=>attribute+'="'+translate(value)+'"');
-    if (/^<a\b/i.test(token)) token=token.replace(/href="([^"]*)"/, (attribute,href)=>{
+    if (/^<a\b/i.test(token) && !token.includes('data-app-language-switch')) token=token.replace(/href="([^"]*)"/, (attribute,href)=>{
       if (!href || href.startsWith('#')) return attribute;
       const url=new URL(decode(href),BASE+'/');
       const target=url.origin===BASE && paths.get(url.pathname);
@@ -295,7 +295,7 @@ function appEnglishHtml(html) {
     });
     return token;
   });
-  return html;
+  return html.replaceAll('<a data-app-language-switch data-no-translate href="/en/" lang="en" hreflang="en">English</a>','<a data-app-language-switch data-no-translate href="/" lang="es" hreflang="es">Español</a>');
 }
 export async function generateInternationalPages(output) {
   const sourcePages=JSON.parse(await readFile(new URL('./pages.json',import.meta.url),'utf8')).pages;
@@ -414,7 +414,7 @@ export async function generateInternationalPages(output) {
   if(!spanishEntries.length) throw new Error('i18n: original sitemap is empty.');
   const missing=spanishEntries.map(entry=>entry.loc).filter(url=>!englishUrlBySpanish.has(url));
   if(missing.length) throw new Error('i18n: English counterpart missing for '+missing.slice(0,8).join(', '));
-  const englishLastmodByUrl=new Map([[BASE+'/en/',priorityUpdated]]);
+  const englishLastmodByUrl=new Map([[BASE+'/en/',HOME_UPDATED]]);
   for(const page of englishPages) if(page.lastmod||priorityExamples[page.sourceSlug]){
     const date=priorityExamples[page.sourceSlug]?priorityUpdated:page.lastmod;
     if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||new Date(date+'T00:00:00.000Z').toISOString().slice(0,10)!==date) throw new Error('i18n: invalid English lastmod for '+page.englishSlug);

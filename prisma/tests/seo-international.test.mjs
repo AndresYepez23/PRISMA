@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, stat, readdir } from 'node:fs/promises';
 import { priorityExamples, priorityUpdated } from '../seo/priority-examples.mjs';
 import { expansionPages, validateExpansion } from '../seo/generate-expansion.mjs';
-import { SEO_BASE } from '../seo/config.mjs';
+import { SEO_BASE, HOME_UPDATED } from '../seo/config.mjs';
 
 const root=new URL('../',import.meta.url);
 const dist=new URL('../dist/',import.meta.url);
@@ -36,8 +36,8 @@ const assetPaths=new Set((await readdir(dist,{recursive:true})).map(path=>'/'+pa
 
 test('sitemap preserves verified per-language lastmod dates without stamping unchanged pages',()=>{
  const expected=[
-  ['/',priorityUpdated],
-  ['/en/',priorityUpdated],
+  ['/',HOME_UPDATED],
+  ['/en/',HOME_UPDATED],
   ['/herramientas/dividir-pdf/',priorityUpdated],
   ['/herramientas/extraer-paginas-pdf/','2026-11-16'],
   ['/herramientas/pdf-a-word/',priorityUpdated],

@@ -5,7 +5,7 @@ import { generateContentHubs } from './content-hubs.mjs';
 import { inlineToolForm, hasInlineTool } from './inline-tool.mjs';
 import { priorityExamples, priorityUpdated, priorityActionLabel, priorityPanelHeading, priorityExampleHero, priorityExampleReview } from './priority-examples.mjs';
 
-import { SEO_BASE as BASE, FORMAT_PRESETS } from './config.mjs';
+import { SEO_BASE as BASE, FORMAT_PRESETS, HOME_UPDATED } from './config.mjs';
 const GROUPS = Object.fromEntries(categories.filter(c => c.id !== 'all').map((c,i) => [c.id, {name:c.name, order:i}]));
 const esc = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 const safeJson = object => JSON.stringify(object).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
@@ -169,7 +169,7 @@ export async function generateSeoPages(output) {
   await writeFile(new URL('index.html',listing),directory(pages,toolMap),'utf8');
   const contentUrls=await generateContentHubs(output,{base:BASE,pages});
   const urls=[
-    {loc:BASE+'/',lastmod:priorityUpdated}, {loc:BASE+'/herramientas/'},
+    {loc:BASE+'/',lastmod:HOME_UPDATED}, {loc:BASE+'/herramientas/'},
     ...pages.map(page=>({loc:urlFor(page.slug),lastmod:priorityExamples[page.slug]?priorityUpdated:page.lastmod})),
     {loc:BASE+'/privacy'}, {loc:BASE+'/acerca'},
     ...contentUrls.map(loc=>({loc}))
